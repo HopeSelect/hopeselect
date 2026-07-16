@@ -107,7 +107,9 @@ Do passo 1 ao 5, o Hostess já pode ser desligado.
 
 Setup do ambiente documentado em `SETUP.md`. Para aplicar novas migrations: `npx supabase db push` (o projeto já está linkado; o aviso de Docker no fim é inofensivo).
 
-**Próximo:** passo 3 (painel de sala com cards + realtime).
+- **Passo 3 ✅** — painel de sala (`src/app/sala`) com cards de professor arrastáveis (posição persistida em `pos_x`/`pos_y`), alocação manual de aluno com alertas visíveis, início/fim de atendimento, e atualização em tempo real via Supabase Realtime (publication `supabase_realtime` cobrindo `atendimentos` e `professores`).
+
+**Próximo:** passo 4 (tarefas dos professores).
 
 ## Fases futuras (não implementar agora)
 
