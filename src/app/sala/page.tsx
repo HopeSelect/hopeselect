@@ -2,6 +2,7 @@ import { Nav } from '@/components/nav'
 import { criarClienteServer } from '@/lib/supabase/server'
 import type { AtendimentoAberto, IntervaloAberto, Professor } from '@/lib/tipos'
 import { PainelSala } from './painel-sala'
+import estilos from './sala.module.css'
 
 export default async function SalaPage() {
   const supabase = await criarClienteServer()
