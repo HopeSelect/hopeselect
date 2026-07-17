@@ -155,7 +155,7 @@ export function AppShell({
       >
         <div className={estilos.sidebarTopo}>
           <Image
-            src="/logo-hope-select.jpg"
+            src="/logo-hope-select-icone.png"
             alt="Hope Select"
             width={34}
             height={34}

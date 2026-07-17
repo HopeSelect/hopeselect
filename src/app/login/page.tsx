@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useActionState } from 'react'
 import { entrar } from './actions'
 import estilos from './login.module.css'
@@ -11,8 +12,14 @@ export default function LoginPage() {
     <main className={estilos.pagina}>
       <form action={acao} className={estilos.cartao}>
         <div className={estilos.cabecalho}>
-          <div className={estilos.marcaIcone} aria-hidden>
-            HS
+          <div className={estilos.marcaIcone}>
+            <Image
+              src="/logo-hope-select-icone.png"
+              alt=""
+              width={56}
+              height={56}
+              className={estilos.marcaImg}
+            />
           </div>
           <h1 className={estilos.titulo}>Hope Select</h1>
           <p className={estilos.subtitulo}>Gestão de sala da academia</p>
