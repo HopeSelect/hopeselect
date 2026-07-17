@@ -1,0 +1,128 @@
+/* ================================================================
+   ALUNOS — busca e cadastro
+   ================================================================
+   Reaproveita os mesmos princípios de Professores (mesma coluna,
+   mesma sombra, mesmo raio — consistência entre destinos), com um
+   acréscimo: aqui a informação mais crítica para decisão rápida é
+   classificação + alerta + dias sem acesso, então esses três dados
+   recebem tratamento visual reforçado (badge global + chips) em vez
+   de texto corrido — a recepção não deveria precisar LER a frase
+   "sem registro de acesso", deveria RECONHECER isso pela cor/forma.
+
+   Mapa de integração (Tailwind → classe nova), a partir dos
+   fragmentos vistos em src/app/alunos/page.tsx:
+
+     <main className="mx-auto w-full max-w-5xl ...">
+       → className={estilos.pagina}
+     linha de resultado com <Link> e <span>...dias sem acesso</span>
+       → className={estilos.item}, className={estilos.diasAcesso}
+   ================================================================ */
+
+.pagina {
+  max-width: 64rem;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+  flex: 1;
+}
+
+.titulo {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+
+.busca {
+  margin-top: var(--space-5);
+  position: relative;
+}
+
+.buscaInput {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  background: var(--neutral-0);
+  transition: border-color var(--dur-base) var(--ease-padrao),
+              box-shadow var(--dur-base) var(--ease-padrao);
+}
+.buscaInput:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.lista {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--dur-base) var(--ease-padrao),
+              box-shadow var(--dur-base) var(--ease-padrao);
+}
+.item:hover {
+  border-color: var(--brand-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.info {
+  min-width: 0;
+  flex: 1;
+}
+
+.nome {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alertas {
+  margin-top: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.diasAcesso {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--neutral-400);
+  white-space: nowrap;
+}
+/* Realça visualmente quando o aluno está há muito tempo sem vir —
+   aplicar via data-attribute quando dias >= algum limiar de negócio */
+.diasAcesso[data-atencao="true"] {
+  color: var(--cor-atencao-texto);
+  font-weight: 600;
+}
+
+.painelForm {
+  margin-top: var(--space-8);
+  padding: var(--space-5);
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.painelTitulo {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--neutral-900);
+}
