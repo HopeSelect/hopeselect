@@ -49,3 +49,14 @@ export interface AtendimentoAberto {
   alunos: AlunoResumo
 }
 
+// ADICIONAR ao final de src/lib/tipos.ts
+
+export type TipoIntervalo = 'almoco' | 'lanche' | 'janta' | 'outro'
+
+// Intervalo em aberto no painel de sala (bolinha amarela no card do professor).
+export interface IntervaloAberto {
+  id: string
+  professor_id: string
+  tipo: TipoIntervalo
+  inicio: string
+}
