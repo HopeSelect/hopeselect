@@ -8,6 +8,13 @@
    sutil, não um botão cheio: em uma barra de navegação, o item ativo
    deve se destacar o suficiente para ser notado no canto do olho,
    sem competir com o conteúdo da página.
+
+   RESPONSIVO: abaixo de 48rem (768px) os 5 links horizontais + Sair
+   não cabem numa linha só — em vez de espremer ou quebrar de forma
+   feia, a barra colapsa para logo + botão hambúrguer, e os links
+   aparecem num painel abaixo do header. O painel some completamente
+   (display:none) em telas largas, então não há duplicação de DOM
+   visível nem custo de layout no desktop.
    ================================================================ */
 
 .header {
@@ -94,4 +101,86 @@
 .sair:hover {
   color: var(--cor-erro);
   background: var(--cor-erro-bg);
+}
+
+/* ---------- Botão hambúrguer (só existe visualmente no mobile) ---------- */
+
+.botaoMenu {
+  display: none;
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--neutral-200);
+  background: var(--neutral-0);
+  color: var(--neutral-700);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-padrao);
+}
+.botaoMenu:hover {
+  border-color: var(--neutral-400);
+}
+
+/* ---------- Painel de links empilhados no mobile ---------- */
+
+.painelMobile {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--neutral-100);
+}
+
+.painelMobileAberto {
+  display: flex;
+}
+
+.linkMobile {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--neutral-600);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+.linkMobile:hover {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+}
+
+.linkMobileAtivo {
+  color: var(--brand-700);
+  background: var(--brand-50);
+}
+
+.sairMobile {
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--neutral-400);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.sairMobile:hover {
+  color: var(--cor-erro);
+  background: var(--cor-erro-bg);
+}
+
+/* ---------- Breakpoint: abaixo de 768px vira menu colapsado ---------- */
+
+@media (max-width: 47.99rem) {
+  .links,
+  .sair {
+    display: none;
+  }
+  .botaoMenu {
+    display: flex;
+  }
 }
