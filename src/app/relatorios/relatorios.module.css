@@ -46,6 +46,7 @@
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--neutral-600);
+  flex: 1 1 160px;
 }
 
 .inputFiltro {
@@ -87,8 +88,10 @@
 
 .blocoCabecalho {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-2);
   padding: var(--space-4);
   border-bottom: 1px solid var(--neutral-200);
 }
