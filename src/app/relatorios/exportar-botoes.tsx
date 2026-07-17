@@ -5,6 +5,23 @@ import type { LinhaAtendimento, LinhaProdutividade } from '@/lib/tipos'
 const botao =
   'rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900'
 
+// Carrega um script externo uma única vez (cache no window) — evita precisar
+// instalar xlsx/jspdf via npm, já que editamos direto pelo GitHub.
+function carregarScript(src: string, chaveGlobal: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any)[chaveGlobal]) {
+      resolve()
+      return
+    }
+    const tag = document.createElement('script')
+    tag.src = src
+    tag.onload = () => resolve()
+    tag.onerror = () => reject(new Error(`Falha ao carregar ${src}`))
+    document.body.appendChild(tag)
+  })
+}
+
 export function ExportarBotoes({
   atendimentos,
   produtividade,
@@ -17,7 +34,9 @@ export function ExportarBotoes({
   ate: string
 }) {
   async function exportarExcel() {
-    const XLSX = await import('xlsx')
+    await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', 'XLSX')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const XLSX = (window as any).XLSX
 
     const linhasAtendimentos = atendimentos.map((l) => ({
       Data: l.data,
@@ -41,8 +60,13 @@ export function ExportarBotoes({
   }
 
   async function exportarPdf() {
-    const { jsPDF } = await import('jspdf')
-    const autoTable = (await import('jspdf-autotable')).default
+    await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf')
+    await carregarScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
+      'jspdfAutoTablePluginLoaded',
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { jsPDF } = (window as any).jspdf
 
     const doc = new jsPDF()
     doc.setFontSize(14)
@@ -50,7 +74,8 @@ export function ExportarBotoes({
 
     doc.setFontSize(11)
     doc.text('Atendimentos', 14, 26)
-    autoTable(doc, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(doc as any).autoTable({
       startY: 30,
       head: [['Data', 'Aluno', 'Classe', 'Professor', 'Duração']],
       body: atendimentos.map((l) => [
@@ -66,7 +91,8 @@ export function ExportarBotoes({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const proximoY = (doc as any).lastAutoTable.finalY + 10
     doc.text('Produtividade por professor', 14, proximoY)
-    autoTable(doc, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(doc as any).autoTable({
       startY: proximoY + 4,
       head: [['Data', 'Professor', 'Atendimentos', 'Tarefas concluídas']],
       body: produtividade.map((l) => [
