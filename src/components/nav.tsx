@@ -15,6 +15,12 @@ export function Nav() {
         <Link href="/alunos" className="text-gray-600 hover:text-gray-900">
           Alunos
         </Link>
+        <Link href="/tarefas" className="text-gray-600 hover:text-gray-900">
+          Tarefas
+        </Link>
+        <Link href="/relatorios" className="text-gray-600 hover:text-gray-900">
+          Relatórios
+        </Link>
         <form action={sair} className="ml-auto">
           <button className="text-gray-500 hover:text-gray-900">Sair</button>
         </form>

@@ -1,25 +1,29 @@
 import { Nav } from '@/components/nav'
 import { criarClienteServer } from '@/lib/supabase/server'
-import type { AtendimentoAberto, Professor } from '@/lib/tipos'
+import type { AtendimentoAberto, IntervaloAberto, Professor } from '@/lib/tipos'
 import { PainelSala } from './painel-sala'
 
 export default async function SalaPage() {
   const supabase = await criarClienteServer()
 
-  const [{ data: professores, error: erroProfessores }, { data: atendimentos, error: erroAtendimentos }] =
-    await Promise.all([
-      supabase
-        .from('professores')
-        .select('*')
-        .eq('ativo', true)
-        .order('nome'),
-      supabase
-        .from('atendimentos')
-        .select('id, aluno_id, professor_id, inicio, alunos(id, nome, classificacao, alertas, ultimo_acesso)')
-        .is('fim', null),
-    ])
+  const [
+    { data: professores, error: erroProfessores },
+    { data: atendimentos, error: erroAtendimentos },
+    { data: intervalos, error: erroIntervalos },
+  ] = await Promise.all([
+    supabase
+      .from('professores')
+      .select('*')
+      .eq('ativo', true)
+      .order('nome'),
+    supabase
+      .from('atendimentos')
+      .select('id, aluno_id, professor_id, inicio, alunos(id, nome, classificacao, alertas, ultimo_acesso)')
+      .is('fim', null),
+    supabase.from('lanches').select('id, professor_id, tipo, inicio').is('fim', null),
+  ])
 
-  const erro = erroProfessores?.message ?? erroAtendimentos?.message ?? null
+  const erro = erroProfessores?.message ?? erroAtendimentos?.message ?? erroIntervalos?.message ?? null
 
   return (
     <>
@@ -32,6 +36,7 @@ export default async function SalaPage() {
         <PainelSala
           professoresIniciais={(professores ?? []) as Professor[]}
           atendimentosIniciais={(atendimentos ?? []) as unknown as AtendimentoAberto[]}
+          intervalosIniciais={(intervalos ?? []) as IntervaloAberto[]}
         />
       </main>
     </>

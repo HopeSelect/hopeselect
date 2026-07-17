@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES } from '@/lib/utils'
-import type { AlunoResumo, AtendimentoAberto, Professor } from '@/lib/tipos'
-import { atualizarPosicaoProfessor, finalizarAtendimento } from './actions'
+import { CLASSIFICACOES, TIPOS_INTERVALO } from '@/lib/utils'
+import type { AlunoResumo, AtendimentoAberto, IntervaloAberto, Professor, TipoIntervalo } from '@/lib/tipos'
+import {
+  atualizarPosicaoProfessor,
+  finalizarAtendimento,
+  finalizarIntervalo,
+  iniciarIntervalo,
+} from './actions'
 import { BuscarAluno } from './buscar-aluno'
 
 const LARGURA_CARD = 240
@@ -32,13 +37,16 @@ function formatarDecorrido(inicioIso: string, agora: number) {
 export function PainelSala({
   professoresIniciais,
   atendimentosIniciais,
+  intervalosIniciais,
 }: {
   professoresIniciais: Professor[]
   atendimentosIniciais: AtendimentoAberto[]
+  intervalosIniciais: IntervaloAberto[]
 }) {
   const supabase = useMemo(() => criarClienteBrowser(), [])
   const [professores, setProfessores] = useState(professoresIniciais)
   const [atendimentos, setAtendimentos] = useState(atendimentosIniciais)
+  const [intervalos, setIntervalos] = useState(intervalosIniciais)
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
 
@@ -48,8 +56,8 @@ export function PainelSala({
     return () => clearInterval(t)
   }, [])
 
-  // Realtime: professores (posição do card) e atendimentos (aloca/finaliza).
-  // Isso é o que resolve a dor do Hostess — nada de fechar/reabrir card na mão.
+  // Realtime: professores (posição do card), atendimentos (aloca/finaliza)
+  // e lanches (início/fim de intervalo -> bolinha amarela).
   useEffect(() => {
     const canal = supabase
       .channel('painel-sala')
@@ -93,6 +101,21 @@ export function PainelSala({
           }
         },
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'lanches' },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' && payload.new.fim) {
+            // Intervalo encerrado -> bolinha some.
+            setIntervalos((prev) => prev.filter((i) => i.id !== payload.new.id))
+            return
+          }
+          if (payload.eventType === 'INSERT' && !payload.new.fim) {
+            const novo = payload.new as IntervaloAberto
+            setIntervalos((prev) => (prev.some((i) => i.id === novo.id) ? prev : [...prev, novo]))
+          }
+        },
+      )
       .subscribe()
 
     return () => {
@@ -120,10 +143,25 @@ export function PainelSala({
     await finalizarAtendimento(atendimentoId)
   }
 
+  async function aoIniciarIntervalo(professor: Professor, tipo: TipoIntervalo) {
+    const idOtimista = `otimista-${professor.id}`
+    setIntervalos((prev) => [
+      ...prev,
+      { id: idOtimista, professor_id: professor.id, tipo, inicio: new Date().toISOString() },
+    ])
+    await iniciarIntervalo(professor.id, tipo)
+  }
+
+  async function aoFinalizarIntervalo(intervaloId: string) {
+    setIntervalos((prev) => prev.filter((i) => i.id !== intervaloId))
+    await finalizarIntervalo(intervaloId)
+  }
+
   return (
     <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 p-4">
       {professores.map((professor, indice) => {
         const atendimento = atendimentos.find((a) => a.professor_id === professor.id)
+        const intervalo = intervalos.find((i) => i.professor_id === professor.id)
         const grade = posicaoGrade(indice)
         const pos = {
           x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
@@ -136,6 +174,7 @@ export function PainelSala({
             professor={professor}
             pos={pos}
             atendimento={atendimento}
+            intervalo={intervalo}
             agora={agora}
             onMover={(x, y) =>
               setProfessores((prev) =>
@@ -145,6 +184,8 @@ export function PainelSala({
             onSoltar={(x, y) => void atualizarPosicaoProfessor(professor.id, x, y)}
             onAlocar={() => setAlocandoPara(professor)}
             onFinalizar={() => atendimento && void aoFinalizar(atendimento.id)}
+            onIniciarIntervalo={(tipo) => void aoIniciarIntervalo(professor, tipo)}
+            onFinalizarIntervalo={() => intervalo && void aoFinalizarIntervalo(intervalo.id)}
           />
         )
       })}
@@ -170,25 +211,32 @@ function CardProfessor({
   professor,
   pos,
   atendimento,
+  intervalo,
   agora,
   onMover,
   onSoltar,
   onAlocar,
   onFinalizar,
+  onIniciarIntervalo,
+  onFinalizarIntervalo,
 }: {
   professor: Professor
   pos: { x: number; y: number }
   atendimento: AtendimentoAberto | undefined
+  intervalo: IntervaloAberto | undefined
   agora: number
   onMover: (x: number, y: number) => void
   onSoltar: (x: number, y: number) => void
   onAlocar: () => void
   onFinalizar: () => void
+  onIniciarIntervalo: (tipo: TipoIntervalo) => void
+  onFinalizarIntervalo: () => void
 }) {
   const arrastando = useRef(false)
   const offset = useRef({ dx: 0, dy: 0 })
   const posAtual = useRef(pos)
   const cabecalhoRef = useRef<HTMLDivElement>(null)
+  const [menuIntervaloAberto, setMenuIntervaloAberto] = useState(false)
   posAtual.current = pos
 
   // Números válidos, com fallback pra posição atual — nunca deixa NaN virar `left`/`top`.
@@ -229,6 +277,7 @@ function CardProfessor({
   }
 
   const ocupado = Boolean(atendimento)
+  const emIntervalo = Boolean(intervalo)
 
   return (
     <div
@@ -258,13 +307,28 @@ function CardProfessor({
           {professor.funcao && <p className="truncate text-xs text-gray-500">{professor.funcao}</p>}
         </div>
         <span
-          className={`ml-auto h-2.5 w-2.5 shrink-0 rounded-full ${ocupado ? 'bg-red-500' : 'bg-green-500'}`}
-          title={ocupado ? 'Ocupado' : 'Livre'}
+          className={`ml-auto h-2.5 w-2.5 shrink-0 rounded-full ${
+            emIntervalo ? 'bg-yellow-400' : ocupado ? 'bg-red-500' : 'bg-green-500'
+          }`}
+          title={emIntervalo ? TIPOS_INTERVALO[intervalo!.tipo] : ocupado ? 'Ocupado' : 'Livre'}
         />
       </div>
 
       <div className="p-3">
-        {atendimento ? (
+        {emIntervalo ? (
+          <div>
+            <p className="text-sm font-medium text-gray-900">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
+            <p className="mt-1 text-xs text-gray-400">
+              Há {formatarDecorrido(intervalo!.inicio, agora)}
+            </p>
+            <button
+              onClick={onFinalizarIntervalo}
+              className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+            >
+              Encerrar intervalo
+            </button>
+          </div>
+        ) : atendimento ? (
           <div>
             <div className="flex items-center justify-between gap-2">
               <p className="truncate text-sm font-medium text-gray-900">{atendimento.alunos.nome}</p>
@@ -294,12 +358,39 @@ function CardProfessor({
             </button>
           </div>
         ) : (
-          <button
-            onClick={onAlocar}
-            className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
-          >
-            + Alocar aluno
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={onAlocar}
+              className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+            >
+              + Alocar aluno
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setMenuIntervaloAberto((v) => !v)}
+                className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+              >
+                Iniciar intervalo
+              </button>
+              {menuIntervaloAberto && (
+                <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-gray-200 bg-white shadow-lg">
+                  {(Object.keys(TIPOS_INTERVALO) as TipoIntervalo[]).map((tipo) => (
+                    <button
+                      key={tipo}
+                      onClick={() => {
+                        setMenuIntervaloAberto(false)
+                        onIniciarIntervalo(tipo)
+                      }}
+                      className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
+                    >
+                      {TIPOS_INTERVALO[tipo]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

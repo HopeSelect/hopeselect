@@ -49,8 +49,6 @@ export interface AtendimentoAberto {
   alunos: AlunoResumo
 }
 
-// ADICIONAR ao final de src/lib/tipos.ts
-
 export type TipoIntervalo = 'almoco' | 'lanche' | 'janta' | 'outro'
 
 // Intervalo em aberto no painel de sala (bolinha amarela no card do professor).
@@ -59,4 +57,66 @@ export interface IntervaloAberto {
   professor_id: string
   tipo: TipoIntervalo
   inicio: string
+}
+
+// Tarefa (prescrição/laudo/momento coach) lançada pelo líder para o professor.
+export interface Tarefa {
+  id: string
+  aluno_id: string
+  professor_id: string
+  tipo: TipoTarefa
+  data: string
+  status: StatusTarefa
+  observacao: string | null
+  created_at: string
+}
+
+export interface TarefaComRelacoes extends Tarefa {
+  alunos: Pick<Aluno, 'id' | 'nome'>
+  professores: Pick<Professor, 'id' | 'nome'>
+}
+
+// Linha de vw_atendimentos (relatório de atendimentos, passo 5).
+export interface LinhaAtendimento {
+  id: string
+  data: string
+  inicio: string
+  fim: string | null
+  em_andamento: boolean
+  duracao_min: number
+  aluno_id: string
+  aluno_nome: string
+  aluno_classificacao: Classificacao
+  professor_id: string
+  professor_nome: string
+  professor_funcao: string | null
+}
+
+// Linha de vw_atendimentos_por_professor (produtividade, passo 5).
+export interface LinhaAtendimentosPorProfessor {
+  data: string
+  professor_id: string
+  professor_nome: string
+  total_atendimentos: number
+  minutos_totais: number
+  duracao_media_min: number
+}
+
+// Linha de vw_tarefas_por_professor_dia (produtividade, passo 5).
+export interface LinhaTarefasPorProfessor {
+  data: string
+  professor_id: string
+  professor_nome: string
+  total_pendentes: number
+  total_concluidas: number
+  total_canceladas: number
+}
+
+// Linha combinada (atendimentos + tarefas) para a tabela de produtividade.
+export interface LinhaProdutividade {
+  data: string
+  professor_id: string
+  professor_nome: string
+  total_atendimentos: number
+  total_tarefas_concluidas: number
 }

@@ -108,8 +108,11 @@ Do passo 1 ao 5, o Hostess já pode ser desligado.
 Setup do ambiente documentado em `SETUP.md`. Para aplicar novas migrations: `npx supabase db push` (o projeto já está linkado; o aviso de Docker no fim é inofensivo).
 
 - **Passo 3 ✅** — painel de sala (`src/app/sala`) com cards de professor arrastáveis (posição persistida em `pos_x`/`pos_y`), alocação manual de aluno com alertas visíveis, início/fim de atendimento, e atualização em tempo real via Supabase Realtime (publication `supabase_realtime` cobrindo `atendimentos` e `professores`).
+- **Intervalo do professor ✅** — bolinha amarela no painel de sala. Não é self-service (fica pra fase futura do PWA): a recepção clica "Iniciar intervalo" no card livre, escolhe o tipo (almoço/lanche/janta/outro — enum `tipo_intervalo`, coluna `lanches.tipo`), e "Encerrar intervalo" fecha. Realtime cobre `lanches` desde a migration `20260717090000`.
+- **Passo 4 ✅** — tarefas dos professores (`src/app/tarefas`): criar/editar/excluir, marcar concluída, listagem agrupada por professor. Usa a tabela `tarefas` e os enums `tipo_tarefa`/`status_tarefa` já existentes desde o schema inicial.
+- **Passo 5 ✅** — relatórios (`src/app/relatorios`): filtro de período, tabela de atendimentos (`vw_atendimentos`) e produtividade por professor (`vw_atendimentos_por_professor` + nova view `vw_tarefas_por_professor_dia`, combinadas por chave professor+data — agregação em si continua toda no banco). Exportação para Excel (`xlsx`) e PDF (`jspdf` + `jspdf-autotable`) — rodar `npm install xlsx jspdf jspdf-autotable`.
 
-**Próximo:** passo 4 (tarefas dos professores).
+**Próximo:** passo 6 (lanche self-service + app do professor, PWA) — não é prioridade imediata do MVP.
 
 ## Fases futuras (não implementar agora)
 

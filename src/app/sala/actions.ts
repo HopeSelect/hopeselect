@@ -68,3 +68,44 @@ export async function atualizarPosicaoProfessor(
   if (error) return { erro: error.message }
   return null
 }
+
+// Inicia um intervalo (almoço/lanche/janta) para o professor.
+// Regra do MVP: não é self-service, a recepção que marca.
+export async function iniciarIntervalo(
+  professorId: string,
+  tipo: string,
+): Promise<ResultadoAcao> {
+  const supabase = await criarClienteServer()
+
+  const { data: aberto } = await supabase
+    .from('lanches')
+    .select('id')
+    .eq('professor_id', professorId)
+    .is('fim', null)
+    .maybeSingle()
+
+  if (aberto) return { erro: 'Este professor já está em intervalo.' }
+
+  const { error } = await supabase.from('lanches').insert({
+    professor_id: professorId,
+    tipo,
+  })
+  if (error) return { erro: error.message }
+
+  revalidatePath('/sala')
+  return null
+}
+
+// Encerra o intervalo em aberto.
+export async function finalizarIntervalo(intervaloId: string): Promise<ResultadoAcao> {
+  const supabase = await criarClienteServer()
+  const { error } = await supabase
+    .from('lanches')
+    .update({ fim: new Date().toISOString() })
+    .eq('id', intervaloId)
+    .is('fim', null)
+  if (error) return { erro: error.message }
+
+  revalidatePath('/sala')
+  return null
+}
