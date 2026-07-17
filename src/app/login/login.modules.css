@@ -1,0 +1,131 @@
+/* ================================================================
+   LOGIN — primeira impressão do sistema para o cliente
+   ================================================================
+   É a única tela "de vitrine" — todas as outras são operacionais e
+   priorizam densidade. Aqui há espaço para respirar: mais espaço em
+   branco, gradiente de marca sutil, cartão elevado. Isso segue o
+   princípio de "primeira impressão" em IHC — o usuário decide em
+   segundos se confia no sistema, e essa confiança é justamente o
+   que falta na experiência atual com o Hostess.
+   ================================================================ */
+
+.pagina {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background:
+    radial-gradient(circle at 15% 20%, var(--brand-100) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, var(--brand-50) 0%, transparent 40%),
+    var(--neutral-50);
+}
+
+.cartao {
+  width: 100%;
+  max-width: 24rem;
+  padding: var(--space-8) var(--space-6) var(--space-6);
+  background: var(--neutral-0);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border-top: 3px solid var(--brand-500);
+}
+
+.cabecalho {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.marcaIcone {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--brand-400), var(--brand-700));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-0);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.titulo {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+
+.subtitulo {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+}
+
+.campo {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-700);
+  margin-bottom: var(--space-4);
+}
+
+.input {
+  margin-top: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1.5px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: 400;
+  color: var(--neutral-900);
+  background: var(--neutral-0);
+  transition: border-color var(--dur-base) var(--ease-padrao),
+              box-shadow var(--dur-base) var(--ease-padrao);
+}
+.input:hover {
+  border-color: var(--neutral-400);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.erro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cor-erro-bg);
+  color: var(--cor-erro);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.botao {
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--brand-600);
+  color: var(--neutral-0);
+  font-size: var(--text-base);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-padrao),
+              transform var(--dur-rapida) var(--ease-padrao);
+}
+.botao:hover:not(:disabled) {
+  background: var(--brand-700);
+}
+.botao:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.botao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
