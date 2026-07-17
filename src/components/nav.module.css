@@ -1,0 +1,97 @@
+/* ================================================================
+   NAV — cabeçalho das telas internas
+   ================================================================
+   Gestalt: a barra fixa no topo (position: sticky) cria "continuidade"
+   — o usuário nunca perde a referência de onde está no sistema,
+   mesmo rolando uma lista longa de alunos.
+   O indicador da rota ativa (sublinhado + fundo) usa contraste de cor
+   sutil, não um botão cheio: em uma barra de navegação, o item ativo
+   deve se destacar o suficiente para ser notado no canto do olho,
+   sem competir com o conteúdo da página.
+   ================================================================ */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--neutral-0);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.nav {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--neutral-900);
+  white-space: nowrap;
+  margin-right: var(--space-4);
+}
+
+.marcaPonto {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.link {
+  position: relative;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--neutral-600);
+  font-weight: 500;
+  transition: color var(--dur-base) var(--ease-padrao),
+              background var(--dur-base) var(--ease-padrao);
+}
+.link:hover {
+  color: var(--neutral-900);
+  background: var(--neutral-100);
+}
+
+.linkAtivo {
+  color: var(--brand-700);
+  background: var(--brand-50);
+}
+.linkAtivo::after {
+  content: "";
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: -1px;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--brand-500);
+}
+
+.sair {
+  margin-left: auto;
+  color: var(--neutral-400);
+  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  transition: color var(--dur-base) var(--ease-padrao),
+              background var(--dur-base) var(--ease-padrao);
+}
+.sair:hover {
+  color: var(--cor-erro);
+  background: var(--cor-erro-bg);
+}
