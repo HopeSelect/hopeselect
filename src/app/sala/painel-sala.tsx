@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import estilos from './sala.module.css'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 import { CLASSIFICACOES, TIPOS_INTERVALO } from '@/lib/utils'
@@ -14,16 +13,50 @@ import {
 } from './actions'
 import { BuscarAluno } from './buscar-aluno'
 
-const LARGURA_CARD = 240
 const ALTURA_CARD = 168
 const GAP = 16
-const COLUNAS = 5
+const LARGURA_CARD_MIN = 168
+const LARGURA_CARD_MAX = 240
 
-// Posição inicial em grade para professores que ainda não foram arrastados.
-function posicaoGrade(indice: number) {
+// Antes: COLUNAS e LARGURA_CARD eram constantes fixas (5 colunas, 240px),
+// o que exigia ~1300px de largura só pra caber a primeira linha de cards.
+// Num celular isso obrigava scroll horizontal constante pra tela mais usada
+// do sistema. Agora colunas e largura do card são calculadas a partir da
+// largura real da tela (ver useLayoutCanvas), então o grid inicial sempre
+// cabe na viewport — o "canvas arrastável" continua existindo (é requisito
+// do cliente), só a disposição inicial que se adapta.
+function useLayoutCanvas() {
+  const [larguraJanela, setLarguraJanela] = useState<number>(() =>
+    typeof window === 'undefined' ? 1280 : window.innerWidth,
+  )
+
+  useEffect(() => {
+    function aoRedimensionar() {
+      setLarguraJanela(window.innerWidth)
+    }
+    aoRedimensionar()
+    window.addEventListener('resize', aoRedimensionar)
+    return () => window.removeEventListener('resize', aoRedimensionar)
+  }, [])
+
+  // p-4 do container = 16px de cada lado
+  const larguraUtil = Math.max(larguraJanela - GAP * 2, LARGURA_CARD_MIN)
+
+  const colunas =
+    larguraJanela < 480 ? 1 : larguraJanela < 768 ? 2 : larguraJanela < 1100 ? 3 : larguraJanela < 1400 ? 4 : 5
+
+  const larguraCard = Math.min(
+    LARGURA_CARD_MAX,
+    Math.max(LARGURA_CARD_MIN, Math.floor((larguraUtil - (colunas - 1) * GAP) / colunas)),
+  )
+
+  return { colunas, larguraCard, larguraUtil }
+}
+
+function posicaoGrade(indice: number, colunas: number, larguraCard: number) {
   return {
-    x: GAP + (indice % COLUNAS) * (LARGURA_CARD + GAP),
-    y: GAP + Math.floor(indice / COLUNAS) * (ALTURA_CARD + GAP),
+    x: GAP + (indice % colunas) * (larguraCard + GAP),
+    y: GAP + Math.floor(indice / colunas) * (ALTURA_CARD + GAP),
   }
 }
 
@@ -50,6 +83,7 @@ export function PainelSala({
   const [intervalos, setIntervalos] = useState(intervalosIniciais)
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
+  const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
 
   // Relógio para os cronômetros dos cards (atualiza a cada 30s, sem revalidar dados).
   useEffect(() => {
@@ -163,10 +197,17 @@ export function PainelSala({
       {professores.map((professor, indice) => {
         const atendimento = atendimentos.find((a) => a.professor_id === professor.id)
         const intervalo = intervalos.find((i) => i.professor_id === professor.id)
-        const grade = posicaoGrade(indice)
-        const pos = {
+        const grade = posicaoGrade(indice, colunas, larguraCard)
+        const posBruta = {
           x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
           y: Number.isFinite(professor.pos_y) ? (professor.pos_y as number) : grade.y,
+        }
+        // Clampa a posição salva (pode ter sido arrastada numa tela grande)
+        // pra caber na largura atual — sem isso, um card arrastado pra
+        // direita no desktop simplesmente some fora da viewport no celular.
+        const pos = {
+          x: Math.min(posBruta.x, Math.max(GAP, larguraUtil - larguraCard)),
+          y: posBruta.y,
         }
 
         return (
@@ -174,6 +215,7 @@ export function PainelSala({
             key={professor.id}
             professor={professor}
             pos={pos}
+            larguraCard={larguraCard}
             atendimento={atendimento}
             intervalo={intervalo}
             agora={agora}
@@ -211,6 +253,7 @@ export function PainelSala({
 function CardProfessor({
   professor,
   pos,
+  larguraCard,
   atendimento,
   intervalo,
   agora,
@@ -223,6 +266,7 @@ function CardProfessor({
 }: {
   professor: Professor
   pos: { x: number; y: number }
+  larguraCard: number
   atendimento: AtendimentoAberto | undefined
   intervalo: IntervaloAberto | undefined
   agora: number
@@ -283,7 +327,7 @@ function CardProfessor({
   return (
     <div
       className="absolute rounded-lg border border-gray-200 bg-white shadow-sm"
-      style={{ left: pos.x, top: pos.y, width: LARGURA_CARD }}
+      style={{ left: pos.x, top: pos.y, width: larguraCard }}
     >
       <div
         ref={cabecalhoRef}
