@@ -163,8 +163,16 @@
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: calc(48px + var(--space-6));
+}
+
+/* position: sticky só faz sentido no layout de 2 colunas (desktop) —
+   no mobile o formulário fica empilhado abaixo da lista e não deve
+   grudar no topo ao rolar. */
+@media (min-width: 64rem) {
+  .painelForm {
+    position: sticky;
+    top: calc(48px + var(--space-6));
+  }
 }
 
 .painelTitulo {
