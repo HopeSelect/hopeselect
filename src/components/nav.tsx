@@ -9,10 +9,10 @@ export function Nav() {
         <Link href="/" className="font-semibold text-gray-900">
           Hope Select
         </Link>
-         <Link href="/sala" className="text-gray-600 hover:text-gray-900">
+        <form ac
+           <Link href="/sala" className="text-gray-600 hover:text-gray-900">
           Sala
         </Link>
-        <form ac
         <Link href="/professores" className="text-gray-600 hover:text-gray-900">
           Professores
         </Link>
