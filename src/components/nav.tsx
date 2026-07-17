@@ -1,32 +1,50 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { sair } from '@/lib/acoes-auth'
+import estilos from './nav.module.css'
+
+const ITENS = [
+  { href: '/sala', rotulo: 'Sala' },
+  { href: '/professores', rotulo: 'Professores' },
+  { href: '/alunos', rotulo: 'Alunos' },
+  { href: '/tarefas', rotulo: 'Tarefas' },
+  { href: '/relatorios', rotulo: 'Relatórios' },
+]
 
 // Cabeçalho das telas internas. A tela de login não usa este componente.
 export function Nav() {
+  const rotaAtual = usePathname()
+
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3 text-sm">
-        <Link href="/" className="font-semibold text-gray-900">
+    <header className={estilos.header}>
+      <nav className={estilos.nav}>
+        <Link href="/" className={estilos.marca}>
+          <span className={estilos.marcaPonto} aria-hidden />
           Hope Select
         </Link>
-        <form ac
-        <Link href="/professores" className="text-gray-600 hover:text-gray-900">
-          Professores
-        </Link>
-        <Link href="/alunos" className="text-gray-600 hover:text-gray-900">
-          Alunos
-        </Link>
-        <Link href="/tarefas" className="text-gray-600 hover:text-gray-900">
-          Tarefas
-        </Link>
-        <Link href="/relatorios" className="text-gray-600 hover:text-gray-900">
-          Relatórios
-        </Link>
-         <Link href="/sala" className="text-gray-600 hover:text-gray-900">
-          Sala
-        </Link>
-        <form action={sair} className="ml-auto">
-          <button className="text-gray-500 hover:text-gray-900">Sair</button>
+
+        <div className={estilos.links}>
+          {ITENS.map((item) => {
+            const ativo = rotaAtual?.startsWith(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={ativo ? `${estilos.link} ${estilos.linkAtivo}` : estilos.link}
+                aria-current={ativo ? 'page' : undefined}
+              >
+                {item.rotulo}
+              </Link>
+            )
+          })}
+        </div>
+
+        <form action={sair} className={estilos.sair} style={{ marginLeft: 'auto' }}>
+          <button type="submit" style={{ all: 'unset', cursor: 'pointer' }}>
+            Sair
+          </button>
         </form>
       </nav>
     </header>
