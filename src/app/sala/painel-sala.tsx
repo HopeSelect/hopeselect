@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import estilos from './sala.module.css'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 import { CLASSIFICACOES, TIPOS_INTERVALO } from '@/lib/utils'
