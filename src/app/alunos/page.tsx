@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Nav } from '@/components/nav'
+import estilos from './alunos.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, diasDesde } from '@/lib/utils'
 import type { Aluno } from '@/lib/tipos'
