@@ -1,0 +1,214 @@
+/* ================================================================
+   INÍCIO — dashboard com resumo do dia
+   ================================================================
+   Mesma lógica visual das outras telas (cards brancos, borda sutil,
+   raio --radius-lg), só que aqui a unidade de leitura é o número
+   grande (--text-3xl) — a recepção deve captar o resumo do turno
+   num relance, antes mesmo de abrir a Sala.
+   ================================================================ */
+
+.pagina {
+  max-width: 74rem;
+}
+
+.boasVindas {
+  margin: 0 0 var(--space-6);
+  font-size: var(--text-base);
+  color: var(--neutral-500);
+}
+
+.gradeStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.cardStat {
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.statRotulo {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  margin-bottom: var(--space-2);
+}
+
+.statValor {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  color: var(--neutral-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.gradeMeio {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.cardPainel {
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.painelTitulo {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-4);
+}
+
+/* ---------- Sparkline (últimos 7 dias) ---------- */
+
+.sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  height: 130px;
+}
+
+.sparklineColuna {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+.sparklineBarraTrilho {
+  flex: 1;
+  width: 100%;
+  max-width: 34px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sparklineBarra {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 5px 5px 0 0;
+  background: var(--brand-500);
+  transition: height var(--dur-lenta) var(--ease-padrao);
+}
+
+.sparklineLabel {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  text-transform: capitalize;
+}
+
+/* ---------- Alertas recentes ---------- */
+
+.listaAlertas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.semAlertas {
+  margin: 0;
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+}
+
+.linhaAlerta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--neutral-50);
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  color: var(--neutral-0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.avatar[data-classe='A'] { background: var(--classe-a); }
+.avatar[data-classe='B'] { background: var(--classe-b); }
+.avatar[data-classe='C'] { background: var(--classe-c); }
+.avatar[data-classe='R'] { background: var(--classe-r); }
+
+.linhaAlertaTexto {
+  min-width: 0;
+}
+
+.linhaAlertaNome {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.linhaAlertaAlertas {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Atalhos ---------- */
+
+.gradeAtalhos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+}
+
+.atalho {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-200);
+  background: var(--neutral-0);
+  color: var(--neutral-900);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: border-color var(--dur-base) var(--ease-padrao),
+    box-shadow var(--dur-base) var(--ease-padrao);
+}
+.atalho:hover {
+  border-color: var(--brand-300);
+  box-shadow: var(--shadow-sm);
+  color: var(--brand-700);
+}
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 64rem) {
+  .gradeStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gradeMeio {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 30rem) {
+  .gradeStats {
+    grid-template-columns: 1fr;
+  }
+}

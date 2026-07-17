@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Nav } from '@/components/nav'
+import { AppShell } from '@/components/app-shell'
 import estilos from './alunos.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, diasDesde } from '@/lib/utils'
@@ -21,11 +21,9 @@ export default async function AlunosPage({
   const alunos = (data ?? []) as Aluno[]
 
   return (
-    <>
-      <Nav />
+    <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Alunos</h1>
+        <div className="flex items-center justify-end">
           <Link
             href="/alunos/novo"
             className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
@@ -86,6 +84,6 @@ export default async function AlunosPage({
           })}
         </div>
       </main>
-    </>
+    </AppShell>
   )
 }

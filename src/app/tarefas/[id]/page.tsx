@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { Nav } from '@/components/nav'
+import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import type { Tarefa } from '@/lib/tipos'
 import { TarefaForm } from '../tarefa-form'
@@ -29,11 +29,9 @@ export default async function EditarTarefaPage({
   }
 
   return (
-    <>
-      <Nav />
+    <AppShell titulo="Editar tarefa">
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Editar tarefa</h1>
+        <div className="flex items-center justify-end">
           <form action={remover}>
             <button className="text-sm text-red-600 hover:text-red-800">Excluir</button>
           </form>
@@ -47,6 +45,6 @@ export default async function EditarTarefaPage({
           />
         </div>
       </main>
-    </>
+    </AppShell>
   )
 }

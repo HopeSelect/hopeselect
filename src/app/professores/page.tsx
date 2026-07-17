@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import estilos from './professores.module.css'
-import { Nav } from '@/components/nav'
+import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { GENEROS } from '@/lib/utils'
 import type { Professor } from '@/lib/tipos'
@@ -17,11 +17,8 @@ export default async function ProfessoresPage() {
   const professores = (data ?? []) as Professor[]
 
   return (
-    <>
-      <Nav />
+    <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Professores</h1>
-
         {error && (
           <p className="mt-2 text-sm text-red-600">
             Erro ao carregar: {error.message}
@@ -82,6 +79,6 @@ export default async function ProfessoresPage() {
           </aside>
         </div>
       </main>
-    </>
+    </AppShell>
   )
 }

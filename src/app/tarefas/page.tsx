@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Nav } from '@/components/nav'
+import { AppShell } from '@/components/app-shell'
 import estilos from './tarefas.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { STATUS_TAREFA, TIPOS_TAREFA, formatarDataTarefa } from '@/lib/utils'
@@ -31,10 +31,8 @@ export default async function TarefasPage() {
   }
 
   return (
-    <>
-      <Nav />
+    <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Tarefas dos professores</h1>
         <p className="mt-1 text-sm text-gray-500">
           Prescrição de treino, laudo e momento coach.
         </p>
@@ -103,6 +101,6 @@ export default async function TarefasPage() {
           </aside>
         </div>
       </main>
-    </>
+    </AppShell>
   )
 }
