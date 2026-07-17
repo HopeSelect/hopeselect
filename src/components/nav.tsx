@@ -10,9 +10,6 @@ export function Nav() {
           Hope Select
         </Link>
         <form ac
-           <Link href="/sala" className="text-gray-600 hover:text-gray-900">
-          Sala
-        </Link>
         <Link href="/professores" className="text-gray-600 hover:text-gray-900">
           Professores
         </Link>
@@ -24,6 +21,9 @@ export function Nav() {
         </Link>
         <Link href="/relatorios" className="text-gray-600 hover:text-gray-900">
           Relatórios
+        </Link>
+         <Link href="/sala" className="text-gray-600 hover:text-gray-900">
+          Sala
         </Link>
         <form action={sair} className="ml-auto">
           <button className="text-gray-500 hover:text-gray-900">Sair</button>
