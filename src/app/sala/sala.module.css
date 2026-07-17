@@ -1,0 +1,312 @@
+/* ================================================================
+   SALA — painel operacional central, telas mais usadas do sistema
+   ================================================================
+   Este é o único arquivo que eu não pude casar 100% com o JSX real
+   (só vi fragmentos de painel-sala.tsx nesta conversa). As classes
+   abaixo estão nomeadas para bater com a estrutura que apareceu no
+   projeto: um "canvas" com cards de professor posicionados em
+   x/y absoluto, cabeçalho arrastável, badge de intervalo e um
+   popover de busca de aluno. Ajuste os nomes se o componente real
+   usar outra divisão — a lógica de design continua valendo.
+
+   PRINCÍPIOS APLICADOS AQUI:
+
+   • Figura-fundo (Gestalt): o canvas (.tela) usa um fundo levemente
+     texturizado e mais escuro que os cards, para que os cards
+     "flutuem" visualmente — reforça o affordance de "isto se
+     arrasta", que é o requisito não-negociável nº1 do cliente.
+
+   • Proximidade (Gestalt): dentro do card, nome do aluno + badge de
+     classificação + chips de alerta ficam colados (gap pequeno),
+     porque são uma unidade de leitura só. O tempo de atendimento
+     fica separado visualmente (canto oposto do card), porque é uma
+     informação de natureza diferente.
+
+   • Pré-atenção / saliência: o estado do professor (livre / ocupado
+     / intervalo) é comunicado por uma barra de cor na borda esquerda
+     do card — visível no campo periférico de visão, sem precisar
+     ler texto. Esse é o mesmo requisito que motivou o pedido
+     original de "cards, nunca lista": leitura espacial rápida.
+
+   • Lei de Fitts (IHC): a área de arraste (cabeçalho do card) e os
+     botões de ação têm altura mínima de 40px — alvo de clique
+     generoso para uso rápido/sob pressão pela recepção.
+
+   • Visibilidade do status do sistema (heurística de Nielsen): o
+     indicador de intervalo pulsa suavemente — chama atenção sem
+     ser irritante — e toda atualização via Realtime herda a mesma
+     transição suave (nunca "pisca" abruptamente).
+   ================================================================ */
+
+.tela {
+  position: relative;
+  flex: 1;
+  min-height: calc(100vh - 120px);
+  overflow: auto;
+  background-color: var(--neutral-100);
+  background-image: radial-gradient(var(--neutral-300) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ---------- Card do professor ---------- */
+
+.card {
+  position: absolute;
+  width: 232px;
+  background: var(--neutral-0);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--neutral-300);
+  overflow: hidden;
+  transition: box-shadow var(--dur-base) var(--ease-padrao),
+              transform var(--dur-rapida) var(--ease-padrao),
+              border-color var(--dur-base) var(--ease-padrao);
+}
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Aplicar quando arrastando.current === true */
+.cardArrastando {
+  box-shadow: var(--shadow-drag);
+  transform: scale(1.02) rotate(0.5deg);
+  z-index: 30;
+  cursor: grabbing;
+}
+
+/* Estados — usar via data-attribute: <div className={estilos.card} data-estado="livre|ocupado|intervalo"> */
+.card[data-estado="livre"]     { border-left-color: var(--neutral-300); }
+.card[data-estado="ocupado"]   { border-left-color: var(--brand-500); }
+.card[data-estado="intervalo"] { border-left-color: var(--classe-b); }
+
+.cardCabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  min-height: 40px;
+  cursor: grab;
+  background: var(--neutral-0);
+  user-select: none;
+  touch-action: none;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid var(--neutral-0);
+  box-shadow: 0 0 0 1px var(--neutral-200);
+  flex-shrink: 0;
+}
+
+.professorInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.professorNome {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--neutral-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.professorFuncao {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bolinha de intervalo — pulso suave, chama atenção no campo periférico */
+.indicadorIntervalo {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--classe-b);
+  flex-shrink: 0;
+  animation: pulso 1.8s ease-in-out infinite;
+}
+@keyframes pulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(180, 83, 9, 0); }
+}
+
+.cardCorpo {
+  padding: 0 var(--space-3) var(--space-3);
+  border-top: 1px solid var(--neutral-100);
+  padding-top: var(--space-3);
+}
+
+/* ---------- Aluno alocado dentro do card ---------- */
+
+.alunoLinha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.alunoNome {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.alertasLinha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.tempo {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Ações ---------- */
+
+.acoes {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.botaoPrimario {
+  flex: 1;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--brand-600);
+  color: var(--neutral-0);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-padrao);
+}
+.botaoPrimario:hover { background: var(--brand-700); }
+
+.botaoSecundario {
+  flex: 1;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--neutral-0);
+  color: var(--neutral-600);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border: 1.5px solid var(--neutral-200);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-padrao),
+              color var(--dur-base) var(--ease-padrao);
+}
+.botaoSecundario:hover {
+  border-color: var(--neutral-400);
+  color: var(--neutral-900);
+}
+
+.botaoPerigo {
+  composes: botaoSecundario;
+  color: var(--cor-erro);
+}
+.botaoPerigo:hover {
+  border-color: var(--cor-erro);
+  background: var(--cor-erro-bg);
+}
+
+/* ---------- Estado vazio ---------- */
+
+.vazio {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--neutral-400);
+  font-size: var(--text-sm);
+}
+
+/* ---------- Popover de busca de aluno (BuscarAluno) ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(21, 23, 22, 0.32);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  z-index: 50;
+}
+
+.painelBusca {
+  width: 100%;
+  max-width: 26rem;
+  background: var(--neutral-0);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.buscaInput {
+  width: 100%;
+  padding: var(--space-4);
+  border: none;
+  border-bottom: 1px solid var(--neutral-200);
+  font-size: var(--text-base);
+  outline: none;
+}
+.buscaInput:focus {
+  border-bottom-color: var(--brand-500);
+}
+
+.buscaResultados {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.buscaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background var(--dur-rapida) var(--ease-padrao);
+  border-bottom: 1px solid var(--neutral-50);
+}
+.buscaItem:hover,
+.buscaItem:focus-visible {
+  background: var(--brand-50);
+}
+
+.buscaItemNome {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.buscaItemAcesso {
+  font-size: var(--text-xs);
+  color: var(--neutral-400);
+  flex-shrink: 0;
+}
