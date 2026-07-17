@@ -1,4 +1,5 @@
 import { Nav } from '@/components/nav'
+import estilos from './relatorios.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES } from '@/lib/utils'
 import type {
