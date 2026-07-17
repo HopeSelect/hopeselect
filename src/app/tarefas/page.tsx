@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Nav } from '@/components/nav'
+import estilos from './tarefas.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { STATUS_TAREFA, TIPOS_TAREFA, formatarDataTarefa } from '@/lib/utils'
 import type { StatusTarefa, TarefaComRelacoes } from '@/lib/tipos'
