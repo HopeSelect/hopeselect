@@ -1,8 +1,142 @@
 @import "tailwindcss";
 
+/* ================================================================
+   HOPE SELECT — TOKENS DE DESIGN
+   ================================================================
+   Esta é a ÚNICA fonte de cor/tipografia/espaçamento do sistema.
+   Os arquivos de cada destino (sala.module.css, professores.module.css
+   etc.) NUNCA declaram um hex novo — sempre consomem uma var(--...)
+   daqui. Isso garante consistência (princípio da similaridade de
+   Gestalt: o mesmo elemento deve parecer igual em qualquer tela) e
+   torna uma futura mudança de marca um edit em um arquivo só.
+   ================================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ---------- Marca: verde-azulado (teal) ----------
+     Por quê teal e não azul puro ou verde puro:
+     1. Verde puro já é o código de "aluno sem restrição" (classe A).
+        Usar verde como cor de marca criaria ruído visual — o olho da
+        recepção precisa distinguir "isto é a interface" de "isto é
+        um alerta médico" em menos de um segundo.
+     2. Azul transmite confiança/calma (psicologia da cor), mas é frio
+        demais para um ambiente de bem-estar/saúde. Teal soma a calma
+        do azul com a vitalidade do verde sem cair em nenhum dos dois
+        significados já ocupados pela classificação do aluno.
+     3. Baixa saturação reduz fadiga visual de quem olha a tela por
+        um turno inteiro — um requisito de HCI tão importante quanto
+        estética para uma tela operacional. */
+  --brand-50:  #f0faf9;
+  --brand-100: #d7f1ee;
+  --brand-200: #ade3dd;
+  --brand-300: #78cec5;
+  --brand-400: #45b3a8;
+  --brand-500: #1f9187;
+  --brand-600: #157770;
+  --brand-700: #14605c;
+  --brand-800: #144d4a;
+  --brand-900: #12403e;
+
+  /* ---------- Neutros ----------
+     Cinza levemente quente (não puramente azulado) — lê como mais
+     "acolhedor" que o cinza frio padrão de dashboard. */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #f8f9f8;
+  --neutral-100: #f1f2f1;
+  --neutral-200: #e2e4e3;
+  --neutral-300: #cbcfcd;
+  --neutral-400: #99a09d;
+  --neutral-500: #6b726f;
+  --neutral-600: #4f5654;
+  --neutral-700: #383d3b;
+  --neutral-800: #232726;
+  --neutral-900: #151716;
+
+  /* ---------- Classificação do aluno ----------
+     Cor aqui é REGRA DE NEGÓCIO, não escolha estética — o cliente
+     já definiu o significado. O trabalho de design foi só calibrar
+     o tom exato para ter contraste AA como badge preenchido (texto
+     branco em cima) e para reforçar a lógica psicológica por trás
+     de cada cor:
+       A verde  = "siga", sem fricção, tom mais confiante que um
+                  verde neon (que lembraria alerta de emergência)
+       B âmbar  = atenção sem pânico — NÃO usamos amarelo puro porque
+                  amarelo puro + texto branco falha contraste (WCAG);
+                  âmbar queimado resolve legibilidade sem perder o
+                  significado de "cautela"
+       C vermelho = pare e confira — vermelho é a cor com resposta
+                  fisiológica mais rápida (maior saliência), correto
+                  usá-la só aqui, nunca decorativamente
+       R roxo   = deliberadamente FORA do eixo verde→amarelo→vermelho.
+                  "Resgate/faltoso" não é um nível de risco médico, é
+                  outra categoria — roxo comunica "preste atenção mas
+                  não é a mesma escala de C", evitando que a recepção
+                  confunda "aluno some há dias" com "aluno com
+                  restrição grave" */
+  --classe-a: #1f9d5c;
+  --classe-a-bg: #e7f7ee;
+  --classe-b: #b45309;
+  --classe-b-bg: #fdf1e0;
+  --classe-c: #dc2626;
+  --classe-c-bg: #fdeaea;
+  --classe-r: #7c3aed;
+  --classe-r-bg: #f3ebfd;
+
+  /* ---------- Semântica de sistema ---------- */
+  --cor-erro: #dc2626;
+  --cor-erro-bg: #fdeaea;
+  --cor-sucesso: var(--brand-600);
+  --cor-sucesso-bg: var(--brand-50);
+  --cor-atencao-texto: #b45309;
+
+  /* ---------- Tipografia ----------
+     Escala modular ~1.2. Geist (já carregada no layout raiz) é
+     geométrica e altamente legível em tamanho pequeno — mantida
+     de propósito, é a escolha certa para uma tela densa de dados. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  /* ---------- Espaçamento (base 4px) ---------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* ---------- Raio ----------
+     Elementos que representam PESSOAS (card de professor, avatar)
+     recebem raio maior — lê como mais humano. Elementos de dado
+     denso (linha de tabela) recebem raio menor — lê como mais
+     "técnico/preciso". Não é aleatório, é intencional por contexto. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* ---------- Elevação ----------
+     Profundidade = affordance de "isto é arrastável/clicável"
+     (Gestalt figura-fundo). Quanto mais a sombra "solta" o elemento
+     do fundo, mais interativo ele deve parecer. */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 21, 0.06);
+  --shadow-md: 0 2px 8px rgba(15, 23, 21, 0.08), 0 1px 2px rgba(15, 23, 21, 0.05);
+  --shadow-lg: 0 10px 28px rgba(15, 23, 21, 0.14), 0 2px 6px rgba(15, 23, 21, 0.06);
+  --shadow-drag: 0 20px 44px rgba(15, 23, 21, 0.24), 0 6px 12px rgba(15, 23, 21, 0.10);
+
+  --ease-padrao: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-rapida: 120ms;
+  --dur-base: 180ms;
+  --dur-lenta: 280ms;
+
+  --background: var(--neutral-50);
+  --foreground: var(--neutral-900);
 }
 
 @theme inline {
@@ -12,15 +146,76 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco sempre visível — nunca outline:none sem substituto (acessibilidade). */
+:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--brand-200);
+  color: var(--brand-900);
+}
+
+/* ----------------------------------------------------------------
+   Badge de classificação — o ÚNICO elemento verdadeiramente global,
+   porque aparece em toda tela que mostra um aluno (busca na sala,
+   lista de alunos, relatórios, tarefas). Repetir exatamente a mesma
+   forma/cor em qualquer lugar do sistema é o que permite à recepção
+   reconhecer o risco por forma+cor antes mesmo de ler a letra —
+   reconhecimento > leitura, um dos princípios centrais de IHC.
+   A letra nunca é removida: cor sozinha não é acessível (daltonismo).
+   ---------------------------------------------------------------- */
+.badge-classificacao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--neutral-0);
+  flex-shrink: 0;
+}
+.badge-classificacao[data-classe="A"] { background: var(--classe-a); }
+.badge-classificacao[data-classe="B"] { background: var(--classe-b); }
+.badge-classificacao[data-classe="C"] { background: var(--classe-c); }
+.badge-classificacao[data-classe="R"] { background: var(--classe-r); }
+
+/* Chip de alerta livre (GRÁVIDA, só treina com mulher, cheque a devolver).
+   Visualmente distinto do badge de classificação (retangular vs. pill)
+   para não competir por atenção com a classificação — são duas
+   informações diferentes e devem parecer diferentes (similaridade
+   usada ao contrário, de propósito, para separar categorias). */
+.chip-alerta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--classe-c-bg);
+  color: var(--cor-erro);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
 }
