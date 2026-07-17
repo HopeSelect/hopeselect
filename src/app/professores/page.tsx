@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import estilos from './professores.module.css'
 import { Nav } from '@/components/nav'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { GENEROS } from '@/lib/utils'
