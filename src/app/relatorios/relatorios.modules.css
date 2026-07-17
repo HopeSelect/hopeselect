@@ -1,0 +1,209 @@
+/* ================================================================
+   RELATÓRIOS — filtro de período + tabelas + exportação
+   ================================================================
+   É a tela que substitui a redigitação manual — o requisito do
+   cliente é confiança nos números, então o desenho aqui prioriza
+   escaneabilidade tabular: zebra striping (similaridade em linhas
+   alternadas ajuda o olho a não "pular" de linha ao ler), cabeçalho
+   fixo ao rolar, e alinhamento à direita para números (convenção de
+   leitura de tabela financeira/planilha, o público já está
+   acostumado com isso vindo do Excel).
+   Os botões de exportação usam ícone + texto e ficam sempre no
+   mesmo canto superior direito do bloco — previsibilidade de
+   posição é parte da heurística de consistência de Nielsen.
+   ================================================================ */
+
+.pagina {
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+  flex: 1;
+}
+
+.titulo {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+
+.filtros {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--neutral-600);
+}
+
+.inputFiltro {
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  background: var(--neutral-0);
+}
+.inputFiltro:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.botaoFiltrar {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--brand-600);
+  color: var(--neutral-0);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.botaoFiltrar:hover {
+  background: var(--brand-700);
+}
+
+/* ---------- Bloco de tabela ---------- */
+
+.blocoTabela {
+  margin-top: var(--space-6);
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.blocoCabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.blocoTitulo {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--neutral-900);
+}
+
+.exportacoes {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.botaoExportar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--neutral-0);
+  border: 1.5px solid var(--neutral-200);
+  color: var(--neutral-700);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-padrao),
+              color var(--dur-base) var(--ease-padrao);
+}
+.botaoExportar:hover {
+  border-color: var(--brand-400);
+  color: var(--brand-700);
+}
+
+.tabelaWrap {
+  overflow-x: auto;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.tabela thead th {
+  position: sticky;
+  top: 0;
+  background: var(--neutral-50);
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--neutral-500);
+  border-bottom: 1px solid var(--neutral-200);
+  white-space: nowrap;
+}
+
+.tabela th[data-num="true"],
+.tabela td[data-num="true"] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela tbody td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--neutral-800);
+  border-bottom: 1px solid var(--neutral-100);
+  white-space: nowrap;
+}
+
+.tabela tbody tr:nth-child(even) {
+  background: var(--neutral-50);
+}
+.tabela tbody tr:hover {
+  background: var(--brand-50);
+}
+
+.vazio {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--neutral-400);
+  font-size: var(--text-sm);
+}
+
+/* ---------- Cartões de resumo (KPIs), se a tela tiver ---------- */
+
+.kpis {
+  margin-top: var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-4);
+}
+
+.kpiCard {
+  padding: var(--space-4);
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+
+.kpiRotulo {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kpiValor {
+  margin-top: var(--space-1);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--neutral-900);
+  font-variant-numeric: tabular-nums;
+}
