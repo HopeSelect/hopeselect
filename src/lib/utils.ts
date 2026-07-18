@@ -42,6 +42,7 @@ export const TIPOS_TAREFA: Record<TipoTarefa, string> = {
   prescricao: 'Prescrição de treino',
   laudo: 'Laudo',
   momento_coach: 'Momento coach',
+  lanche: 'Lanche',
 }
 
 export const STATUS_TAREFA: Record<StatusTarefa, { rotulo: string; classe: string }> = {
