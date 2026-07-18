@@ -16,6 +16,7 @@ export default async function SalaPage() {
       .from('professores')
       .select('*')
       .eq('ativo', true)
+    .eq('em_sala', true)
       .order('nome'),
     supabase
       .from('atendimentos')
