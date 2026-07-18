@@ -1,9 +1,11 @@
 // Tipos do domínio (espelham os enums e tabelas das migrations).
+
 export type Classificacao = 'A' | 'B' | 'C' | 'R'
 export type Papel = 'admin' | 'lider' | 'recepcao' | 'professor'
 export type Genero = 'feminino' | 'masculino' | 'outro'
 export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach' | 'lanche'
-export type StatusTarefa = 'pendente' | 'concluida' | 'cancelada'
+export type StatusTarefa = 'a_realizar' | 'concluida' | 'cancelada' | 'agendar' | 'realizar_novamente'
+
 export interface Professor {
   id: string
   nome: string
@@ -17,6 +19,7 @@ export interface Professor {
   pos_y: number | null
   created_at: string
 }
+
 export interface Aluno {
   id: string
   matricula: string | null
@@ -30,10 +33,9 @@ export interface Aluno {
   origem: string | null
   created_at: string
 }
-// Aluno em busca/alocação: só os campos que a recepção precisa ler de relance.
+
 export type AlunoResumo = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes'>
-// Atendimento em aberto no painel de sala, já com o aluno embutido
-// (select aninhado via FK aluno_id -> alunos).
+
 export interface AtendimentoAberto {
   id: string
   aluno_id: string
@@ -42,15 +44,16 @@ export interface AtendimentoAberto {
   tarefa: TipoTarefa | null
   alunos: AlunoResumo
 }
+
 export type TipoIntervalo = 'almoco' | 'lanche' | 'janta' | 'outro'
-// Intervalo em aberto no painel de sala (bolinha amarela no card do professor).
+
 export interface IntervaloAberto {
   id: string
   professor_id: string
   tipo: TipoIntervalo
   inicio: string
 }
-// Tarefa (prescrição/laudo/momento coach) lançada pelo líder para o professor.
+
 export interface Tarefa {
   id: string
   aluno_id: string
@@ -61,11 +64,27 @@ export interface Tarefa {
   observacao: string | null
   created_at: string
 }
+
 export interface TarefaComRelacoes extends Tarefa {
-  alunos: Pick<Aluno, 'id' | 'nome'>
+  alunos: Pick<Aluno, 'id' | 'nome' | 'matricula'>
   professores: Pick<Professor, 'id' | 'nome'>
 }
-// Linha de vw_atendimentos (relatório de atendimentos, passo 5).
+
+// Linha de vw_tarefas_detalhe (relatório de Tarefas: filtros, exportação, gráficos).
+export interface LinhaTarefa {
+  id: string
+  data: string
+  tipo: TipoTarefa
+  status: StatusTarefa
+  observacao: string | null
+  aluno_id: string
+  aluno_matricula: string | null
+  aluno_nome: string
+  professor_id: string
+  professor_nome: string
+  created_at: string
+}
+
 export interface LinhaAtendimento {
   id: string
   data: string
@@ -84,7 +103,7 @@ export interface LinhaAtendimento {
   professor_nome: string
   professor_funcao: string | null
 }
-// Linha de vw_atendimentos_por_professor (produtividade, passo 5).
+
 export interface LinhaAtendimentosPorProfessor {
   data: string
   professor_id: string
@@ -93,7 +112,7 @@ export interface LinhaAtendimentosPorProfessor {
   minutos_totais: number
   duracao_media_min: number
 }
-// Linha de vw_tarefas_por_professor_dia (produtividade, passo 5).
+
 export interface LinhaTarefasPorProfessor {
   data: string
   professor_id: string
@@ -102,7 +121,7 @@ export interface LinhaTarefasPorProfessor {
   total_concluidas: number
   total_canceladas: number
 }
-// Linha combinada (atendimentos + tarefas) para a tabela de produtividade.
+
 export interface LinhaProdutividade {
   data: string
   professor_id: string
