@@ -32,7 +32,7 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
     let cancelado = false
 
     async function montar() {
-      await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js', 'Chart')
+     await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js', 'Chart')
       if (cancelado) return
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const Chart = (window as any).Chart
