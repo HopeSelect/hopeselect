@@ -84,9 +84,10 @@ export interface LinhaAtendimento {
   inicio: string
   fim: string | null
   em_andamento: boolean
-  duracao_min: number
+ duracao_min: number
   duracao_hms: string
   entrada_hms: string
+  saida_hms: string | null
   aluno_id: string
   aluno_nome: string
   aluno_classificacao: Classificacao
