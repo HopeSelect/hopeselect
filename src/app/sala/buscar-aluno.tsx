@@ -22,26 +22,25 @@ export function BuscarAluno({
   const [erro, setErro] = useState<string | null>(null)
   const [alocandoId, setAlocandoId] = useState<string | null>(null)
 
+  // Carrega a lista assim que o painel abre — todos os alunos por padrão
+  // (dá pra rolar o mouse e escolher), ou filtrados pelo termo digitado.
   useEffect(() => {
-    if (termo.trim().length < 2) {
-      setResultados([])
-      return
-    }
     let cancelado = false
     setBuscando(true)
     const t = setTimeout(async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('alunos')
         .select('id, nome, classificacao, alertas, ultimo_acesso')
-        .ilike('nome', `%${termo.trim()}%`)
         .order('nome')
-        .limit(8)
+        .limit(200)
+      if (termo.trim().length >= 1) query = query.ilike('nome', `%${termo.trim()}%`)
+      const { data, error } = await query
       if (!cancelado) {
         if (error) setErro(error.message)
         setResultados((data ?? []) as AlunoResumo[])
         setBuscando(false)
       }
-    }, 250)
+    }, 200)
     return () => {
       cancelado = true
       clearTimeout(t)
@@ -81,7 +80,7 @@ export function BuscarAluno({
             autoFocus
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
-            placeholder="Digite o nome do aluno…"
+            placeholder="Digite o nome do aluno ou role a lista abaixo…"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
           />
 
@@ -124,7 +123,7 @@ export function BuscarAluno({
                 </li>
               )
             })}
-            {!buscando && termo.trim().length >= 2 && resultados.length === 0 && (
+            {!buscando && resultados.length === 0 && (
               <li className="text-sm text-gray-400">Nenhum aluno encontrado.</li>
             )}
           </ul>
