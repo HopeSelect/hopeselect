@@ -3,7 +3,7 @@
 export type Classificacao = 'A' | 'B' | 'C' | 'R'
 export type Papel = 'admin' | 'lider' | 'recepcao' | 'professor'
 export type Genero = 'feminino' | 'masculino' | 'outro'
-export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach'
+export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach' | 'lanche'
 export type StatusTarefa = 'pendente' | 'concluida' | 'cancelada'
 
 export interface Professor {
@@ -43,12 +43,13 @@ export type AlunoResumo = Pick<
 // Atendimento em aberto no painel de sala, já com o aluno embutido
 // (select aninhado via FK aluno_id -> alunos).
 export interface AtendimentoAberto {
-  id: string
-  aluno_id: string
-  professor_id: string
-  inicio: string
-  alunos: AlunoResumo
-}
+   id: string
+   aluno_id: string
+   professor_id: string
+   inicio: string
+  tarefa: TipoTarefa | null
+   alunos: AlunoResumo
+ }
 
 export type TipoIntervalo = 'almoco' | 'lanche' | 'janta' | 'outro'
 
@@ -79,22 +80,23 @@ export interface TarefaComRelacoes extends Tarefa {
 
 // Linha de vw_atendimentos (relatório de atendimentos, passo 5).
 export interface LinhaAtendimento {
-  id: string
-  data: string
-  inicio: string
-  fim: string | null
-  em_andamento: boolean
- duracao_min: number
-  duracao_hms: string
-  entrada_hms: string
-  saida_hms: string | null
-  aluno_id: string
-  aluno_nome: string
-  aluno_classificacao: Classificacao
-  professor_id: string
-  professor_nome: string
-  professor_funcao: string | null
-}
+   id: string
+   data: string
+   inicio: string
+   fim: string | null
+   em_andamento: boolean
+   duracao_min: number
+   duracao_hms: string
+   entrada_hms: string
+   saida_hms: string | null
++  tarefa: TipoTarefa | null
+   aluno_id: string
+   aluno_nome: string
+   aluno_classificacao: Classificacao
+   professor_id: string
+   professor_nome: string
+   professor_funcao: string | null
+ }
 
 // Linha de vw_atendimentos_por_professor (produtividade, passo 5).
 export interface LinhaAtendimentosPorProfessor {
