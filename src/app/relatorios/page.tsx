@@ -1,7 +1,7 @@
 import { AppShell } from '@/components/app-shell'
 import estilos from './relatorios.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { CLASSIFICACOES } from '@/lib/utils'
+import { CLASSIFICACOES, TIPOS_TAREFA } from '@/lib/utils'
 import type {
   LinhaAtendimento,
   LinhaAtendimentosPorProfessor,
@@ -139,7 +139,7 @@ export default async function RelatoriosPage({
               <tbody>
                 {linhasAtendimentos.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
                       Nenhum atendimento no período.
                     </td>
                   </tr>
@@ -157,7 +157,8 @@ export default async function RelatoriosPage({
                         {l.aluno_classificacao}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-gray-600">{l.professor_nome}</td>
+                     <td className="px-4 py-2 text-gray-600">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600">{l.tarefa ? TIPOS_TAREFA[l.tarefa] : '—'}</td>
                     <td className="px-4 py-2 text-gray-600">{l.entrada_hms}</td>
                     <td className="px-4 py-2 text-gray-600">
                       {l.em_andamento ? '—' : l.saida_hms}
