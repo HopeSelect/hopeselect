@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { criarClienteServer } from '@/lib/supabase/server'
+import type { TipoTarefa } from '@/lib/tipos'
 
 export type ResultadoAcao = { erro: string } | null
 
@@ -10,10 +11,10 @@ export type ResultadoAcao = { erro: string } | null
 export async function alocarAluno(
   alunoId: string,
   professorId: string,
+  tarefa: TipoTarefa | null = null,
 ): Promise<ResultadoAcao> {
   const supabase = await criarClienteServer()
 
-  // Evita duplicar: um aluno não pode estar em dois atendimentos abertos ao mesmo tempo.
   const { data: aberto } = await supabase
     .from('atendimentos')
     .select('id')
@@ -30,6 +31,7 @@ export async function alocarAluno(
   const { error } = await supabase.from('atendimentos').insert({
     aluno_id: alunoId,
     professor_id: professorId,
+    tarefa,
     registrado_por: user?.id ?? null,
   })
   if (error) return { erro: error.message }
