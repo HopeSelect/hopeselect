@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react'
 import Link from 'next/link'
-import type { Tarefa, TipoTarefa } from '@/lib/tipos'
-import { TIPOS_TAREFA } from '@/lib/utils'
+import type { StatusTarefa, Tarefa, TipoTarefa } from '@/lib/tipos'
+import { STATUS_TAREFA, STATUS_TAREFA_SELECIONAVEIS, TIPOS_TAREFA } from '@/lib/utils'
 import type { EstadoForm } from './actions'
 
 type Acao = (prev: EstadoForm, fd: FormData) => Promise<EstadoForm>
@@ -31,6 +31,11 @@ export function TarefaForm({
 }) {
   const [estado, submit, pendente] = useActionState(acao, null)
 
+  // Se a tarefa já existente tiver o status legado "cancelada", mostra ele
+  // como opção extra pra não trocar o valor sem querer ao salvar de novo.
+  const opcoesStatus: StatusTarefa[] =
+    inicial?.status === 'cancelada' ? [...STATUS_TAREFA_SELECIONAVEIS, 'cancelada'] : STATUS_TAREFA_SELECIONAVEIS
+
   return (
     <form action={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -50,12 +55,7 @@ export function TarefaForm({
 
         <label className="block text-sm font-medium text-gray-700">
           Professor *
-          <select
-            name="professor_id"
-            required
-            defaultValue={inicial?.professor_id ?? ''}
-            className={campo}
-          >
+          <select name="professor_id" required defaultValue={inicial?.professor_id ?? ''} className={campo}>
             <option value="" disabled>
               Selecione…
             </option>
@@ -68,7 +68,7 @@ export function TarefaForm({
         </label>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <label className="block text-sm font-medium text-gray-700">
           Tipo
           <select name="tipo" defaultValue={inicial?.tipo ?? 'prescricao'} className={campo}>
@@ -81,25 +81,25 @@ export function TarefaForm({
         </label>
 
         <label className="block text-sm font-medium text-gray-700">
+          Status
+          <select name="status" defaultValue={inicial?.status ?? 'a_realizar'} className={campo}>
+            {opcoesStatus.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_TAREFA[s].rotulo}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block text-sm font-medium text-gray-700">
           Data *
-          <input
-            type="date"
-            name="data"
-            required
-            defaultValue={inicial?.data ?? amanhaISO()}
-            className={campo}
-          />
+          <input type="date" name="data" required defaultValue={inicial?.data ?? amanhaISO()} className={campo} />
         </label>
       </div>
 
       <label className="block text-sm font-medium text-gray-700">
         Observação
-        <textarea
-          name="observacao"
-          rows={2}
-          defaultValue={inicial?.observacao ?? ''}
-          className={campo}
-        />
+        <textarea name="observacao" rows={2} defaultValue={inicial?.observacao ?? ''} className={campo} />
       </label>
 
       {estado?.erro && (
