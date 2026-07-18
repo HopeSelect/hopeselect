@@ -12,6 +12,7 @@ function dadosTarefa(fd: FormData) {
     aluno_id: String(fd.get('aluno_id') ?? ''),
     professor_id: String(fd.get('professor_id') ?? ''),
     tipo: String(fd.get('tipo') ?? 'prescricao'),
+    status: String(fd.get('status') ?? 'a_realizar'),
     data: String(fd.get('data') ?? ''),
     observacao: valorOuNull(fd.get('observacao')),
   }
