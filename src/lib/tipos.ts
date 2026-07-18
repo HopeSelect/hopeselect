@@ -14,6 +14,7 @@ export interface Professor {
   genero: Genero
   horario_trabalho: string | null
   ativo: boolean
+  em_sala: boolean
   pos_x: number | null
   pos_y: number | null
   created_at: string
@@ -84,6 +85,8 @@ export interface LinhaAtendimento {
   fim: string | null
   em_andamento: boolean
   duracao_min: number
+  duracao_hms: string
+  entrada_hms: string
   aluno_id: string
   aluno_nome: string
   aluno_classificacao: Classificacao
