@@ -15,10 +15,7 @@ export function parseAlertas(v: FormDataEntryValue | null): string[] {
 }
 
 // Cor/rótulo de cada classificação (requisito do cliente: leitura por cor).
-export const CLASSIFICACOES: Record<
-  Classificacao,
-  { rotulo: string; classe: string }
-> = {
+export const CLASSIFICACOES: Record<Classificacao, { rotulo: string; classe: string }> = {
   A: { rotulo: 'A — sem restrições', classe: 'bg-green-100 text-green-800 border-green-300' },
   B: { rotulo: 'B — leves restrições', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
   C: { rotulo: 'C — com restrições', classe: 'bg-red-100 text-red-800 border-red-300' },
@@ -45,11 +42,19 @@ export const TIPOS_TAREFA: Record<TipoTarefa, string> = {
   lanche: 'Lanche',
 }
 
+// Todos os status possíveis (inclui "cancelada", legado — não aparece nos
+// seletores novos, mas tarefas antigas com esse status continuam com rótulo).
 export const STATUS_TAREFA: Record<StatusTarefa, { rotulo: string; classe: string }> = {
-  pendente: { rotulo: 'Pendente', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+  a_realizar: { rotulo: 'A realizar', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
   concluida: { rotulo: 'Concluída', classe: 'bg-green-100 text-green-800 border-green-300' },
+  agendar: { rotulo: 'Agendar', classe: 'bg-blue-100 text-blue-800 border-blue-300' },
+  realizar_novamente: { rotulo: 'Realizar novamente', classe: 'bg-orange-100 text-orange-800 border-orange-300' },
   cancelada: { rotulo: 'Cancelada', classe: 'bg-gray-100 text-gray-500 border-gray-300' },
 }
+
+// Os 4 status que a recepção/líder escolhe ao criar ou editar uma tarefa.
+// "cancelada" fica de fora — é só um rótulo legado exibido quando já existe.
+export const STATUS_TAREFA_SELECIONAVEIS: StatusTarefa[] = ['a_realizar', 'concluida', 'agendar', 'realizar_novamente']
 
 // "hoje", "amanhã" ou dd/mm para exibir a data da tarefa de forma legível.
 export function formatarDataTarefa(dataIso: string): string {
