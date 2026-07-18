@@ -129,7 +129,8 @@ export default async function RelatoriosPage({
                   <th className="px-4 py-2">Data</th>
                   <th className="px-4 py-2">Aluno</th>
                   <th className="px-4 py-2">Classe</th>
-                  <th className="px-4 py-2">Professor</th>
+                 <th className="px-4 py-2">Professor</th>
+                  <th className="px-4 py-2">Tarefa</th>
                   <th className="px-4 py-2">Entrada</th>
                   <th className="px-4 py-2">Saída</th>
                   <th className="px-4 py-2">Duração</th>
