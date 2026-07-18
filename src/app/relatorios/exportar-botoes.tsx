@@ -1,5 +1,6 @@
 'use client'
 
+import { TIPOS_TAREFA } from '@/lib/utils'
 import type { LinhaAtendimento, LinhaProdutividade } from '@/lib/tipos'
 
 const botao =
@@ -38,11 +39,12 @@ export function ExportarBotoes({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const XLSX = (window as any).XLSX
 
-    const linhasAtendimentos = atendimentos.map((l) => ({
+  const linhasAtendimentos = atendimentos.map((l) => ({
       Data: l.data,
       Aluno: l.aluno_nome,
       Classificação: l.aluno_classificacao,
       Professor: l.professor_nome,
+      Tarefa: l.tarefa ? TIPOS_TAREFA[l.tarefa] : '',
       Entrada: l.entrada_hms,
       Saída: l.em_andamento ? 'em andamento' : l.saida_hms,
       Duração: l.duracao_hms,
@@ -79,12 +81,13 @@ export function ExportarBotoes({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(doc as any).autoTable({
       startY: 30,
-      head: [['Data', 'Aluno', 'Classe', 'Professor', 'Entrada', 'Saída', 'Duração']],
+     head: [['Data', 'Aluno', 'Classe', 'Professor', 'Tarefa', 'Entrada', 'Saída', 'Duração']],
       body: atendimentos.map((l) => [
         l.data,
         l.aluno_nome,
         l.aluno_classificacao,
         l.professor_nome,
+        l.tarefa ? TIPOS_TAREFA[l.tarefa] : '',
         l.entrada_hms,
         l.em_andamento ? 'em andamento' : l.saida_hms,
         l.duracao_hms,
