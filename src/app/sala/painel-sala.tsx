@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES, TIPOS_INTERVALO } from '@/lib/utils'
+import { CLASSIFICACOES, TIPOS_INTERVALO, diasDesde } from '@/lib/utils'
 import type { AlunoResumo, AtendimentoAberto, IntervaloAberto, Professor, TipoIntervalo } from '@/lib/tipos'
 import {
   atualizarPosicaoProfessor,
@@ -15,7 +15,11 @@ import {
 import { BuscarAluno } from './buscar-aluno'
 import { BuscarProfessorParaSala } from './buscar-professor'
 
-const ALTURA_CARD = 168
+// ALTURA_CARD subiu de 168 pra 300: cada card agora nasce com 2 vagas de
+// atendimento em vez de 1, então precisa de mais espaço vertical na posição
+// inicial da grade. Cards continuam arrastáveis, então isso só afeta o
+// posicionamento de largada, não é uma trava.
+const ALTURA_CARD = 300
 const GAP = 16
 const LARGURA_CARD_MIN = 168
 const LARGURA_CARD_MAX = 240
@@ -69,6 +73,12 @@ function formatarDecorrido(inicioIso: string, agora: number) {
   const m = Math.floor((totalSeg % 3600) / 60)
   const s = totalSeg % 60
   return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
+}
+
+// Horário de entrada em si (relógio), separado do "há quanto tempo" —
+// pedido do cliente: evidenciar o horário de entrada de cada aluno.
+function formatarHora(iso: string) {
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
 export function PainelSala({
@@ -223,7 +233,7 @@ export function PainelSala({
 
       <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 p-4">
         {professores.map((professor, indice) => {
-          const atendimento = atendimentos.find((a) => a.professor_id === professor.id)
+          const atendimentosDoProfessor = atendimentos.filter((a) => a.professor_id === professor.id)
           const intervalo = intervalos.find((i) => i.professor_id === professor.id)
           const grade = posicaoGrade(indice, colunas, larguraCard)
           const posBruta = {
@@ -244,7 +254,7 @@ export function PainelSala({
               professor={professor}
               pos={pos}
               larguraCard={larguraCard}
-              atendimento={atendimento}
+              atendimentosDoProfessor={atendimentosDoProfessor}
               intervalo={intervalo}
               agora={agora}
               onMover={(x, y) =>
@@ -254,7 +264,7 @@ export function PainelSala({
               }
               onSoltar={(x, y) => void atualizarPosicaoProfessor(professor.id, x, y)}
               onAlocar={() => setAlocandoPara(professor)}
-              onFinalizar={() => atendimento && void aoFinalizar(atendimento.id)}
+              onFinalizar={(atendimentoId) => void aoFinalizar(atendimentoId)}
               onIniciarIntervalo={(tipo) => void aoIniciarIntervalo(professor, tipo)}
               onFinalizarIntervalo={() => intervalo && void aoFinalizarIntervalo(intervalo.id)}
               onRemoverDaSala={() => void aoRemoverDaSala(professor)}
@@ -284,7 +294,7 @@ function CardProfessor({
   professor,
   pos,
   larguraCard,
-  atendimento,
+  atendimentosDoProfessor,
   intervalo,
   agora,
   onMover,
@@ -298,13 +308,13 @@ function CardProfessor({
   professor: Professor
   pos: { x: number; y: number }
   larguraCard: number
-  atendimento: AtendimentoAberto | undefined
+  atendimentosDoProfessor: AtendimentoAberto[]
   intervalo: IntervaloAberto | undefined
   agora: number
   onMover: (x: number, y: number) => void
   onSoltar: (x: number, y: number) => void
   onAlocar: () => void
-  onFinalizar: () => void
+  onFinalizar: (atendimentoId: string) => void
   onIniciarIntervalo: (tipo: TipoIntervalo) => void
   onFinalizarIntervalo: () => void
   onRemoverDaSala: () => void
@@ -314,6 +324,9 @@ function CardProfessor({
   const posAtual = useRef(pos)
   const cabecalhoRef = useRef<HTMLDivElement>(null)
   const [menuIntervaloAberto, setMenuIntervaloAberto] = useState(false)
+  // Vagas extras além do mínimo de 2 — pedidas pela recepção via "+ Adicionar
+  // vaga" quando um professor precisa atender mais alunos ao mesmo tempo.
+  const [extras, setExtras] = useState(0)
   posAtual.current = pos
 
   // Números válidos, com fallback pra posição atual — nunca deixa NaN virar `left`/`top`.
@@ -353,8 +366,11 @@ function CardProfessor({
     onSoltar(posAtual.current.x, posAtual.current.y)
   }
 
-  const ocupado = Boolean(atendimento)
+  const ocupado = atendimentosDoProfessor.length > 0
   const emIntervalo = Boolean(intervalo)
+  // Sempre pelo menos 2 vagas (requisito: professor pode atender 2 alunos de
+  // largada); o "+ Adicionar vaga" soma mais em cima disso.
+  const totalVagas = Math.max(2, atendimentosDoProfessor.length) + extras
 
   return (
     <div
@@ -394,7 +410,7 @@ function CardProfessor({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={onRemoverDaSala}
             disabled={ocupado}
-            title={ocupado ? 'Finalize o atendimento antes de remover' : 'Remover da sala'}
+            title={ocupado ? 'Finalize os atendimentos antes de remover' : 'Remover da sala'}
             className="rounded p-0.5 text-gray-300 hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -404,7 +420,7 @@ function CardProfessor({
         </div>
       </div>
 
-      <div className="p-3">
+      <div className="space-y-2 p-3">
         {emIntervalo ? (
           <div>
             <p className="text-sm font-medium text-gray-900">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
@@ -418,69 +434,95 @@ function CardProfessor({
               Encerrar intervalo
             </button>
           </div>
-        ) : atendimento ? (
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-sm font-medium text-gray-900">{atendimento.alunos.nome}</p>
-              <span
-                className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[atendimento.alunos.classificacao].classe}`}
-              >
-                {atendimento.alunos.classificacao}
-              </span>
-            </div>
-            {atendimento.alunos.alertas?.length > 0 && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {atendimento.alunos.alertas.map((a) => (
-                  <span key={a} className="rounded bg-orange-100 px-1.5 py-0.5 text-xs text-orange-800">
-                    {a}
-                  </span>
-                ))}
-              </div>
-            )}
-            <p className="mt-1 text-xs text-gray-400">
-              Em atendimento há {formatarDecorrido(atendimento.inicio, agora)}
-            </p>
-            <button
-              onClick={onFinalizar}
-              className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
-            >
-              Finalizar atendimento
-            </button>
-          </div>
         ) : (
-          <div className="space-y-2">
+          <>
+            {Array.from({ length: totalVagas }).map((_, i) => {
+              const atendimentoDaVaga = atendimentosDoProfessor[i]
+
+              if (atendimentoDaVaga) {
+                const dias = diasDesde(atendimentoDaVaga.alunos.ultimo_acesso)
+                return (
+                  <div key={atendimentoDaVaga.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-medium text-gray-900">
+                        {atendimentoDaVaga.alunos.nome}
+                      </p>
+                      <span
+                        className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[atendimentoDaVaga.alunos.classificacao].classe}`}
+                      >
+                        {atendimentoDaVaga.alunos.classificacao}
+                      </span>
+                    </div>
+                    {atendimentoDaVaga.alunos.alertas?.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {atendimentoDaVaga.alunos.alertas.map((a) => (
+                          <span key={a} className="rounded bg-orange-100 px-1.5 py-0.5 text-xs text-orange-800">
+                            {a}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-gray-400">
+                      {dias === null ? 'Sem registro de acesso anterior' : `Último acesso há ${dias} dia${dias === 1 ? '' : 's'}`}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Entrou às {formatarHora(atendimentoDaVaga.inicio)} · há {formatarDecorrido(atendimentoDaVaga.inicio, agora)}
+                    </p>
+                    <button
+                      onClick={() => onFinalizar(atendimentoDaVaga.id)}
+                      className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+                    >
+                      Finalizar atendimento
+                    </button>
+                  </div>
+                )
+              }
+
+              return (
+                <button
+                  key={`vaga-${professor.id}-${i}`}
+                  onClick={onAlocar}
+                  className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                >
+                  + Alocar aluno
+                </button>
+              )
+            })}
+
             <button
-              onClick={onAlocar}
-              className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+              onClick={() => setExtras((v) => v + 1)}
+              className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-400 hover:border-gray-400 hover:text-gray-600"
             >
-              + Alocar aluno
+              + Adicionar vaga
             </button>
 
-            <div className="relative">
-              <button
-                onClick={() => setMenuIntervaloAberto((v) => !v)}
-                className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
-              >
-                Iniciar intervalo
-              </button>
-              {menuIntervaloAberto && (
-                <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-gray-200 bg-white shadow-lg">
-                  {(Object.keys(TIPOS_INTERVALO) as TipoIntervalo[]).map((tipo) => (
-                    <button
-                      key={tipo}
-                      onClick={() => {
-                        setMenuIntervaloAberto(false)
-                        onIniciarIntervalo(tipo)
-                      }}
-                      className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
-                    >
-                      {TIPOS_INTERVALO[tipo]}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+            {!ocupado && (
+              <div className="relative">
+                <button
+                  onClick={() => setMenuIntervaloAberto((v) => !v)}
+                  className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                >
+                  Iniciar intervalo
+                </button>
+                {menuIntervaloAberto && (
+                  <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-gray-200 bg-white shadow-lg">
+                    {(Object.keys(TIPOS_INTERVALO) as TipoIntervalo[]).map((tipo) => (
+                      <button
+                        key={tipo}
+                        onClick={() => {
+                          setMenuIntervaloAberto(false)
+                          onIniciarIntervalo(tipo)
+                        }}
+                        className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
+                      >
+                        {TIPOS_INTERVALO[tipo]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
