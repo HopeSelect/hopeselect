@@ -10,8 +10,10 @@ import {
   finalizarAtendimento,
   finalizarIntervalo,
   iniciarIntervalo,
+  removerProfessorDaSala,
 } from './actions'
 import { BuscarAluno } from './buscar-aluno'
+import { BuscarProfessorParaSala } from './buscar-professor'
 
 const ALTURA_CARD = 168
 const GAP = 16
@@ -62,10 +64,11 @@ function posicaoGrade(indice: number, colunas: number, larguraCard: number) {
 
 function formatarDecorrido(inicioIso: string, agora: number) {
   const ms = Math.max(0, agora - new Date(inicioIso).getTime())
-  const totalMin = Math.floor(ms / 60000)
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`
+  const totalSeg = Math.floor(ms / 1000)
+  const h = Math.floor(totalSeg / 3600)
+  const m = Math.floor((totalSeg % 3600) / 60)
+  const s = totalSeg % 60
+  return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
 }
 
 export function PainelSala({
@@ -83,6 +86,7 @@ export function PainelSala({
   const [intervalos, setIntervalos] = useState(intervalosIniciais)
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
+  const [erroRemocao, setErroRemocao] = useState<string | null>(null)
   const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
 
   // Relógio para os cronômetros dos cards (atualiza a cada 30s, sem revalidar dados).
@@ -107,7 +111,7 @@ export function PainelSala({
           const novo = payload.new as Professor
           setProfessores((prev) => {
             const existe = prev.some((p) => p.id === novo.id)
-            if (!novo.ativo) return prev.filter((p) => p.id !== novo.id)
+            if (!novo.ativo || !novo.em_sala) return prev.filter((p) => p.id !== novo.id)
             return existe ? prev.map((p) => (p.id === novo.id ? { ...p, ...novo } : p)) : [...prev, novo]
           })
         },
@@ -192,60 +196,86 @@ export function PainelSala({
     await finalizarIntervalo(intervaloId)
   }
 
+  function aoAdicionarProfessor(professor: Professor) {
+    setProfessores((prev) => (prev.some((p) => p.id === professor.id) ? prev : [...prev, professor]))
+  }
+
+  async function aoRemoverDaSala(professor: Professor) {
+    setErroRemocao(null)
+    const anterior = professores
+    setProfessores((prev) => prev.filter((p) => p.id !== professor.id))
+    const resultado = await removerProfessorDaSala(professor.id)
+    if (resultado?.erro) {
+      setProfessores(anterior)
+      setErroRemocao(resultado.erro)
+    }
+  }
+
   return (
-    <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 p-4">
-      {professores.map((professor, indice) => {
-        const atendimento = atendimentos.find((a) => a.professor_id === professor.id)
-        const intervalo = intervalos.find((i) => i.professor_id === professor.id)
-        const grade = posicaoGrade(indice, colunas, larguraCard)
-        const posBruta = {
-          x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
-          y: Number.isFinite(professor.pos_y) ? (professor.pos_y as number) : grade.y,
-        }
-        // Clampa a posição salva (pode ter sido arrastada numa tela grande)
-        // pra caber na largura atual — sem isso, um card arrastado pra
-        // direita no desktop simplesmente some fora da viewport no celular.
-        const pos = {
-          x: Math.min(posBruta.x, Math.max(GAP, larguraUtil - larguraCard)),
-          y: posBruta.y,
-        }
-
-        return (
-          <CardProfessor
-            key={professor.id}
-            professor={professor}
-            pos={pos}
-            larguraCard={larguraCard}
-            atendimento={atendimento}
-            intervalo={intervalo}
-            agora={agora}
-            onMover={(x, y) =>
-              setProfessores((prev) =>
-                prev.map((p) => (p.id === professor.id ? { ...p, pos_x: x, pos_y: y } : p)),
-              )
-            }
-            onSoltar={(x, y) => void atualizarPosicaoProfessor(professor.id, x, y)}
-            onAlocar={() => setAlocandoPara(professor)}
-            onFinalizar={() => atendimento && void aoFinalizar(atendimento.id)}
-            onIniciarIntervalo={(tipo) => void aoIniciarIntervalo(professor, tipo)}
-            onFinalizarIntervalo={() => intervalo && void aoFinalizarIntervalo(intervalo.id)}
-          />
-        )
-      })}
-
-      {professores.length === 0 && (
-        <p className="text-sm text-gray-400">
-          Nenhum professor ativo. Cadastre professores para vê-los aqui.
-        </p>
-      )}
-
-      {alocandoPara && (
-        <BuscarAluno
-          professor={alocandoPara}
-          onFechar={() => setAlocandoPara(null)}
-          onAlocado={(alunoId, aluno) => aoAlocado(alocandoPara, alunoId, aluno)}
+    <div className="flex w-full flex-1 flex-col">
+      <div className="border-b border-gray-200 bg-white px-4 py-3">
+        <BuscarProfessorParaSala
+          idsNaSala={professores.map((p) => p.id)}
+          onAdicionado={aoAdicionarProfessor}
         />
-      )}
+        {erroRemocao && <p className="mt-2 text-sm text-red-600">{erroRemocao}</p>}
+      </div>
+
+      <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 p-4">
+        {professores.map((professor, indice) => {
+          const atendimento = atendimentos.find((a) => a.professor_id === professor.id)
+          const intervalo = intervalos.find((i) => i.professor_id === professor.id)
+          const grade = posicaoGrade(indice, colunas, larguraCard)
+          const posBruta = {
+            x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
+            y: Number.isFinite(professor.pos_y) ? (professor.pos_y as number) : grade.y,
+          }
+          // Clampa a posição salva (pode ter sido arrastada numa tela grande)
+          // pra caber na largura atual — sem isso, um card arrastado pra
+          // direita no desktop simplesmente some fora da viewport no celular.
+          const pos = {
+            x: Math.min(posBruta.x, Math.max(GAP, larguraUtil - larguraCard)),
+            y: posBruta.y,
+          }
+
+          return (
+            <CardProfessor
+              key={professor.id}
+              professor={professor}
+              pos={pos}
+              larguraCard={larguraCard}
+              atendimento={atendimento}
+              intervalo={intervalo}
+              agora={agora}
+              onMover={(x, y) =>
+                setProfessores((prev) =>
+                  prev.map((p) => (p.id === professor.id ? { ...p, pos_x: x, pos_y: y } : p)),
+                )
+              }
+              onSoltar={(x, y) => void atualizarPosicaoProfessor(professor.id, x, y)}
+              onAlocar={() => setAlocandoPara(professor)}
+              onFinalizar={() => atendimento && void aoFinalizar(atendimento.id)}
+              onIniciarIntervalo={(tipo) => void aoIniciarIntervalo(professor, tipo)}
+              onFinalizarIntervalo={() => intervalo && void aoFinalizarIntervalo(intervalo.id)}
+              onRemoverDaSala={() => void aoRemoverDaSala(professor)}
+            />
+          )
+        })}
+
+        {professores.length === 0 && (
+          <p className="text-sm text-gray-400">
+            Nenhum professor na sala ainda. Use a busca acima para adicionar.
+          </p>
+        )}
+
+        {alocandoPara && (
+          <BuscarAluno
+            professor={alocandoPara}
+            onFechar={() => setAlocandoPara(null)}
+            onAlocado={(alunoId, aluno) => aoAlocado(alocandoPara, alunoId, aluno)}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -263,6 +293,7 @@ function CardProfessor({
   onFinalizar,
   onIniciarIntervalo,
   onFinalizarIntervalo,
+  onRemoverDaSala,
 }: {
   professor: Professor
   pos: { x: number; y: number }
@@ -276,6 +307,7 @@ function CardProfessor({
   onFinalizar: () => void
   onIniciarIntervalo: (tipo: TipoIntervalo) => void
   onFinalizarIntervalo: () => void
+  onRemoverDaSala: () => void
 }) {
   const arrastando = useRef(false)
   const offset = useRef({ dx: 0, dy: 0 })
@@ -351,12 +383,25 @@ function CardProfessor({
           <p className="truncate text-sm font-semibold text-gray-900">{professor.nome}</p>
           {professor.funcao && <p className="truncate text-xs text-gray-500">{professor.funcao}</p>}
         </div>
-        <span
-          className={`ml-auto h-2.5 w-2.5 shrink-0 rounded-full ${
-            emIntervalo ? 'bg-yellow-400' : ocupado ? 'bg-red-500' : 'bg-green-500'
-          }`}
-          title={emIntervalo ? TIPOS_INTERVALO[intervalo!.tipo] : ocupado ? 'Ocupado' : 'Livre'}
-        />
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <span
+            className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+              emIntervalo ? 'bg-yellow-400' : ocupado ? 'bg-red-500' : 'bg-green-500'
+            }`}
+            title={emIntervalo ? TIPOS_INTERVALO[intervalo!.tipo] : ocupado ? 'Ocupado' : 'Livre'}
+          />
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onRemoverDaSala}
+            disabled={ocupado}
+            title={ocupado ? 'Finalize o atendimento antes de remover' : 'Remover da sala'}
+            className="rounded p-0.5 text-gray-300 hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="p-3">
