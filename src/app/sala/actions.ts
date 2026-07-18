@@ -109,3 +109,40 @@ export async function finalizarIntervalo(intervaloId: string): Promise<Resultado
   revalidatePath('/sala')
   return null
 }
+
+// Adiciona um professor já cadastrado ao painel de sala.
+export async function adicionarProfessorNaSala(professorId: string): Promise<ResultadoAcao> {
+  const supabase = await criarClienteServer()
+  const { error } = await supabase
+    .from('professores')
+    .update({ em_sala: true })
+    .eq('id', professorId)
+  if (error) return { erro: error.message }
+
+  revalidatePath('/sala')
+  return null
+}
+
+// Remove o professor do painel (não mexe no cadastro).
+// Trava: não deixa remover quem está em atendimento aberto.
+export async function removerProfessorDaSala(professorId: string): Promise<ResultadoAcao> {
+  const supabase = await criarClienteServer()
+
+  const { data: aberto } = await supabase
+    .from('atendimentos')
+    .select('id')
+    .eq('professor_id', professorId)
+    .is('fim', null)
+    .maybeSingle()
+
+  if (aberto) return { erro: 'Este professor está em atendimento. Finalize antes de remover da sala.' }
+
+  const { error } = await supabase
+    .from('professores')
+    .update({ em_sala: false })
+    .eq('id', professorId)
+  if (error) return { erro: error.message }
+
+  revalidatePath('/sala')
+  return null
+}
