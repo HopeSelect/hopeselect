@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES, diasDesde } from '@/lib/utils'
-import type { AlunoResumo, Professor } from '@/lib/tipos'
+import { CLASSIFICACOES, TIPOS_TAREFA, diasDesde } from '@/lib/utils'
+import type { AlunoResumo, Professor, TipoTarefa } from '@/lib/tipos'
 import { alocarAluno } from './actions'
 
 export function BuscarAluno({
@@ -13,10 +13,11 @@ export function BuscarAluno({
 }: {
   professor: Professor
   onFechar: () => void
-  onAlocado: (alunoId: string, alunoResumo: AlunoResumo) => void
+  onAlocado: (alunoId: string, alunoResumo: AlunoResumo, tarefa: TipoTarefa | null) => void
 }) {
   const supabase = criarClienteBrowser()
   const [termo, setTermo] = useState('')
+  const [tarefa, setTarefa] = useState<TipoTarefa | ''>('')
   const [resultados, setResultados] = useState<AlunoResumo[]>([])
   const [buscando, setBuscando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -30,7 +31,7 @@ export function BuscarAluno({
     const t = setTimeout(async () => {
       let query = supabase
         .from('alunos')
-        .select('id, nome, classificacao, alertas, ultimo_acesso')
+        .select('id, nome, classificacao, alertas, ultimo_acesso, restricoes')
         .order('nome')
         .limit(200)
       if (termo.trim().length >= 1) query = query.ilike('nome', `%${termo.trim()}%`)
@@ -50,13 +51,14 @@ export function BuscarAluno({
   async function alocar(aluno: AlunoResumo) {
     setAlocandoId(aluno.id)
     setErro(null)
-    const resultado = await alocarAluno(aluno.id, professor.id)
+    const tarefaEscolhida = tarefa === '' ? null : tarefa
+    const resultado = await alocarAluno(aluno.id, professor.id, tarefaEscolhida)
     if (resultado?.erro) {
       setErro(resultado.erro)
       setAlocandoId(null)
       return
     }
-    onAlocado(aluno.id, aluno)
+    onAlocado(aluno.id, aluno, tarefaEscolhida)
   }
 
   return (
@@ -76,6 +78,19 @@ export function BuscarAluno({
         </div>
 
         <div className="p-4">
+          <select
+            value={tarefa}
+            onChange={(e) => setTarefa(e.target.value as TipoTarefa | '')}
+            className="mb-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+          >
+            <option value="">Tarefa deste atendimento (opcional)</option>
+            {(Object.keys(TIPOS_TAREFA) as TipoTarefa[]).map((t) => (
+              <option key={t} value={t}>
+                {TIPOS_TAREFA[t]}
+              </option>
+            ))}
+          </select>
+
           <input
             autoFocus
             value={termo}
