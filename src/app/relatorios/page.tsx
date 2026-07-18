@@ -130,13 +130,15 @@ export default async function RelatoriosPage({
                   <th className="px-4 py-2">Aluno</th>
                   <th className="px-4 py-2">Classe</th>
                   <th className="px-4 py-2">Professor</th>
+                  <th className="px-4 py-2">Entrada</th>
+                  <th className="px-4 py-2">Saída</th>
                   <th className="px-4 py-2">Duração</th>
                 </tr>
               </thead>
               <tbody>
                 {linhasAtendimentos.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
                       Nenhum atendimento no período.
                     </td>
                   </tr>
@@ -155,9 +157,11 @@ export default async function RelatoriosPage({
                       </span>
                     </td>
                     <td className="px-4 py-2 text-gray-600">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600">{l.entrada_hms}</td>
                     <td className="px-4 py-2 text-gray-600">
-                      {l.em_andamento ? 'em andamento' : `${l.duracao_min} min`}
+                      {l.em_andamento ? '—' : l.saida_hms}
                     </td>
+                    <td className="px-4 py-2 text-gray-600">{l.duracao_hms}</td>
                   </tr>
                 ))}
               </tbody>
