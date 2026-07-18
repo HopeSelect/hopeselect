@@ -478,14 +478,28 @@ function CardProfessor({
                 )
               }
 
+            const ehVagaExtraRemovivel = i === totalVagas - 1 && extras > 0
+
               return (
-                <button
-                  key={`vaga-${professor.id}-${i}`}
-                  onClick={onAlocar}
-                  className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
-                >
-                  + Alocar aluno
-                </button>
+                <div key={`vaga-${professor.id}-${i}`} className="flex items-center gap-1.5">
+                  <button
+                    onClick={onAlocar}
+                    className="flex-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                  >
+                    + Alocar aluno
+                  </button>
+                  {ehVagaExtraRemovivel && (
+                    <button
+                      onClick={() => setExtras((v) => Math.max(0, v - 1))}
+                      title="Remover esta vaga"
+                      className="shrink-0 rounded-md border border-gray-200 p-2 text-gray-300 hover:border-red-300 hover:text-red-600"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               )
             })}
 
