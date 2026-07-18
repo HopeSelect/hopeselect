@@ -43,7 +43,9 @@ export function ExportarBotoes({
       Aluno: l.aluno_nome,
       Classificação: l.aluno_classificacao,
       Professor: l.professor_nome,
-      'Duração (min)': l.em_andamento ? 'em andamento' : l.duracao_min,
+      Entrada: l.entrada_hms,
+      Saída: l.em_andamento ? 'em andamento' : l.saida_hms,
+      Duração: l.duracao_hms,
     }))
 
     const linhasProdutividade = produtividade.map((l) => ({
@@ -77,13 +79,15 @@ export function ExportarBotoes({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(doc as any).autoTable({
       startY: 30,
-      head: [['Data', 'Aluno', 'Classe', 'Professor', 'Duração']],
+      head: [['Data', 'Aluno', 'Classe', 'Professor', 'Entrada', 'Saída', 'Duração']],
       body: atendimentos.map((l) => [
         l.data,
         l.aluno_nome,
         l.aluno_classificacao,
         l.professor_nome,
-        l.em_andamento ? 'em andamento' : `${l.duracao_min} min`,
+        l.entrada_hms,
+        l.em_andamento ? 'em andamento' : l.saida_hms,
+        l.duracao_hms,
       ]),
       styles: { fontSize: 8 },
     })
