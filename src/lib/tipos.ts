@@ -31,10 +31,7 @@ export interface Aluno {
   created_at: string
 }
 // Aluno em busca/alocação: só os campos que a recepção precisa ler de relance.
-export type AlunoResumo = Pick
-  Aluno,
-  'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes'
->
+export type AlunoResumo = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes'>
 // Atendimento em aberto no painel de sala, já com o aluno embutido
 // (select aninhado via FK aluno_id -> alunos).
 export interface AtendimentoAberto {
