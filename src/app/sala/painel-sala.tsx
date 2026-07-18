@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES, TIPOS_INTERVALO, diasDesde } from '@/lib/utils'
-import type { AlunoResumo, AtendimentoAberto, IntervaloAberto, Professor, TipoIntervalo } from '@/lib/tipos'
+import { CLASSIFICACOES, TIPOS_INTERVALO, TIPOS_TAREFA, diasDesde } from '@/lib/utils'
+import type { AlunoResumo, AtendimentoAberto, IntervaloAberto, Professor, TipoIntervalo, TipoTarefa } from '@/lib/tipos'
 import {
   atualizarPosicaoProfessor,
   finalizarAtendimento,
@@ -15,22 +15,11 @@ import {
 import { BuscarAluno } from './buscar-aluno'
 import { BuscarProfessorParaSala } from './buscar-professor'
 
-// ALTURA_CARD subiu de 168 pra 300: cada card agora nasce com 2 vagas de
-// atendimento em vez de 1, então precisa de mais espaço vertical na posição
-// inicial da grade. Cards continuam arrastáveis, então isso só afeta o
-// posicionamento de largada, não é uma trava.
 const ALTURA_CARD = 300
 const GAP = 16
 const LARGURA_CARD_MIN = 168
 const LARGURA_CARD_MAX = 240
 
-// Antes: COLUNAS e LARGURA_CARD eram constantes fixas (5 colunas, 240px),
-// o que exigia ~1300px de largura só pra caber a primeira linha de cards.
-// Num celular isso obrigava scroll horizontal constante pra tela mais usada
-// do sistema. Agora colunas e largura do card são calculadas a partir da
-// largura real da tela (ver useLayoutCanvas), então o grid inicial sempre
-// cabe na viewport — o "canvas arrastável" continua existindo (é requisito
-// do cliente), só a disposição inicial que se adapta.
 function useLayoutCanvas() {
   const [larguraJanela, setLarguraJanela] = useState<number>(() =>
     typeof window === 'undefined' ? 1280 : window.innerWidth,
@@ -45,7 +34,6 @@ function useLayoutCanvas() {
     return () => window.removeEventListener('resize', aoRedimensionar)
   }, [])
 
-  // p-4 do container = 16px de cada lado
   const larguraUtil = Math.max(larguraJanela - GAP * 2, LARGURA_CARD_MIN)
 
   const colunas =
@@ -75,8 +63,6 @@ function formatarDecorrido(inicioIso: string, agora: number) {
   return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
 }
 
-// Horário de entrada em si (relógio), separado do "há quanto tempo" —
-// pedido do cliente: evidenciar o horário de entrada de cada aluno.
 function formatarHora(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
@@ -99,14 +85,11 @@ export function PainelSala({
   const [erroRemocao, setErroRemocao] = useState<string | null>(null)
   const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
 
-  // Relógio para os cronômetros dos cards (atualiza a cada 30s, sem revalidar dados).
   useEffect(() => {
     const t = setInterval(() => setAgora(Date.now()), 30_000)
     return () => clearInterval(t)
   }, [])
 
-  // Realtime: professores (posição do card), atendimentos (aloca/finaliza)
-  // e lanches (início/fim de intervalo -> bolinha amarela).
   useEffect(() => {
     const canal = supabase
       .channel('painel-sala')
@@ -131,15 +114,13 @@ export function PainelSala({
         { event: '*', schema: 'public', table: 'atendimentos' },
         async (payload) => {
           if (payload.eventType === 'UPDATE' && payload.new.fim) {
-            // Atendimento finalizado (por qualquer usuário) -> sai do painel.
             setAtendimentos((prev) => prev.filter((a) => a.id !== payload.new.id))
             return
           }
           if (payload.eventType === 'INSERT' && !payload.new.fim) {
-            // Novo atendimento aberto por outra sessão: busca o aluno embutido.
             const { data } = await supabase
               .from('atendimentos')
-              .select('id, aluno_id, professor_id, inicio, alunos(id, nome, classificacao, alertas, ultimo_acesso)')
+              .select('id, aluno_id, professor_id, inicio, tarefa, alunos(id, nome, classificacao, alertas, ultimo_acesso, restricoes)')
               .eq('id', payload.new.id)
               .single()
             if (data) {
@@ -155,7 +136,6 @@ export function PainelSala({
         { event: '*', schema: 'public', table: 'lanches' },
         (payload) => {
           if (payload.eventType === 'UPDATE' && payload.new.fim) {
-            // Intervalo encerrado -> bolinha some.
             setIntervalos((prev) => prev.filter((i) => i.id !== payload.new.id))
             return
           }
@@ -172,8 +152,12 @@ export function PainelSala({
     }
   }, [supabase])
 
-  function aoAlocado(professor: Professor, alunoId: string, aluno: AlunoResumo) {
-    // Otimista: o INSERT do realtime também vai chegar, mas isso evita esperar o round-trip.
+  function aoAlocado(
+    professor: Professor,
+    alunoId: string,
+    aluno: AlunoResumo,
+    tarefa: TipoTarefa | null,
+  ) {
     setAtendimentos((prev) => [
       ...prev,
       {
@@ -181,6 +165,7 @@ export function PainelSala({
         aluno_id: alunoId,
         professor_id: professor.id,
         inicio: new Date().toISOString(),
+        tarefa,
         alunos: aluno,
       },
     ])
@@ -240,9 +225,6 @@ export function PainelSala({
             x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
             y: Number.isFinite(professor.pos_y) ? (professor.pos_y as number) : grade.y,
           }
-          // Clampa a posição salva (pode ter sido arrastada numa tela grande)
-          // pra caber na largura atual — sem isso, um card arrastado pra
-          // direita no desktop simplesmente some fora da viewport no celular.
           const pos = {
             x: Math.min(posBruta.x, Math.max(GAP, larguraUtil - larguraCard)),
             y: posBruta.y,
@@ -282,7 +264,7 @@ export function PainelSala({
           <BuscarAluno
             professor={alocandoPara}
             onFechar={() => setAlocandoPara(null)}
-            onAlocado={(alunoId, aluno) => aoAlocado(alocandoPara, alunoId, aluno)}
+            onAlocado={(alunoId, aluno, tarefa) => aoAlocado(alocandoPara, alunoId, aluno, tarefa)}
           />
         )}
       </div>
@@ -324,19 +306,14 @@ function CardProfessor({
   const posAtual = useRef(pos)
   const cabecalhoRef = useRef<HTMLDivElement>(null)
   const [menuIntervaloAberto, setMenuIntervaloAberto] = useState(false)
-  // Vagas extras além do mínimo de 2 — pedidas pela recepção via "+ Adicionar
-  // vaga" quando um professor precisa atender mais alunos ao mesmo tempo.
   const [extras, setExtras] = useState(0)
   posAtual.current = pos
 
-  // Números válidos, com fallback pra posição atual — nunca deixa NaN virar `left`/`top`.
   function numeroSeguro(valor: number, fallback: number) {
     return Number.isFinite(valor) ? valor : fallback
   }
 
   function aoPointerDown(e: React.PointerEvent) {
-    // Captura no cabeçalho (elemento estável), nunca em e.target — se o clique
-    // cair na <Image>, ela pode trocar de nó DOM e derrubar a captura no meio do arrasto.
     cabecalhoRef.current?.setPointerCapture(e.pointerId)
     arrastando.current = true
     offset.current = {
@@ -358,8 +335,6 @@ function CardProfessor({
     onSoltar(posAtual.current.x, posAtual.current.y)
   }
 
-  // Se o navegador soltar a captura sozinho (ex.: troca de janela no meio do
-  // arrasto), encerra o drag em vez de deixar o estado "preso" arrastando.
   function aoPerderCaptura() {
     if (!arrastando.current) return
     arrastando.current = false
@@ -368,8 +343,6 @@ function CardProfessor({
 
   const ocupado = atendimentosDoProfessor.length > 0
   const emIntervalo = Boolean(intervalo)
-  // Sempre pelo menos 2 vagas (requisito: professor pode atender 2 alunos de
-  // largada); o "+ Adicionar vaga" soma mais em cima disso.
   const totalVagas = Math.max(2, atendimentosDoProfessor.length) + extras
 
   return (
@@ -441,6 +414,13 @@ function CardProfessor({
 
               if (atendimentoDaVaga) {
                 const dias = diasDesde(atendimentoDaVaga.alunos.ultimo_acesso)
+                const infoSecundaria = [
+                  dias === null ? null : `Último acesso há ${dias} dia${dias === 1 ? '' : 's'}`,
+                  atendimentoDaVaga.alunos.restricoes,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+
                 return (
                   <div key={atendimentoDaVaga.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
                     <div className="flex items-center justify-between gap-2">
@@ -453,6 +433,16 @@ function CardProfessor({
                         {atendimentoDaVaga.alunos.classificacao}
                       </span>
                     </div>
+
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      <span className="text-xs text-gray-400">Entrou às {formatarHora(atendimentoDaVaga.inicio)}</span>
+                      {atendimentoDaVaga.tarefa && (
+                        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+                          {TIPOS_TAREFA[atendimentoDaVaga.tarefa]}
+                        </span>
+                      )}
+                    </div>
+
                     {atendimentoDaVaga.alunos.alertas?.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
                         {atendimentoDaVaga.alunos.alertas.map((a) => (
@@ -462,12 +452,9 @@ function CardProfessor({
                         ))}
                       </div>
                     )}
-                    <p className="mt-1 text-xs text-gray-400">
-                      {dias === null ? 'Sem registro de acesso anterior' : `Último acesso há ${dias} dia${dias === 1 ? '' : 's'}`}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Entrou às {formatarHora(atendimentoDaVaga.inicio)} · há {formatarDecorrido(atendimentoDaVaga.inicio, agora)}
-                    </p>
+
+                    {infoSecundaria && <p className="mt-1 text-xs text-gray-400">{infoSecundaria}</p>}
+
                     <button
                       onClick={() => onFinalizar(atendimentoDaVaga.id)}
                       className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
@@ -478,28 +465,14 @@ function CardProfessor({
                 )
               }
 
-            const ehVagaExtraRemovivel = i === totalVagas - 1 && extras > 0
-
               return (
-                <div key={`vaga-${professor.id}-${i}`} className="flex items-center gap-1.5">
-                  <button
-                    onClick={onAlocar}
-                    className="flex-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
-                  >
-                    + Alocar aluno
-                  </button>
-                  {ehVagaExtraRemovivel && (
-                    <button
-                      onClick={() => setExtras((v) => Math.max(0, v - 1))}
-                      title="Remover esta vaga"
-                      className="shrink-0 rounded-md border border-gray-200 p-2 text-gray-300 hover:border-red-300 hover:text-red-600"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                <button
+                  key={`vaga-${professor.id}-${i}`}
+                  onClick={onAlocar}
+                  className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                >
+                  + Alocar aluno
+                </button>
               )
             })}
 
