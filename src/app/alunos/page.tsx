@@ -4,6 +4,7 @@ import estilos from './alunos.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, diasDesde, statusPlano } from '@/lib/utils'
 import type { AlunoComProfessor } from '@/lib/tipos'
+import { BuscarAlunoSelect } from './buscar-aluno-select'
 
 export default async function AlunosPage({
   searchParams,
@@ -32,14 +33,9 @@ export default async function AlunosPage({
           </Link>
         </div>
 
-        <form className="mt-4">
-          <input
-            name="q"
-            defaultValue={busca}
-            placeholder="Buscar por nome…"
-            className="w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
-          />
-        </form>
+        <div className="mt-4">
+          <BuscarAlunoSelect valorInicial={busca} />
+        </div>
 
         {error && (
           <p className="mt-2 text-sm text-red-600">Erro ao carregar: {error.message}</p>
