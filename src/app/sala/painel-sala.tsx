@@ -15,7 +15,7 @@ import {
 import { BuscarAluno } from './buscar-aluno'
 import { BuscarProfessorParaSala } from './buscar-professor'
 
-const ALTURA_CARD = 300
+const ALTURA_CARD = 420
 const GAP = 16
 const LARGURA_CARD_MIN = 168
 const LARGURA_CARD_MAX = 240
@@ -124,9 +124,13 @@ export function PainelSala({
               .eq('id', payload.new.id)
               .single()
             if (data) {
-              setAtendimentos((prev) =>
-                prev.some((a) => a.id === data.id) ? prev : [...prev, data as unknown as AtendimentoAberto],
-              )
+              // Troca qualquer entrada otimista (ou repetida) do mesmo aluno
+              // pela linha real do banco — é isso que evita o aluno aparecer
+              // alocado duas vezes quando o realtime confirma a alocação.
+              setAtendimentos((prev) => {
+                const outros = prev.filter((a) => a.aluno_id !== data.aluno_id)
+                return [...outros, data as unknown as AtendimentoAberto]
+              })
             }
           }
         },
@@ -306,6 +310,8 @@ function CardProfessor({
   const posAtual = useRef(pos)
   const cabecalhoRef = useRef<HTMLDivElement>(null)
   const [menuIntervaloAberto, setMenuIntervaloAberto] = useState(false)
+  // Vagas extras além do mínimo de 2 — pedidas via "+ Adicionar vaga" e
+  // removíveis via "x", só quando estão vazias.
   const [extras, setExtras] = useState(0)
   posAtual.current = pos
 
@@ -343,7 +349,8 @@ function CardProfessor({
 
   const ocupado = atendimentosDoProfessor.length > 0
   const emIntervalo = Boolean(intervalo)
-  const totalVagas = Math.max(2, atendimentosDoProfessor.length) + extras
+  const baseVagas = Math.max(2, atendimentosDoProfessor.length)
+  const totalVagas = baseVagas + extras
 
   return (
     <div
@@ -393,22 +400,21 @@ function CardProfessor({
         </div>
       </div>
 
-      <div className="space-y-2 p-3">
-        {emIntervalo ? (
-          <div>
-            <p className="text-sm font-medium text-gray-900">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
-            <p className="mt-1 text-xs text-gray-400">
-              Há {formatarDecorrido(intervalo!.inicio, agora)}
-            </p>
-            <button
-              onClick={onFinalizarIntervalo}
-              className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
-            >
-              Encerrar intervalo
-            </button>
-          </div>
-        ) : (
-          <>
+      {emIntervalo ? (
+        <div className="p-3">
+          <p className="text-sm font-medium text-gray-900">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
+          <p className="mt-1 text-xs text-gray-400">Há {formatarDecorrido(intervalo!.inicio, agora)}</p>
+          <button
+            onClick={onFinalizarIntervalo}
+            className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+          >
+            Encerrar intervalo
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Área com scroll próprio — o card não cresce mais infinito */}
+          <div className="max-h-64 space-y-2 overflow-y-auto p-3">
             {Array.from({ length: totalVagas }).map((_, i) => {
               const atendimentoDaVaga = atendimentosDoProfessor[i]
 
@@ -465,17 +471,35 @@ function CardProfessor({
                 )
               }
 
+              // Só as vagas além das 2 padrão podem ser removidas com o "x".
+              const removivel = i >= baseVagas
+
               return (
-                <button
-                  key={`vaga-${professor.id}-${i}`}
-                  onClick={onAlocar}
-                  className="w-full rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
-                >
-                  + Alocar aluno
-                </button>
+                <div key={`vaga-${professor.id}-${i}`} className="flex items-center gap-1">
+                  <button
+                    onClick={onAlocar}
+                    className="flex-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                  >
+                    + Alocar aluno
+                  </button>
+                  {removivel && (
+                    <button
+                      onClick={() => setExtras((v) => Math.max(0, v - 1))}
+                      title="Remover vaga"
+                      className="shrink-0 rounded p-1.5 text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               )
             })}
+          </div>
 
+          {/* Fora da área de scroll — sempre visível */}
+          <div className="space-y-2 border-t border-gray-100 p-3">
             <button
               onClick={() => setExtras((v) => v + 1)}
               className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-400 hover:border-gray-400 hover:text-gray-600"
@@ -509,9 +533,9 @@ function CardProfessor({
                 )}
               </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
