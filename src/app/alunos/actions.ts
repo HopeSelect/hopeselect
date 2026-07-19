@@ -12,12 +12,19 @@ function dadosAluno(fd: FormData) {
     nome: String(fd.get('nome') ?? '').trim(),
     matricula: valorOuNull(fd.get('matricula')),
     telefone: valorOuNull(fd.get('telefone')),
+    email: valorOuNull(fd.get('email')),
+    data_nascimento: valorOuNull(fd.get('data_nascimento')),
+    data_matricula: valorOuNull(fd.get('data_matricula')),
+    inicio_plano: valorOuNull(fd.get('inicio_plano')),
+    vencimento_plano: valorOuNull(fd.get('vencimento_plano')),
     classificacao: String(fd.get('classificacao') ?? 'A'),
     restricoes: valorOuNull(fd.get('restricoes')),
     observacoes: valorOuNull(fd.get('observacoes')),
     alertas: parseAlertas(fd.get('alertas')),
     origem: valorOuNull(fd.get('origem')),
     ultimo_acesso: valorOuNull(fd.get('ultimo_acesso')),
+    professor_id: valorOuNull(fd.get('professor_id')),
+    nutricionista: valorOuNull(fd.get('nutricionista')),
   }
 }
 
