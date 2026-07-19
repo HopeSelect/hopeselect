@@ -12,7 +12,11 @@ export default async function EditarAlunoPage({
 }) {
   const { id } = await params
   const supabase = await criarClienteServer()
-  const { data } = await supabase.from('alunos').select('*').eq('id', id).single()
+
+  const [{ data }, { data: professores }] = await Promise.all([
+    supabase.from('alunos').select('*').eq('id', id).single(),
+    supabase.from('professores').select('id, nome').eq('ativo', true).order('nome'),
+  ])
 
   if (!data) notFound()
   const aluno = data as Aluno
@@ -32,7 +36,7 @@ export default async function EditarAlunoPage({
           </form>
         </div>
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
-          <AlunoForm acao={atualizarAluno.bind(null, aluno.id)} inicial={aluno} />
+          <AlunoForm acao={atualizarAluno.bind(null, aluno.id)} professores={professores ?? []} inicial={aluno} />
         </div>
       </main>
     </AppShell>
