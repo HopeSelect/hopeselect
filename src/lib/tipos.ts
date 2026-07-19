@@ -25,13 +25,25 @@ export interface Aluno {
   matricula: string | null
   nome: string
   telefone: string | null
+  email: string | null
+  data_nascimento: string | null
+  data_matricula: string | null
+  inicio_plano: string | null
+  vencimento_plano: string | null
   classificacao: Classificacao
   restricoes: string | null
   observacoes: string | null
   alertas: string[]
   ultimo_acesso: string | null
   origem: string | null
+  professor_id: string | null
+  nutricionista: string | null
   created_at: string
+}
+
+// Aluno com o nome do professor vinculado embutido (join usado na listagem).
+export interface AlunoComProfessor extends Aluno {
+  professores: Pick<Professor, 'nome'> | null
 }
 
 export type AlunoResumo = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes'>
@@ -70,7 +82,6 @@ export interface TarefaComRelacoes extends Tarefa {
   professores: Pick<Professor, 'id' | 'nome'>
 }
 
-// Linha de vw_tarefas_detalhe (relatório de Tarefas: filtros, exportação, gráficos).
 export interface LinhaTarefa {
   id: string
   data: string
