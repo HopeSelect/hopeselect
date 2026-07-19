@@ -3,21 +3,32 @@
 import { useActionState } from 'react'
 import Link from 'next/link'
 import type { Aluno, Classificacao } from '@/lib/tipos'
-import { CLASSIFICACOES } from '@/lib/utils'
+import { CLASSIFICACOES, idadeDesde } from '@/lib/utils'
 import type { EstadoForm } from './actions'
 
 type Acao = (prev: EstadoForm, fd: FormData) => Promise<EstadoForm>
 
+type OpcaoNome = { id: string; nome: string }
+
 const campo =
   'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900'
 
-export function AlunoForm({ acao, inicial }: { acao: Acao; inicial?: Aluno }) {
+export function AlunoForm({
+  acao,
+  professores,
+  inicial,
+}: {
+  acao: Acao
+  professores: OpcaoNome[]
+  inicial?: Aluno
+}) {
   const [estado, submit, pendente] = useActionState(acao, null)
+  const idade = idadeDesde(inicial?.data_nascimento ?? null)
 
   return (
     <form action={submit} className="space-y-4">
       <label className="block text-sm font-medium text-gray-700">
-        Nome *
+        Nome completo *
         <input name="nome" required defaultValue={inicial?.nome} className={campo} />
       </label>
 
@@ -31,12 +42,25 @@ export function AlunoForm({ acao, inicial }: { acao: Acao; inicial?: Aluno }) {
           <input name="telefone" defaultValue={inicial?.telefone ?? ''} className={campo} />
         </label>
         <label className="block text-sm font-medium text-gray-700">
-          Classificação
-          <select
-            name="classificacao"
-            defaultValue={inicial?.classificacao ?? 'A'}
+          Email
+          <input name="email" type="email" defaultValue={inicial?.email ?? ''} className={campo} />
+        </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="block text-sm font-medium text-gray-700">
+          Data de nascimento
+          {idade !== null && <span className="ml-1 font-normal text-gray-400">({idade} anos)</span>}
+          <input
+            name="data_nascimento"
+            type="date"
+            defaultValue={inicial?.data_nascimento?.slice(0, 10) ?? ''}
             className={campo}
-          >
+          />
+        </label>
+        <label className="block text-sm font-medium text-gray-700">
+          Classificação
+          <select name="classificacao" defaultValue={inicial?.classificacao ?? 'A'} className={campo}>
             {(Object.keys(CLASSIFICACOES) as Classificacao[]).map((c) => (
               <option key={c} value={c}>
                 {CLASSIFICACOES[c].rotulo}
@@ -44,16 +68,68 @@ export function AlunoForm({ acao, inicial }: { acao: Acao; inicial?: Aluno }) {
             ))}
           </select>
         </label>
+        <label className="block text-sm font-medium text-gray-700">
+          Último acesso
+          <input
+            name="ultimo_acesso"
+            type="date"
+            defaultValue={inicial?.ultimo_acesso?.slice(0, 10) ?? ''}
+            className={campo}
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="block text-sm font-medium text-gray-700">
+          Data da matrícula
+          <input
+            name="data_matricula"
+            type="date"
+            defaultValue={inicial?.data_matricula?.slice(0, 10) ?? ''}
+            className={campo}
+          />
+        </label>
+        <label className="block text-sm font-medium text-gray-700">
+          Início do plano
+          <input
+            name="inicio_plano"
+            type="date"
+            defaultValue={inicial?.inicio_plano?.slice(0, 10) ?? ''}
+            className={campo}
+          />
+        </label>
+        <label className="block text-sm font-medium text-gray-700">
+          Vencimento do plano
+          <input
+            name="vencimento_plano"
+            type="date"
+            defaultValue={inicial?.vencimento_plano?.slice(0, 10) ?? ''}
+            className={campo}
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Professor
+          <select name="professor_id" defaultValue={inicial?.professor_id ?? ''} className={campo}>
+            <option value="">Nenhum</option>
+            {professores.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-medium text-gray-700">
+          Nutricionista
+          <input name="nutricionista" defaultValue={inicial?.nutricionista ?? ''} className={campo} />
+        </label>
       </div>
 
       <label className="block text-sm font-medium text-gray-700">
         Restrições
-        <textarea
-          name="restricoes"
-          rows={2}
-          defaultValue={inicial?.restricoes ?? ''}
-          className={campo}
-        />
+        <textarea name="restricoes" rows={2} defaultValue={inicial?.restricoes ?? ''} className={campo} />
       </label>
 
       <label className="block text-sm font-medium text-gray-700">
@@ -68,29 +144,13 @@ export function AlunoForm({ acao, inicial }: { acao: Acao; inicial?: Aluno }) {
 
       <label className="block text-sm font-medium text-gray-700">
         Observações
-        <textarea
-          name="observacoes"
-          rows={2}
-          defaultValue={inicial?.observacoes ?? ''}
-          className={campo}
-        />
+        <textarea name="observacoes" rows={2} defaultValue={inicial?.observacoes ?? ''} className={campo} />
       </label>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Origem
-          <input name="origem" defaultValue={inicial?.origem ?? ''} className={campo} />
-        </label>
-        <label className="block text-sm font-medium text-gray-700">
-          Último acesso
-          <input
-            name="ultimo_acesso"
-            type="date"
-            defaultValue={inicial?.ultimo_acesso?.slice(0, 10) ?? ''}
-            className={campo}
-          />
-        </label>
-      </div>
+      <label className="block text-sm font-medium text-gray-700">
+        Origem
+        <input name="origem" defaultValue={inicial?.origem ?? ''} className={campo} />
+      </label>
 
       {estado?.erro && (
         <p className="text-sm text-red-600" role="alert">
