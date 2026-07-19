@@ -1,5 +1,4 @@
 import { AppShell } from '@/components/app-shell'
-import estilos from './relatorios.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, TIPOS_TAREFA } from '@/lib/utils'
 import type {
@@ -8,14 +7,15 @@ import type {
   LinhaProdutividade,
   LinhaTarefasPorProfessor,
 } from '@/lib/tipos'
-import { FiltroPeriodo } from './filtro-periodo'
+import { FiltrosAtendimentos } from './filtros-atendimentos'
+import { GraficoAtendimentos } from './grafico-atendimentos'
 import { ExportarBotoes } from './exportar-botoes'
 
 function hojeISO() {
   return new Date().toISOString().slice(0, 10)
 }
-function seteDiasAtrasISO() {
-  return new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+function diasAtrasISO(dias: number) {
+  return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10)
 }
 
 // Junta atendimentos + tarefas concluídas por professor/dia. As duas fontes já
@@ -61,36 +61,48 @@ function combinarProdutividade(
 export default async function RelatoriosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ de?: string; ate?: string }>
+  searchParams: Promise<{ aluno?: string; professor?: string; tipo?: string; dias?: string; de?: string; ate?: string }>
 }) {
   const params = await searchParams
-  const de = params.de || seteDiasAtrasISO()
-  const ate = params.ate || hojeISO()
+  const usaPeriodoPersonalizado = Boolean(params.de && params.ate)
+  const dias = Number(params.dias ?? '7') || 7
+  const de = usaPeriodoPersonalizado ? (params.de as string) : diasAtrasISO(dias)
+  const ate = usaPeriodoPersonalizado ? (params.ate as string) : hojeISO()
 
   const supabase = await criarClienteServer()
+
+  let consultaAtendimentos = supabase
+    .from('vw_atendimentos')
+    .select('*')
+    .gte('data', de)
+    .lte('data', ate)
+    .order('data', { ascending: false })
+    .order('inicio', { ascending: false })
+
+  if (params.aluno) consultaAtendimentos = consultaAtendimentos.ilike('aluno_nome', `%${params.aluno}%`)
+  if (params.professor) consultaAtendimentos = consultaAtendimentos.eq('professor_id', params.professor)
+  if (params.tipo) consultaAtendimentos = consultaAtendimentos.eq('tarefa', params.tipo)
+
+  let consultaAtPorProf = supabase
+    .from('vw_atendimentos_por_professor')
+    .select('*')
+    .gte('data', de)
+    .lte('data', ate)
+  if (params.professor) consultaAtPorProf = consultaAtPorProf.eq('professor_id', params.professor)
+
+  let consultaTarefas = supabase.from('vw_tarefas_por_professor_dia').select('*').gte('data', de).lte('data', ate)
+  if (params.professor) consultaTarefas = consultaTarefas.eq('professor_id', params.professor)
 
   const [
     { data: atendimentos, error: erroAtendimentos },
     { data: atendimentosPorProfessor, error: erroAtPorProf },
     { data: tarefasPorProfessor, error: erroTarefas },
+    { data: professores },
   ] = await Promise.all([
-    supabase
-      .from('vw_atendimentos')
-      .select('*')
-      .gte('data', de)
-      .lte('data', ate)
-      .order('data', { ascending: false })
-      .order('inicio', { ascending: false }),
-    supabase
-      .from('vw_atendimentos_por_professor')
-      .select('*')
-      .gte('data', de)
-      .lte('data', ate),
-    supabase
-      .from('vw_tarefas_por_professor_dia')
-      .select('*')
-      .gte('data', de)
-      .lte('data', ate),
+    consultaAtendimentos,
+    consultaAtPorProf,
+    consultaTarefas,
+    supabase.from('professores').select('id, nome').eq('ativo', true).order('nome'),
   ])
 
   const erro = erroAtendimentos?.message ?? erroAtPorProf?.message ?? erroTarefas?.message ?? null
@@ -105,11 +117,19 @@ export default async function RelatoriosPage({
     <AppShell>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <p className="mt-1 text-sm text-gray-500">
-          Atendimentos por período e produtividade por professor.
+          Acessos dos alunos: quantas vezes vieram, duração de treino, com quais professores treinaram e quais tarefas foram realizadas.
         </p>
 
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-          <FiltroPeriodo de={de} ate={ate} />
+          <FiltrosAtendimentos
+            professores={professores ?? []}
+            aluno={params.aluno ?? ''}
+            professorSelecionado={params.professor ?? ''}
+            tipoSelecionado={params.tipo ?? ''}
+            dias={usaPeriodoPersonalizado ? null : dias}
+            de={de}
+            ate={ate}
+          />
           <ExportarBotoes
             atendimentos={linhasAtendimentos}
             produtividade={linhasProdutividade}
@@ -120,6 +140,8 @@ export default async function RelatoriosPage({
 
         {erro && <p className="mt-4 text-sm text-red-600">Erro ao carregar: {erro}</p>}
 
+        <GraficoAtendimentos linhas={linhasAtendimentos} />
+
         <section className="mt-8">
           <h2 className="text-lg font-medium text-gray-900">Atendimentos</h2>
           <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
@@ -129,7 +151,7 @@ export default async function RelatoriosPage({
                   <th className="px-4 py-2">Data</th>
                   <th className="px-4 py-2">Aluno</th>
                   <th className="px-4 py-2">Classe</th>
-                 <th className="px-4 py-2">Professor</th>
+                  <th className="px-4 py-2">Professor</th>
                   <th className="px-4 py-2">Tarefa</th>
                   <th className="px-4 py-2">Entrada</th>
                   <th className="px-4 py-2">Saída</th>
@@ -140,7 +162,7 @@ export default async function RelatoriosPage({
                 {linhasAtendimentos.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
-                      Nenhum atendimento no período.
+                      Nenhum atendimento no período com esses filtros.
                     </td>
                   </tr>
                 )}
@@ -157,7 +179,7 @@ export default async function RelatoriosPage({
                         {l.aluno_classificacao}
                       </span>
                     </td>
-                     <td className="px-4 py-2 text-gray-600">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600">{l.professor_nome}</td>
                     <td className="px-4 py-2 text-gray-600">{l.tarefa ? TIPOS_TAREFA[l.tarefa] : '—'}</td>
                     <td className="px-4 py-2 text-gray-600">{l.entrada_hms}</td>
                     <td className="px-4 py-2 text-gray-600">
