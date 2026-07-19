@@ -1,12 +1,10 @@
 import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo } from '@/lib/tipos'
 
-// Converte um campo de formulário em string ou null (vazio => null).
 export function valorOuNull(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? '').trim()
   return s === '' ? null : s
 }
 
-// Alertas chegam como texto separado por vírgula ou quebra de linha.
 export function parseAlertas(v: FormDataEntryValue | null): string[] {
   return String(v ?? '')
     .split(/[,\n]/)
@@ -14,7 +12,6 @@ export function parseAlertas(v: FormDataEntryValue | null): string[] {
     .filter(Boolean)
 }
 
-// Cor/rótulo de cada classificação (requisito do cliente: leitura por cor).
 export const CLASSIFICACOES: Record<Classificacao, { rotulo: string; classe: string }> = {
   A: { rotulo: 'A — sem restrições', classe: 'bg-green-100 text-green-800 border-green-300' },
   B: { rotulo: 'B — leves restrições', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
@@ -28,11 +25,33 @@ export const GENEROS: Record<Genero, string> = {
   outro: 'Outro',
 }
 
-// "Acesso há X dias" a partir do último acesso.
 export function diasDesde(data: string | null): number | null {
   if (!data) return null
   const ms = Date.now() - new Date(data).getTime()
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)))
+}
+
+// Idade em anos completos a partir da data de nascimento.
+export function idadeDesde(dataNascimento: string | null): number | null {
+  if (!dataNascimento) return null
+  const hoje = new Date()
+  const nasc = new Date(dataNascimento)
+  let idade = hoje.getFullYear() - nasc.getFullYear()
+  const aindaNaoFezAniversario =
+    hoje.getMonth() < nasc.getMonth() || (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate())
+  if (aindaNaoFezAniversario) idade--
+  return idade
+}
+
+// Selo de vencimento do plano: vencido (vermelho) ou vence em até 7 dias
+// (amarelo). Sem selo quando o plano está tranquilo ou não tem data.
+export function statusPlano(vencimento: string | null): { rotulo: string; classe: string } | null {
+  if (!vencimento) return null
+  const hoje = new Date().toISOString().slice(0, 10)
+  const emSeteDias = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+  if (vencimento < hoje) return { rotulo: 'Plano vencido', classe: 'bg-red-50 text-red-700' }
+  if (vencimento <= emSeteDias) return { rotulo: 'Vence em breve', classe: 'bg-yellow-50 text-yellow-700' }
+  return null
 }
 
 export const TIPOS_TAREFA: Record<TipoTarefa, string> = {
@@ -42,8 +61,6 @@ export const TIPOS_TAREFA: Record<TipoTarefa, string> = {
   lanche: 'Lanche',
 }
 
-// Todos os status possíveis (inclui "cancelada", legado — não aparece nos
-// seletores novos, mas tarefas antigas com esse status continuam com rótulo).
 export const STATUS_TAREFA: Record<StatusTarefa, { rotulo: string; classe: string }> = {
   a_realizar: { rotulo: 'A realizar', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
   concluida: { rotulo: 'Concluída', classe: 'bg-green-100 text-green-800 border-green-300' },
@@ -52,11 +69,8 @@ export const STATUS_TAREFA: Record<StatusTarefa, { rotulo: string; classe: strin
   cancelada: { rotulo: 'Cancelada', classe: 'bg-gray-100 text-gray-500 border-gray-300' },
 }
 
-// Os 4 status que a recepção/líder escolhe ao criar ou editar uma tarefa.
-// "cancelada" fica de fora — é só um rótulo legado exibido quando já existe.
 export const STATUS_TAREFA_SELECIONAVEIS: StatusTarefa[] = ['a_realizar', 'concluida', 'agendar', 'realizar_novamente']
 
-// "hoje", "amanhã" ou dd/mm para exibir a data da tarefa de forma legível.
 export function formatarDataTarefa(dataIso: string): string {
   const hoje = new Date().toISOString().slice(0, 10)
   const amanha = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
