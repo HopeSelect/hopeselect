@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import estilos from './alunos.module.css'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { CLASSIFICACOES, diasDesde } from '@/lib/utils'
-import type { Aluno } from '@/lib/tipos'
+import { CLASSIFICACOES, diasDesde, statusPlano } from '@/lib/utils'
+import type { AlunoComProfessor } from '@/lib/tipos'
 
 export default async function AlunosPage({
   searchParams,
@@ -14,11 +14,11 @@ export default async function AlunosPage({
   const busca = (q ?? '').trim()
 
   const supabase = await criarClienteServer()
-  let query = supabase.from('alunos').select('*').order('nome').limit(50)
+  let query = supabase.from('alunos').select('*, professores(nome)').order('nome').limit(50)
   if (busca) query = query.ilike('nome', `%${busca}%`)
   const { data, error } = await query
 
-  const alunos = (data ?? []) as Aluno[]
+  const alunos = (data ?? []) as unknown as AlunoComProfessor[]
 
   return (
     <AppShell>
@@ -53,6 +53,7 @@ export default async function AlunosPage({
           )}
           {alunos.map((a) => {
             const dias = diasDesde(a.ultimo_acesso)
+            const plano = statusPlano(a.vencimento_plano)
             return (
               <Link
                 key={a.id}
@@ -67,6 +68,10 @@ export default async function AlunosPage({
                 </span>
                 <span className="font-medium text-gray-900">{a.nome}</span>
 
+                {a.professores?.nome && (
+                  <span className="text-xs text-gray-400">· {a.professores.nome}</span>
+                )}
+
                 {a.alertas.map((alerta) => (
                   <span
                     key={alerta}
@@ -75,6 +80,12 @@ export default async function AlunosPage({
                     {alerta}
                   </span>
                 ))}
+
+                {plano && (
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${plano.classe}`}>
+                    {plano.rotulo}
+                  </span>
+                )}
 
                 <span className="ml-auto text-xs text-gray-500">
                   {dias === null ? 'sem registro de acesso' : `Acesso há ${dias} dia(s)`}
