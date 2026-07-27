@@ -23,6 +23,7 @@ import {
 import { concluirTarefa, iniciarTarefa } from '@/app/tarefas/actions'
 import { BuscarAluno } from './buscar-aluno'
 import { BuscarProfessorParaSala } from './buscar-professor'
+import { PerfilAlunoModal } from './perfil-aluno-modal'
 
 const ALTURA_CARD = 480
 const GAP = 16
@@ -94,6 +95,7 @@ export function PainelSala({
   const [intervalos, setIntervalos] = useState(intervalosIniciais)
   const [tarefas, setTarefas] = useState(tarefasIniciais)
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
+  const [verPerfilAlunoId, setVerPerfilAlunoId] = useState<string | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
   const [erroRemocao, setErroRemocao] = useState<string | null>(null)
   const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
@@ -211,9 +213,32 @@ export function PainelSala({
     setAlocandoPara(null)
   }
 
+  async function aoConcluirTarefa(id: string) {
+    setTarefas((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, fim: new Date().toISOString(), status: 'concluida' } : t)),
+    )
+    await concluirTarefa(id)
+  }
+
+  // Ao finalizar o atendimento, conclui junto qualquer tarefa de hoje desse
+  // professor com esse mesmo aluno que ainda não tenha sido concluída —
+  // evita ter que fechar a tarefa separadamente.
   async function aoFinalizar(atendimentoId: string) {
+    const atendimento = atendimentos.find((a) => a.id === atendimentoId)
     setAtendimentos((prev) => prev.filter((a) => a.id !== atendimentoId))
     await finalizarAtendimento(atendimentoId)
+
+    if (atendimento) {
+      const tarefasRelacionadas = tarefas.filter(
+        (t) =>
+          t.aluno_id === atendimento.aluno_id &&
+          t.professor_id === atendimento.professor_id &&
+          t.status !== 'concluida',
+      )
+      for (const t of tarefasRelacionadas) {
+        await aoConcluirTarefa(t.id)
+      }
+    }
   }
 
   async function aoIniciarIntervalo(professor: Professor, tipo: TipoIntervalo) {
@@ -248,13 +273,6 @@ export function PainelSala({
   async function aoIniciarTarefa(id: string) {
     setTarefas((prev) => prev.map((t) => (t.id === id ? { ...t, inicio: new Date().toISOString() } : t)))
     await iniciarTarefa(id)
-  }
-
-  async function aoConcluirTarefa(id: string) {
-    setTarefas((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, fim: new Date().toISOString(), status: 'concluida' } : t)),
-    )
-    await concluirTarefa(id)
   }
 
   return (
@@ -305,6 +323,7 @@ export function PainelSala({
               onRemoverDaSala={() => void aoRemoverDaSala(professor)}
               onIniciarTarefa={(id) => void aoIniciarTarefa(id)}
               onConcluirTarefa={(id) => void aoConcluirTarefa(id)}
+              onVerPerfil={(alunoId) => setVerPerfilAlunoId(alunoId)}
             />
           )
         })}
@@ -321,6 +340,10 @@ export function PainelSala({
             onFechar={() => setAlocandoPara(null)}
             onAlocado={(alunoId, aluno, tarefa) => aoAlocado(alocandoPara, alunoId, aluno, tarefa)}
           />
+        )}
+
+        {verPerfilAlunoId && (
+          <PerfilAlunoModal alunoId={verPerfilAlunoId} onFechar={() => setVerPerfilAlunoId(null)} />
         )}
       </div>
     </div>
@@ -344,6 +367,7 @@ function CardProfessor({
   onRemoverDaSala,
   onIniciarTarefa,
   onConcluirTarefa,
+  onVerPerfil,
 }: {
   professor: Professor
   pos: { x: number; y: number }
@@ -361,6 +385,7 @@ function CardProfessor({
   onRemoverDaSala: () => void
   onIniciarTarefa: (id: string) => void
   onConcluirTarefa: (id: string) => void
+  onVerPerfil: (alunoId: string) => void
 }) {
   const arrastando = useRef(false)
   const offset = useRef({ dx: 0, dy: 0 })
@@ -530,9 +555,13 @@ function CardProfessor({
                 return (
                   <div key={atendimentoDaVaga.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-gray-900">
+                      <button
+                        onClick={() => onVerPerfil(atendimentoDaVaga.aluno_id)}
+                        className="truncate text-left text-sm font-medium text-gray-900 hover:underline"
+                        title="Ver ficha do aluno"
+                      >
                         {atendimentoDaVaga.alunos.nome}
-                      </p>
+                      </button>
                       <span
                         className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[atendimentoDaVaga.alunos.classificacao].classe}`}
                       >
