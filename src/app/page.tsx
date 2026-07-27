@@ -4,7 +4,6 @@ import { criarClienteServer } from '@/lib/supabase/server'
 import type { Aluno } from '@/lib/tipos'
 import estilos from './inicio.module.css'
 
-// Dados de vw_atendimentos_por_dia (migration 20260715120100_views_relatorios.sql).
 type AtendimentosPorDia = { data: string; total_atendimentos: number }
 
 function hojeISO() {
@@ -19,8 +18,6 @@ function iniciais(nome: string): string {
   return (partes[0]?.[0] ?? '').concat(partes[1]?.[0] ?? '').toUpperCase()
 }
 
-// Monta os últimos 7 dias (com zero para dias sem atendimento) a partir do
-// que veio da view — a agregação em si já saiu pronta do banco.
 function montarSparkline(porDia: AtendimentosPorDia[]) {
   const porData = new Map(porDia.map((d) => [d.data, d.total_atendimentos]))
   const dias: { label: string; data: string; total: number }[] = []
@@ -38,8 +35,6 @@ function montarSparkline(porDia: AtendimentosPorDia[]) {
   }))
 }
 
-// Hora local de São Paulo a partir de um timestamp — o servidor roda em UTC
-// na Vercel, então não dá pra usar new Date().getHours() direto aqui.
 function horaSaoPaulo(iso: string): number {
   const hora = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Sao_Paulo',
@@ -50,9 +45,6 @@ function horaSaoPaulo(iso: string): number {
   return n === 24 ? 0 : n
 }
 
-// Conta atendimentos por hora do dia (últimos 30 dias) e acha o horário de
-// pico. Só mostra a faixa de horas que realmente tem movimento, pra não
-// desenhar um gráfico cheio de barras zeradas de madrugada.
 function montarPico(inicios: { inicio: string }[]) {
   const contagem = new Array(24).fill(0)
   for (const { inicio } of inicios) contagem[horaSaoPaulo(inicio)]++
@@ -174,14 +166,21 @@ export default async function InicioPage() {
           <div className={estilos.cardPainel}>
             <div className={estilos.painelTitulo}>Fluxo de atendimentos — últimos 7 dias</div>
             <div className={estilos.sparkline}>
-              {sparkline.map((d) => (
-                <div key={d.data} className={estilos.sparklineColuna}>
-                  <div className={estilos.sparklineBarraTrilho}>
-                    <div className={estilos.sparklineBarra} style={{ height: `${d.alturaPct}%` }} />
+              {sparkline.map((d) => {
+                const dataFormatada = new Date(`${d.data}T00:00:00`).toLocaleDateString('pt-BR')
+                return (
+                  <div key={d.data} className={estilos.sparklineColuna}>
+                    <span className={estilos.sparklineValor}>{d.total > 0 ? d.total : '\u00A0'}</span>
+                    <div
+                      className={estilos.sparklineBarraTrilho}
+                      title={`${dataFormatada}: ${d.total} atendimento${d.total === 1 ? '' : 's'}`}
+                    >
+                      <div className={estilos.sparklineBarra} style={{ height: `${d.alturaPct}%` }} />
+                    </div>
+                    <span className={estilos.sparklineLabel}>{d.label}</span>
                   </div>
-                  <span className={estilos.sparklineLabel}>{d.label}</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
@@ -217,7 +216,11 @@ export default async function InicioPage() {
             <div className={estilos.sparkline}>
               {pico.horas.map((h) => (
                 <div key={h.hora} className={estilos.sparklineColuna}>
-                  <div className={estilos.sparklineBarraTrilho}>
+                  <span className={estilos.sparklineValor}>{h.total > 0 ? h.total : '\u00A0'}</span>
+                  <div
+                    className={estilos.sparklineBarraTrilho}
+                    title={`${String(h.hora).padStart(2, '0')}h–${String((h.hora + 1) % 24).padStart(2, '0')}h: ${h.total} atendimento${h.total === 1 ? '' : 's'}`}
+                  >
                     <div
                       className={estilos.sparklineBarra}
                       style={{
