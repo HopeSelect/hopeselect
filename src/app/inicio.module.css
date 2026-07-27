@@ -65,7 +65,12 @@
   margin-bottom: var(--space-4);
 }
 
-/* ---------- Sparkline (últimos 7 dias) ---------- */
+.picoDestaque {
+  font-weight: 400;
+  color: var(--brand-500);
+}
+
+/* ---------- Sparkline (últimos 7 dias / horário de pico) ---------- */
 
 .sparkline {
   display: flex;
