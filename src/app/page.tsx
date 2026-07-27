@@ -38,6 +38,40 @@ function montarSparkline(porDia: AtendimentosPorDia[]) {
   }))
 }
 
+// Hora local de São Paulo a partir de um timestamp — o servidor roda em UTC
+// na Vercel, então não dá pra usar new Date().getHours() direto aqui.
+function horaSaoPaulo(iso: string): number {
+  const hora = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date(iso))
+  const n = Number(hora)
+  return n === 24 ? 0 : n
+}
+
+// Conta atendimentos por hora do dia (últimos 30 dias) e acha o horário de
+// pico. Só mostra a faixa de horas que realmente tem movimento, pra não
+// desenhar um gráfico cheio de barras zeradas de madrugada.
+function montarPico(inicios: { inicio: string }[]) {
+  const contagem = new Array(24).fill(0)
+  for (const { inicio } of inicios) contagem[horaSaoPaulo(inicio)]++
+
+  const horasComDado = contagem.map((total, hora) => ({ hora, total })).filter((h) => h.total > 0)
+  if (horasComDado.length === 0)
+    return { horas: [] as { hora: number; total: number }[], picoLabel: null as string | null }
+
+  const minHora = Math.min(...horasComDado.map((h) => h.hora))
+  const maxHora = Math.max(...horasComDado.map((h) => h.hora))
+  const horas = []
+  for (let h = minHora; h <= maxHora; h++) horas.push({ hora: h, total: contagem[h] })
+
+  const pico = horas.reduce((a, b) => (b.total > a.total ? b : a))
+  const picoLabel = `${String(pico.hora).padStart(2, '0')}h–${String((pico.hora + 1) % 24).padStart(2, '0')}h`
+
+  return { horas, picoLabel }
+}
+
 const ATALHOS = [
   {
     href: '/sala',
@@ -76,6 +110,7 @@ export default async function InicioPage() {
     { count: statTotalAlunos },
     { data: porDia },
     { data: alunosRecentes },
+    { data: atendimentos30dias },
   ] = await Promise.all([
     supabase.from('atendimentos').select('*', { count: 'exact', head: true }).is('fim', null),
     supabase.from('professores').select('*', { count: 'exact', head: true }).eq('ativo', true),
@@ -90,6 +125,11 @@ export default async function InicioPage() {
       .select('id, nome, classificacao, alertas')
       .order('created_at', { ascending: false })
       .limit(30),
+    supabase
+      .from('atendimentos')
+      .select('inicio')
+      .gte('data', diasAtrasISO(29))
+      .lte('data', hoje),
   ])
 
   const sparkline = montarSparkline((porDia ?? []) as AtendimentosPorDia[])
@@ -100,6 +140,9 @@ export default async function InicioPage() {
   )
     .filter((a) => a.alertas && a.alertas.length > 0)
     .slice(0, 4)
+
+  const pico = montarPico((atendimentos30dias ?? []) as { inicio: string }[])
+  const maiorPico = Math.max(1, ...pico.horas.map((h) => h.total))
 
   return (
     <AppShell>
@@ -161,6 +204,32 @@ export default async function InicioPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className={estilos.cardPainel} style={{ marginBottom: 'var(--space-6)' }}>
+          <div className={estilos.painelTitulo}>
+            Horário de pico — últimos 30 dias
+            {pico.picoLabel && <span className={estilos.picoDestaque}> · pico: {pico.picoLabel}</span>}
+          </div>
+          {pico.horas.length === 0 ? (
+            <p className={estilos.semAlertas}>Ainda não há atendimentos suficientes pra calcular.</p>
+          ) : (
+            <div className={estilos.sparkline}>
+              {pico.horas.map((h) => (
+                <div key={h.hora} className={estilos.sparklineColuna}>
+                  <div className={estilos.sparklineBarraTrilho}>
+                    <div
+                      className={estilos.sparklineBarra}
+                      style={{
+                        height: `${h.total === 0 ? 4 : Math.max(10, Math.round((h.total / maiorPico) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <span className={estilos.sparklineLabel}>{h.hora}h</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={estilos.painelTitulo}>Atalhos</div>
