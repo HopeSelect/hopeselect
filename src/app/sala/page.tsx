@@ -1,32 +1,40 @@
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import type { AtendimentoAberto, IntervaloAberto, Professor } from '@/lib/tipos'
+import type { AtendimentoAberto, IntervaloAberto, Professor, TarefaDoDia } from '@/lib/tipos'
 import { PainelSala } from './painel-sala'
 import estilos from './sala.module.css'
 
+function hojeISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export default async function SalaPage() {
   const supabase = await criarClienteServer()
-
   const [
     { data: professores, error: erroProfessores },
     { data: atendimentos, error: erroAtendimentos },
     { data: intervalos, error: erroIntervalos },
+    { data: tarefas, error: erroTarefas },
   ] = await Promise.all([
     supabase
       .from('professores')
       .select('*')
       .eq('ativo', true)
-    .eq('em_sala', true)
+      .eq('em_sala', true)
       .order('nome'),
     supabase
       .from('atendimentos')
-      .select('id, aluno_id, professor_id, inicio, alunos(id, nome, classificacao, alertas, ultimo_acesso)')
+      .select('id, aluno_id, professor_id, inicio, tarefa, alunos(id, nome, classificacao, alertas, ultimo_acesso, restricoes)')
       .is('fim', null),
     supabase.from('lanches').select('id, professor_id, tipo, inicio').is('fim', null),
+    supabase
+      .from('tarefas')
+      .select('id, aluno_id, professor_id, tipo, status, observacao, inicio, fim, alunos(id, nome)')
+      .eq('data', hojeISO())
+      .neq('status', 'cancelada')
+      .order('created_at'),
   ])
-
-  const erro = erroProfessores?.message ?? erroAtendimentos?.message ?? erroIntervalos?.message ?? null
-
+  const erro = erroProfessores?.message ?? erroAtendimentos?.message ?? erroIntervalos?.message ?? erroTarefas?.message ?? null
   return (
     <AppShell>
       <main className="flex w-full flex-1 flex-col">
@@ -37,6 +45,7 @@ export default async function SalaPage() {
           professoresIniciais={(professores ?? []) as Professor[]}
           atendimentosIniciais={(atendimentos ?? []) as unknown as AtendimentoAberto[]}
           intervalosIniciais={(intervalos ?? []) as IntervaloAberto[]}
+          tarefasIniciais={(tarefas ?? []) as unknown as TarefaDoDia[]}
         />
       </main>
     </AppShell>
