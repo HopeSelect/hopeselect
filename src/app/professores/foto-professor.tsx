@@ -6,6 +6,38 @@ import { criarClienteBrowser } from '@/lib/supabase/client'
 const BUCKET = 'professores'
 const MAX_LADO = 640 // redimensiona para no máximo 640px no maior lado
 
+function carregarScript(src: string, chaveGlobal: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any)[chaveGlobal]) {
+      resolve()
+      return
+    }
+    const tag = document.createElement('script')
+    tag.src = src
+    tag.onload = () => resolve()
+    tag.onerror = () => reject(new Error(`Falha ao carregar ${src}`))
+    document.body.appendChild(tag)
+  })
+}
+
+// iPhone tira foto em HEIC por padrão, e só o Safari consegue abrir isso
+// direto — Chrome/Edge/Firefox não decodificam. Convertemos pra JPEG no
+// navegador antes de tudo; o resto do pipeline (redimensionar) já cuida
+// do tamanho do arquivo final.
+async function paraJpegSeHeic(file: File): Promise<Blob> {
+  const ehHeic =
+    file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name)
+
+  if (!ehHeic) return file
+
+  await carregarScript('https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js', 'heic2any')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const heic2any = (window as any).heic2any
+  const resultado = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 })
+  return Array.isArray(resultado) ? resultado[0] : resultado
+}
+
 // Desenha a fonte (imagem ou frame de vídeo) em um canvas reduzido e devolve um JPEG.
 function redimensionar(fonte: HTMLImageElement | HTMLVideoElement): Promise<Blob> {
   const w = fonte instanceof HTMLVideoElement ? fonte.videoWidth : fonte.naturalWidth
@@ -52,16 +84,23 @@ export function FotoProfessor({ inicial }: { inicial?: string | null }) {
   async function aoEscolherArquivo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const objUrl = URL.createObjectURL(file)
-    const img = new Image()
-    img.src = objUrl
+    setEnviando(true)
+    setErro(null)
     try {
-      await img.decode()
-      await enviar(await redimensionar(img))
+      const arquivoJpeg = await paraJpegSeHeic(file)
+      const objUrl = URL.createObjectURL(arquivoJpeg)
+      const img = new Image()
+      img.src = objUrl
+      try {
+        await img.decode()
+        await enviar(await redimensionar(img))
+      } finally {
+        URL.revokeObjectURL(objUrl)
+      }
     } catch {
-      setErro('Não foi possível ler a imagem.')
+      setErro('Não foi possível ler essa imagem. Tenta outro arquivo.')
+      setEnviando(false)
     } finally {
-      URL.revokeObjectURL(objUrl)
       e.target.value = ''
     }
   }
@@ -116,7 +155,7 @@ export function FotoProfessor({ inicial }: { inicial?: string | null }) {
             <span className="underline">Enviar arquivo</span>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               className="hidden"
               onChange={aoEscolherArquivo}
             />
