@@ -6,16 +6,14 @@ import { GENEROS } from '@/lib/utils'
 import type { Professor } from '@/lib/tipos'
 import { ProfessorForm } from './professor-form'
 import { criarProfessor, definirAtivoProfessor } from './actions'
-
+import { ExcluirProfessorBotao } from './excluir-professor-botao'
 export default async function ProfessoresPage() {
   const supabase = await criarClienteServer()
   const { data, error } = await supabase
     .from('professores')
     .select('*')
     .order('nome')
-
   const professores = (data ?? []) as Professor[]
-
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
@@ -24,7 +22,6 @@ export default async function ProfessoresPage() {
             Erro ao carregar: {error.message}
           </p>
         )}
-
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
           {/* Lista */}
           <section className="space-y-2">
@@ -68,10 +65,10 @@ export default async function ProfessoresPage() {
                     {p.ativo ? 'Desativar' : 'Ativar'}
                   </button>
                 </form>
+                <ExcluirProfessorBotao id={p.id} nome={p.nome} />
               </div>
             ))}
           </section>
-
           {/* Novo */}
           <aside className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="mb-4 font-medium text-gray-900">Novo professor</h2>
