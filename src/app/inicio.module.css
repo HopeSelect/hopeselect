@@ -71,6 +71,11 @@
 }
 
 /* ---------- Sparkline (últimos 7 dias / horário de pico) ---------- */
+.sparklineValor {
+  font-size: var(--text-xs);
+  color: var(--neutral-500);
+  font-variant-numeric: tabular-nums;
+}
 
 .sparkline {
   display: flex;
