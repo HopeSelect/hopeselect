@@ -1,11 +1,9 @@
 // Tipos do domínio (espelham os enums e tabelas das migrations).
-
 export type Classificacao = 'A' | 'B' | 'C' | 'R'
 export type Papel = 'admin' | 'lider' | 'recepcao' | 'professor'
 export type Genero = 'feminino' | 'masculino' | 'outro'
 export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach' | 'lanche'
 export type StatusTarefa = 'a_realizar' | 'concluida' | 'cancelada' | 'agendar' | 'realizar_novamente'
-
 export interface Professor {
   id: string
   nome: string
@@ -19,7 +17,6 @@ export interface Professor {
   pos_y: number | null
   created_at: string
 }
-
 export interface Aluno {
   id: string
   matricula: string | null
@@ -40,14 +37,11 @@ export interface Aluno {
   nutricionista: string | null
   created_at: string
 }
-
 // Aluno com o nome do professor vinculado embutido (join usado na listagem).
 export interface AlunoComProfessor extends Aluno {
   professores: Pick<Professor, 'nome'> | null
 }
-
 export type AlunoResumo = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes'>
-
 export interface AtendimentoAberto {
   id: string
   aluno_id: string
@@ -56,16 +50,13 @@ export interface AtendimentoAberto {
   tarefa: TipoTarefa | null
   alunos: AlunoResumo
 }
-
 export type TipoIntervalo = 'almoco' | 'lanche' | 'janta' | 'outro'
-
 export interface IntervaloAberto {
   id: string
   professor_id: string
   tipo: TipoIntervalo
   inicio: string
 }
-
 export interface Tarefa {
   id: string
   aluno_id: string
@@ -74,14 +65,26 @@ export interface Tarefa {
   data: string
   status: StatusTarefa
   observacao: string | null
+  inicio: string | null
+  fim: string | null
   created_at: string
 }
-
 export interface TarefaComRelacoes extends Tarefa {
   alunos: Pick<Aluno, 'id' | 'nome' | 'matricula'>
   professores: Pick<Professor, 'id' | 'nome'>
 }
-
+// Tarefa do dia mostrada no card do professor na Sala (join enxuto).
+export interface TarefaDoDia {
+  id: string
+  aluno_id: string
+  professor_id: string
+  tipo: TipoTarefa
+  status: StatusTarefa
+  observacao: string | null
+  inicio: string | null
+  fim: string | null
+  alunos: Pick<Aluno, 'id' | 'nome'>
+}
 export interface LinhaTarefa {
   id: string
   data: string
@@ -95,7 +98,6 @@ export interface LinhaTarefa {
   professor_nome: string
   created_at: string
 }
-
 export interface LinhaAtendimento {
   id: string
   data: string
@@ -114,7 +116,6 @@ export interface LinhaAtendimento {
   professor_nome: string
   professor_funcao: string | null
 }
-
 export interface LinhaAtendimentosPorProfessor {
   data: string
   professor_id: string
@@ -123,7 +124,6 @@ export interface LinhaAtendimentosPorProfessor {
   minutos_totais: number
   duracao_media_min: number
 }
-
 export interface LinhaTarefasPorProfessor {
   data: string
   professor_id: string
@@ -132,7 +132,6 @@ export interface LinhaTarefasPorProfessor {
   total_concluidas: number
   total_canceladas: number
 }
-
 export interface LinhaProdutividade {
   data: string
   professor_id: string
