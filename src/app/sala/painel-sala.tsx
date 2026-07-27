@@ -4,7 +4,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 import { CLASSIFICACOES, TIPOS_INTERVALO, TIPOS_TAREFA, diasDesde } from '@/lib/utils'
-import type { AlunoResumo, AtendimentoAberto, IntervaloAberto, Professor, TipoIntervalo, TipoTarefa } from '@/lib/tipos'
+import type {
+  AlunoResumo,
+  AtendimentoAberto,
+  IntervaloAberto,
+  Professor,
+  TarefaDoDia,
+  TipoIntervalo,
+  TipoTarefa,
+} from '@/lib/tipos'
 import {
   atualizarPosicaoProfessor,
   finalizarAtendimento,
@@ -12,10 +20,11 @@ import {
   iniciarIntervalo,
   removerProfessorDaSala,
 } from './actions'
+import { concluirTarefa, iniciarTarefa } from '@/app/tarefas/actions'
 import { BuscarAluno } from './buscar-aluno'
 import { BuscarProfessorParaSala } from './buscar-professor'
 
-const ALTURA_CARD = 420
+const ALTURA_CARD = 480
 const GAP = 16
 const LARGURA_CARD_MIN = 168
 const LARGURA_CARD_MAX = 240
@@ -71,15 +80,19 @@ export function PainelSala({
   professoresIniciais,
   atendimentosIniciais,
   intervalosIniciais,
+  tarefasIniciais,
 }: {
   professoresIniciais: Professor[]
   atendimentosIniciais: AtendimentoAberto[]
   intervalosIniciais: IntervaloAberto[]
+  tarefasIniciais: TarefaDoDia[]
 }) {
   const supabase = useMemo(() => criarClienteBrowser(), [])
+  const hoje = useMemo(() => new Date().toISOString().slice(0, 10), [])
   const [professores, setProfessores] = useState(professoresIniciais)
   const [atendimentos, setAtendimentos] = useState(atendimentosIniciais)
   const [intervalos, setIntervalos] = useState(intervalosIniciais)
+  const [tarefas, setTarefas] = useState(tarefasIniciais)
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
   const [erroRemocao, setErroRemocao] = useState<string | null>(null)
@@ -124,9 +137,6 @@ export function PainelSala({
               .eq('id', payload.new.id)
               .single()
             if (data) {
-              // Troca qualquer entrada otimista (ou repetida) do mesmo aluno
-              // pela linha real do banco — é isso que evita o aluno aparecer
-              // alocado duas vezes quando o realtime confirma a alocação.
               setAtendimentos((prev) => {
                 const outros = prev.filter((a) => a.aluno_id !== data.aluno_id)
                 return [...outros, data as unknown as AtendimentoAberto]
@@ -149,12 +159,37 @@ export function PainelSala({
           }
         },
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tarefas' },
+        async (payload) => {
+          if (payload.eventType === 'DELETE') {
+            setTarefas((prev) => prev.filter((t) => t.id !== payload.old.id))
+            return
+          }
+          if (payload.new.data !== hoje || payload.new.status === 'cancelada') {
+            setTarefas((prev) => prev.filter((t) => t.id !== payload.new.id))
+            return
+          }
+          const { data } = await supabase
+            .from('tarefas')
+            .select('id, aluno_id, professor_id, tipo, status, observacao, inicio, fim, alunos(id, nome)')
+            .eq('id', payload.new.id)
+            .single()
+          if (data) {
+            setTarefas((prev) => {
+              const outras = prev.filter((t) => t.id !== data.id)
+              return [...outras, data as unknown as TarefaDoDia]
+            })
+          }
+        },
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(canal)
     }
-  }, [supabase])
+  }, [supabase, hoje])
 
   function aoAlocado(
     professor: Professor,
@@ -210,6 +245,18 @@ export function PainelSala({
     }
   }
 
+  async function aoIniciarTarefa(id: string) {
+    setTarefas((prev) => prev.map((t) => (t.id === id ? { ...t, inicio: new Date().toISOString() } : t)))
+    await iniciarTarefa(id)
+  }
+
+  async function aoConcluirTarefa(id: string) {
+    setTarefas((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, fim: new Date().toISOString(), status: 'concluida' } : t)),
+    )
+    await concluirTarefa(id)
+  }
+
   return (
     <div className="flex w-full flex-1 flex-col">
       <div className="border-b border-gray-200 bg-white px-4 py-3">
@@ -224,6 +271,7 @@ export function PainelSala({
         {professores.map((professor, indice) => {
           const atendimentosDoProfessor = atendimentos.filter((a) => a.professor_id === professor.id)
           const intervalo = intervalos.find((i) => i.professor_id === professor.id)
+          const tarefasDoProfessor = tarefas.filter((t) => t.professor_id === professor.id)
           const grade = posicaoGrade(indice, colunas, larguraCard)
           const posBruta = {
             x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
@@ -242,6 +290,7 @@ export function PainelSala({
               larguraCard={larguraCard}
               atendimentosDoProfessor={atendimentosDoProfessor}
               intervalo={intervalo}
+              tarefasDoProfessor={tarefasDoProfessor}
               agora={agora}
               onMover={(x, y) =>
                 setProfessores((prev) =>
@@ -254,6 +303,8 @@ export function PainelSala({
               onIniciarIntervalo={(tipo) => void aoIniciarIntervalo(professor, tipo)}
               onFinalizarIntervalo={() => intervalo && void aoFinalizarIntervalo(intervalo.id)}
               onRemoverDaSala={() => void aoRemoverDaSala(professor)}
+              onIniciarTarefa={(id) => void aoIniciarTarefa(id)}
+              onConcluirTarefa={(id) => void aoConcluirTarefa(id)}
             />
           )
         })}
@@ -282,6 +333,7 @@ function CardProfessor({
   larguraCard,
   atendimentosDoProfessor,
   intervalo,
+  tarefasDoProfessor,
   agora,
   onMover,
   onSoltar,
@@ -290,12 +342,15 @@ function CardProfessor({
   onIniciarIntervalo,
   onFinalizarIntervalo,
   onRemoverDaSala,
+  onIniciarTarefa,
+  onConcluirTarefa,
 }: {
   professor: Professor
   pos: { x: number; y: number }
   larguraCard: number
   atendimentosDoProfessor: AtendimentoAberto[]
   intervalo: IntervaloAberto | undefined
+  tarefasDoProfessor: TarefaDoDia[]
   agora: number
   onMover: (x: number, y: number) => void
   onSoltar: (x: number, y: number) => void
@@ -304,14 +359,14 @@ function CardProfessor({
   onIniciarIntervalo: (tipo: TipoIntervalo) => void
   onFinalizarIntervalo: () => void
   onRemoverDaSala: () => void
+  onIniciarTarefa: (id: string) => void
+  onConcluirTarefa: (id: string) => void
 }) {
   const arrastando = useRef(false)
   const offset = useRef({ dx: 0, dy: 0 })
   const posAtual = useRef(pos)
   const cabecalhoRef = useRef<HTMLDivElement>(null)
   const [menuIntervaloAberto, setMenuIntervaloAberto] = useState(false)
-  // Vagas extras além do mínimo de 2 — pedidas via "+ Adicionar vaga" e
-  // removíveis via "x", só quando estão vazias.
   const [extras, setExtras] = useState(0)
   posAtual.current = pos
 
@@ -403,7 +458,8 @@ function CardProfessor({
       {emIntervalo ? (
         <div className="p-3">
           <p className="text-sm font-medium text-gray-900">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
-          <p className="mt-1 text-xs text-gray-400">Há {formatarDecorrido(intervalo!.inicio, agora)}</p>
+          <p className="mt-1 text-xs text-gray-400">Início: {formatarHora(intervalo!.inicio)}</p>
+          <p className="text-xs text-gray-400">Duração: {formatarDecorrido(intervalo!.inicio, agora)}</p>
           <button
             onClick={onFinalizarIntervalo}
             className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
@@ -413,7 +469,51 @@ function CardProfessor({
         </div>
       ) : (
         <>
-          {/* Área com scroll próprio — o card não cresce mais infinito */}
+          {tarefasDoProfessor.length > 0 && (
+            <div className="max-h-40 space-y-1.5 overflow-y-auto border-b border-gray-100 p-3">
+              <p className="text-xs font-medium text-gray-500">Tarefas de hoje</p>
+              {tarefasDoProfessor.map((t) => {
+                const emAndamento = Boolean(t.inicio) && !t.fim
+                const concluida = t.status === 'concluida'
+                return (
+                  <div key={t.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+                        {TIPOS_TAREFA[t.tipo]}
+                      </span>
+                      {concluida && <span className="text-xs text-green-700">Concluída</span>}
+                    </div>
+                    <p className="mt-1 truncate text-xs font-medium text-gray-900">{t.alunos.nome}</p>
+                    {t.observacao && <p className="text-xs text-gray-500">{t.observacao}</p>}
+                    {emAndamento && (
+                      <p className="mt-1 text-xs text-gray-400">
+                        Em andamento há {formatarDecorrido(t.inicio!, agora)}
+                      </p>
+                    )}
+                    {!concluida && (
+                      <div className="mt-1.5 flex gap-1.5">
+                        {!t.inicio && (
+                          <button
+                            onClick={() => onIniciarTarefa(t.id)}
+                            className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:border-gray-400"
+                          >
+                            Iniciar
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onConcluirTarefa(t.id)}
+                          className="flex-1 rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-800"
+                        >
+                          Concluir
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           <div className="max-h-64 space-y-2 overflow-y-auto p-3">
             {Array.from({ length: totalVagas }).map((_, i) => {
               const atendimentoDaVaga = atendimentosDoProfessor[i]
@@ -471,7 +571,6 @@ function CardProfessor({
                 )
               }
 
-              // Só as vagas além das 2 padrão podem ser removidas com o "x".
               const removivel = i >= baseVagas
 
               return (
@@ -498,7 +597,6 @@ function CardProfessor({
             })}
           </div>
 
-          {/* Fora da área de scroll — sempre visível */}
           <div className="space-y-2 border-t border-gray-100 p-3">
             <button
               onClick={() => setExtras((v) => v + 1)}
