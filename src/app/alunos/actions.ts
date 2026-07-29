@@ -1,12 +1,9 @@
 'use server'
-
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { valorOuNull, parseAlertas } from '@/lib/utils'
-
 export type EstadoForm = { erro: string } | null
-
 function dadosAluno(fd: FormData) {
   return {
     nome: String(fd.get('nome') ?? '').trim(),
@@ -27,7 +24,25 @@ function dadosAluno(fd: FormData) {
     nutricionista: valorOuNull(fd.get('nutricionista')),
   }
 }
-
+// Nome igual (sem diferenciar maiúscula/minúscula) já cadastrado -> bloqueia.
+// idExcluido serve pra não comparar o aluno com ele mesmo ao editar.
+async function existeAlunoComMesmoNome(
+  supabase: Awaited<ReturnType<typeof criarClienteServer>>,
+  nome: string,
+  idExcluido?: string,
+): Promise<boolean> {
+  let query = supabase.from('alunos').select('id').ilike('nome', nome)
+  if (idExcluido) query = query.neq('id', idExcluido)
+  const { data } = await query.limit(1)
+  return (data?.length ?? 0) > 0
+}
+// Troca o erro cru do banco por uma mensagem que a recepção entende.
+function traduzirErro(mensagem: string): string {
+  if (mensagem.includes('alunos_matricula_key')) {
+    return 'Já existe um aluno cadastrado com essa matrícula. Confere o número antes de salvar de novo.'
+  }
+  return mensagem
+}
 export async function criarAluno(
   _prev: EstadoForm,
   fd: FormData,
@@ -36,13 +51,16 @@ export async function criarAluno(
   if (!dados.nome) return { erro: 'Nome é obrigatório.' }
 
   const supabase = await criarClienteServer()
-  const { error } = await supabase.from('alunos').insert(dados)
-  if (error) return { erro: error.message }
 
+  if (await existeAlunoComMesmoNome(supabase, dados.nome)) {
+    return { erro: `Já existe um aluno cadastrado com o nome "${dados.nome}". Confere se não é duplicado.` }
+  }
+
+  const { error } = await supabase.from('alunos').insert(dados)
+  if (error) return { erro: traduzirErro(error.message) }
   revalidatePath('/alunos')
   redirect('/alunos')
 }
-
 export async function atualizarAluno(
   id: string,
   _prev: EstadoForm,
@@ -52,13 +70,16 @@ export async function atualizarAluno(
   if (!dados.nome) return { erro: 'Nome é obrigatório.' }
 
   const supabase = await criarClienteServer()
-  const { error } = await supabase.from('alunos').update(dados).eq('id', id)
-  if (error) return { erro: error.message }
 
+  if (await existeAlunoComMesmoNome(supabase, dados.nome, id)) {
+    return { erro: `Já existe outro aluno cadastrado com o nome "${dados.nome}".` }
+  }
+
+  const { error } = await supabase.from('alunos').update(dados).eq('id', id)
+  if (error) return { erro: traduzirErro(error.message) }
   revalidatePath('/alunos')
   redirect('/alunos')
 }
-
 export async function excluirAluno(id: string) {
   const supabase = await criarClienteServer()
   await supabase.from('alunos').delete().eq('id', id)
