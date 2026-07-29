@@ -6,25 +6,46 @@ import { CLASSIFICACOES, diasDesde, statusPlano } from '@/lib/utils'
 import type { AlunoComProfessor } from '@/lib/tipos'
 import { BuscarAlunoSelect } from './buscar-aluno-select'
 
+const POR_PAGINA = 50
+
 export default async function AlunosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; pagina?: string }>
 }) {
-  const { q } = await searchParams
+  const { q, pagina: paginaParam } = await searchParams
   const busca = (q ?? '').trim()
+  const pagina = Math.max(1, Number(paginaParam ?? '1') || 1)
+  const de = (pagina - 1) * POR_PAGINA
+  const ate = de + POR_PAGINA - 1
 
   const supabase = await criarClienteServer()
-  let query = supabase.from('alunos').select('*, professores(nome)').order('nome').limit(50)
+  let query = supabase
+    .from('alunos')
+    .select('*, professores(nome)', { count: 'exact' })
+    .order('nome')
+    .range(de, ate)
   if (busca) query = query.ilike('nome', `%${busca}%`)
-  const { data, error } = await query
+  const { data, error, count } = await query
 
   const alunos = (data ?? []) as unknown as AlunoComProfessor[]
+  const total = count ?? 0
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA))
+
+  function linkPagina(p: number) {
+    const params = new URLSearchParams()
+    if (busca) params.set('q', busca)
+    params.set('pagina', String(p))
+    return `/alunos?${params.toString()}`
+  }
 
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            {total} aluno{total === 1 ? '' : 's'} cadastrado{total === 1 ? '' : 's'}
+          </p>
           <Link
             href="/alunos/novo"
             className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
@@ -32,15 +53,12 @@ export default async function AlunosPage({
             Novo aluno
           </Link>
         </div>
-
         <div className="mt-4">
           <BuscarAlunoSelect valorInicial={busca} />
         </div>
-
         {error && (
           <p className="mt-2 text-sm text-red-600">Erro ao carregar: {error.message}</p>
         )}
-
         <div className="mt-6 space-y-2">
           {alunos.length === 0 && (
             <p className="text-sm text-gray-500">
@@ -63,11 +81,9 @@ export default async function AlunosPage({
                   {a.classificacao}
                 </span>
                 <span className="font-medium text-gray-900">{a.nome}</span>
-
                 {a.professores?.nome && (
                   <span className="text-xs text-gray-400">· {a.professores.nome}</span>
                 )}
-
                 {a.alertas.map((alerta) => (
                   <span
                     key={alerta}
@@ -76,13 +92,11 @@ export default async function AlunosPage({
                     {alerta}
                   </span>
                 ))}
-
                 {plano && (
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${plano.classe}`}>
                     {plano.rotulo}
                   </span>
                 )}
-
                 <span className="ml-auto text-xs text-gray-500">
                   {dias === null ? 'sem registro de acesso' : `Acesso há ${dias} dia(s)`}
                 </span>
@@ -90,6 +104,36 @@ export default async function AlunosPage({
             )
           })}
         </div>
+
+        {totalPaginas > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Link
+              href={linkPagina(pagina - 1)}
+              aria-disabled={pagina <= 1}
+              className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                pagina <= 1
+                  ? 'pointer-events-none text-gray-300'
+                  : 'text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              Anterior
+            </Link>
+            <span className="text-sm text-gray-500">
+              Página {pagina} de {totalPaginas}
+            </span>
+            <Link
+              href={linkPagina(pagina + 1)}
+              aria-disabled={pagina >= totalPaginas}
+              className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                pagina >= totalPaginas
+                  ? 'pointer-events-none text-gray-300'
+                  : 'text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              Próxima
+            </Link>
+          </div>
+        )}
       </main>
     </AppShell>
   )
