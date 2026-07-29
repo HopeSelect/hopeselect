@@ -289,7 +289,11 @@ export function PainelSala({
         {professores.map((professor, indice) => {
           const atendimentosDoProfessor = atendimentos.filter((a) => a.professor_id === professor.id)
           const intervalo = intervalos.find((i) => i.professor_id === professor.id)
-          const tarefasDoProfessor = tarefas.filter((t) => t.professor_id === professor.id)
+          // Tarefa concluída some daqui — ela já está registrada em /tarefas e
+          // nos relatórios, só não fica poluindo o card de "com quem o professor está".
+          const tarefasDoProfessor = tarefas.filter(
+            (t) => t.professor_id === professor.id && t.status !== 'concluida',
+          )
           const grade = posicaoGrade(indice, colunas, larguraCard)
           const posBruta = {
             x: Number.isFinite(professor.pos_x) ? (professor.pos_x as number) : grade.x,
@@ -499,15 +503,11 @@ function CardProfessor({
               <p className="text-xs font-medium text-gray-500">Tarefas de hoje</p>
               {tarefasDoProfessor.map((t) => {
                 const emAndamento = Boolean(t.inicio) && !t.fim
-                const concluida = t.status === 'concluida'
                 return (
                   <div key={t.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
-                        {TIPOS_TAREFA[t.tipo]}
-                      </span>
-                      {concluida && <span className="text-xs text-green-700">Concluída</span>}
-                    </div>
+                    <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+                      {TIPOS_TAREFA[t.tipo]}
+                    </span>
                     <p className="mt-1 truncate text-xs font-medium text-gray-900">{t.alunos.nome}</p>
                     {t.observacao && <p className="text-xs text-gray-500">{t.observacao}</p>}
                     {emAndamento && (
@@ -515,24 +515,22 @@ function CardProfessor({
                         Em andamento há {formatarDecorrido(t.inicio!, agora)}
                       </p>
                     )}
-                    {!concluida && (
-                      <div className="mt-1.5 flex gap-1.5">
-                        {!t.inicio && (
-                          <button
-                            onClick={() => onIniciarTarefa(t.id)}
-                            className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:border-gray-400"
-                          >
-                            Iniciar
-                          </button>
-                        )}
+                    <div className="mt-1.5 flex gap-1.5">
+                      {!t.inicio && (
                         <button
-                          onClick={() => onConcluirTarefa(t.id)}
-                          className="flex-1 rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-800"
+                          onClick={() => onIniciarTarefa(t.id)}
+                          className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:border-gray-400"
                         >
-                          Concluir
+                          Iniciar
                         </button>
-                      </div>
-                    )}
+                      )}
+                      <button
+                        onClick={() => onConcluirTarefa(t.id)}
+                        className="flex-1 rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-800"
+                      >
+                        Concluir
+                      </button>
+                    </div>
                   </div>
                 )
               })}
