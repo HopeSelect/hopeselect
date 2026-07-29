@@ -1,7 +1,8 @@
 'use client'
 
-import { TIPOS_TAREFA } from '@/lib/utils'
+import { TIPOS_TAREFA, statusPlano } from '@/lib/utils'
 import type { LinhaAtendimento, LinhaProdutividade } from '@/lib/tipos'
+import type { LinhaAlunoRelatorio } from './page'
 
 const botao =
   'rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900'
@@ -26,11 +27,13 @@ function carregarScript(src: string, chaveGlobal: string): Promise<void> {
 export function ExportarBotoes({
   atendimentos,
   produtividade,
+  alunos,
   de,
   ate,
 }: {
   atendimentos: LinhaAtendimento[]
   produtividade: LinhaProdutividade[]
+  alunos: LinhaAlunoRelatorio[]
   de: string
   ate: string
 }) {
@@ -39,7 +42,7 @@ export function ExportarBotoes({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const XLSX = (window as any).XLSX
 
-  const linhasAtendimentos = atendimentos.map((l) => ({
+    const linhasAtendimentos = atendimentos.map((l) => ({
       Data: l.data,
       Aluno: l.aluno_nome,
       Classificação: l.aluno_classificacao,
@@ -57,9 +60,22 @@ export function ExportarBotoes({
       'Tarefas concluídas': l.total_tarefas_concluidas,
     }))
 
+    const linhasAlunos = alunos.map((a) => ({
+      Matrícula: a.matricula ?? '',
+      Nome: a.nome,
+      Classificação: a.classificacao,
+      Telefone: a.telefone ?? '',
+      Email: a.email ?? '',
+      Professor: a.professores?.nome ?? '',
+      'Data da matrícula': a.data_matricula ?? '',
+      'Vencimento do plano': a.vencimento_plano ?? '',
+      Situação: statusPlano(a.vencimento_plano)?.rotulo ?? 'Em dia',
+    }))
+
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhasAtendimentos), 'Atendimentos')
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhasProdutividade), 'Produtividade')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhasAlunos), 'Alunos')
     XLSX.writeFile(wb, `relatorio_${de}_a_${ate}.xlsx`)
   }
 
@@ -81,7 +97,7 @@ export function ExportarBotoes({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(doc as any).autoTable({
       startY: 30,
-     head: [['Data', 'Aluno', 'Classe', 'Professor', 'Tarefa', 'Entrada', 'Saída', 'Duração']],
+      head: [['Data', 'Aluno', 'Classe', 'Professor', 'Tarefa', 'Entrada', 'Saída', 'Duração']],
       body: atendimentos.map((l) => [
         l.data,
         l.aluno_nome,
@@ -96,7 +112,7 @@ export function ExportarBotoes({
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const proximoY = (doc as any).lastAutoTable.finalY + 10
+    let proximoY = (doc as any).lastAutoTable.finalY + 10
     doc.text('Produtividade por professor', 14, proximoY)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(doc as any).autoTable({
@@ -107,6 +123,27 @@ export function ExportarBotoes({
         l.professor_nome,
         String(l.total_atendimentos),
         String(l.total_tarefas_concluidas),
+      ]),
+      styles: { fontSize: 8 },
+    })
+
+    // Alunos matriculados entra numa página nova — é uma lista independente
+    // do período filtrado acima, então não faz sentido dividir espaço com o resto.
+    doc.addPage()
+    doc.setFontSize(11)
+    doc.text('Alunos matriculados', 14, 16)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(doc as any).autoTable({
+      startY: 20,
+      head: [['Matrícula', 'Nome', 'Classe', 'Telefone', 'Professor', 'Data matrícula', 'Situação']],
+      body: alunos.map((a) => [
+        a.matricula ?? '',
+        a.nome,
+        a.classificacao,
+        a.telefone ?? '',
+        a.professores?.nome ?? '',
+        a.data_matricula ?? '',
+        statusPlano(a.vencimento_plano)?.rotulo ?? 'Em dia',
       ]),
       styles: { fontSize: 8 },
     })
