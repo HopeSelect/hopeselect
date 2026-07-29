@@ -1,7 +1,8 @@
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { CLASSIFICACOES, TIPOS_TAREFA } from '@/lib/utils'
+import { CLASSIFICACOES, TIPOS_TAREFA, statusPlano } from '@/lib/utils'
 import type {
+  Classificacao,
   LinhaAtendimento,
   LinhaAtendimentosPorProfessor,
   LinhaProdutividade,
@@ -16,6 +17,19 @@ function hojeISO() {
 }
 function diasAtrasISO(dias: number) {
   return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10)
+}
+
+// Linha de aluno pra seção "Alunos matriculados" (lista completa, sem
+// filtro de período — é o cadastro geral, não uma atividade no tempo).
+export interface LinhaAlunoRelatorio {
+  matricula: string | null
+  nome: string
+  classificacao: Classificacao
+  telefone: string | null
+  email: string | null
+  data_matricula: string | null
+  vencimento_plano: string | null
+  professores: { nome: string } | null
 }
 
 // Junta atendimentos + tarefas concluídas por professor/dia. As duas fontes já
@@ -98,20 +112,26 @@ export default async function RelatoriosPage({
     { data: atendimentosPorProfessor, error: erroAtPorProf },
     { data: tarefasPorProfessor, error: erroTarefas },
     { data: professores },
+    { data: todosAlunos, error: erroAlunos },
   ] = await Promise.all([
     consultaAtendimentos,
     consultaAtPorProf,
     consultaTarefas,
     supabase.from('professores').select('id, nome').eq('ativo', true).order('nome'),
+    supabase
+      .from('alunos')
+      .select('matricula, nome, classificacao, telefone, email, data_matricula, vencimento_plano, professores(nome)')
+      .order('nome'),
   ])
 
-  const erro = erroAtendimentos?.message ?? erroAtPorProf?.message ?? erroTarefas?.message ?? null
+  const erro = erroAtendimentos?.message ?? erroAtPorProf?.message ?? erroTarefas?.message ?? erroAlunos?.message ?? null
 
   const linhasAtendimentos = (atendimentos ?? []) as LinhaAtendimento[]
   const linhasProdutividade = combinarProdutividade(
     (atendimentosPorProfessor ?? []) as LinhaAtendimentosPorProfessor[],
     (tarefasPorProfessor ?? []) as LinhaTarefasPorProfessor[],
   )
+  const linhasAlunos = (todosAlunos ?? []) as unknown as LinhaAlunoRelatorio[]
 
   return (
     <AppShell>
@@ -133,6 +153,7 @@ export default async function RelatoriosPage({
           <ExportarBotoes
             atendimentos={linhasAtendimentos}
             produtividade={linhasProdutividade}
+            alunos={linhasAlunos}
             de={de}
             ate={ate}
           />
@@ -223,6 +244,67 @@ export default async function RelatoriosPage({
                     <td className="px-4 py-2 text-gray-600">{l.total_tarefas_concluidas}</td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-medium text-gray-900">Alunos matriculados</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Lista completa de alunos cadastrados no sistema, independente do período filtrado acima.
+          </p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+                <tr>
+                  <th className="px-4 py-2">Matrícula</th>
+                  <th className="px-4 py-2">Nome</th>
+                  <th className="px-4 py-2">Classe</th>
+                  <th className="px-4 py-2">Telefone</th>
+                  <th className="px-4 py-2">Professor</th>
+                  <th className="px-4 py-2">Data da matrícula</th>
+                  <th className="px-4 py-2">Situação do plano</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhasAlunos.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                      Nenhum aluno cadastrado.
+                    </td>
+                  </tr>
+                )}
+                {linhasAlunos.map((a) => {
+                  const plano = statusPlano(a.vencimento_plano)
+                  return (
+                    <tr key={a.nome + (a.matricula ?? '')} className="border-b border-gray-100 last:border-0">
+                      <td className="px-4 py-2 text-gray-600">{a.matricula ?? '—'}</td>
+                      <td className="px-4 py-2 text-gray-900">{a.nome}</td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[a.classificacao].classe}`}
+                        >
+                          {a.classificacao}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">{a.telefone ?? '—'}</td>
+                      <td className="px-4 py-2 text-gray-600">{a.professores?.nome ?? '—'}</td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {a.data_matricula ? new Date(`${a.data_matricula}T00:00:00`).toLocaleDateString('pt-BR') : '—'}
+                      </td>
+                      <td className="px-4 py-2">
+                        {plano ? (
+                          <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${plano.classe}`}>
+                            {plano.rotulo}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">Em dia</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
