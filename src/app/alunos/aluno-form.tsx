@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Aluno, Classificacao } from '@/lib/tipos'
 import { CLASSIFICACOES, idadeDesde } from '@/lib/utils'
 import type { EstadoForm } from './actions'
+import { FotoAluno } from './foto-aluno'
 
 type Acao = (prev: EstadoForm, fd: FormData) => Promise<EstadoForm>
 
@@ -27,6 +28,13 @@ export function AlunoForm({
 
   return (
     <form action={submit} className="space-y-4">
+      <label className="block text-sm font-medium text-gray-700">
+        Foto
+        <div className="mt-1">
+          <FotoAluno inicial={inicial?.foto_url} />
+        </div>
+      </label>
+
       <label className="block text-sm font-medium text-gray-700">
         Nome completo *
         <input name="nome" required defaultValue={inicial?.nome} className={campo} />
