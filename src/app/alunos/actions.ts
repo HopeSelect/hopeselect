@@ -22,6 +22,7 @@ function dadosAluno(fd: FormData) {
     ultimo_acesso: valorOuNull(fd.get('ultimo_acesso')),
     professor_id: valorOuNull(fd.get('professor_id')),
     nutricionista: valorOuNull(fd.get('nutricionista')),
+    foto_url: valorOuNull(fd.get('foto_url')),
   }
 }
 // Nome igual (sem diferenciar maiúscula/minúscula) já cadastrado -> bloqueia.
@@ -49,13 +50,10 @@ export async function criarAluno(
 ): Promise<EstadoForm> {
   const dados = dadosAluno(fd)
   if (!dados.nome) return { erro: 'Nome é obrigatório.' }
-
   const supabase = await criarClienteServer()
-
   if (await existeAlunoComMesmoNome(supabase, dados.nome)) {
     return { erro: `Já existe um aluno cadastrado com o nome "${dados.nome}". Confere se não é duplicado.` }
   }
-
   const { error } = await supabase.from('alunos').insert(dados)
   if (error) return { erro: traduzirErro(error.message) }
   revalidatePath('/alunos')
@@ -68,13 +66,10 @@ export async function atualizarAluno(
 ): Promise<EstadoForm> {
   const dados = dadosAluno(fd)
   if (!dados.nome) return { erro: 'Nome é obrigatório.' }
-
   const supabase = await criarClienteServer()
-
   if (await existeAlunoComMesmoNome(supabase, dados.nome, id)) {
     return { erro: `Já existe outro aluno cadastrado com o nome "${dados.nome}".` }
   }
-
   const { error } = await supabase.from('alunos').update(dados).eq('id', id)
   if (error) return { erro: traduzirErro(error.message) }
   revalidatePath('/alunos')
