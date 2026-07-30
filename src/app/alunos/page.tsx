@@ -75,10 +75,15 @@ export default async function AlunosPage({
                 className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-400"
               >
                 <span
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold ${CLASSIFICACOES[a.classificacao].classe}`}
+                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 text-sm font-semibold ${CLASSIFICACOES[a.classificacao].classe}`}
                   title={CLASSIFICACOES[a.classificacao].rotulo}
                 >
-                  {a.classificacao}
+                  {a.foto_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.foto_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    a.classificacao
+                  )}
                 </span>
                 <span className="font-medium text-gray-900">{a.nome}</span>
                 {a.professores?.nome && (
