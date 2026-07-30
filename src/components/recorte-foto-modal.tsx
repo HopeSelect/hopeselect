@@ -82,8 +82,11 @@ export function RecorteFotoModal({
     }
   }, [arquivo])
 
+  // .zoomTo() define o zoom exato pro valor do controle (diferente de
+  // .zoom(), que soma/subtrai em cima do zoom atual — por isso ele só
+  // crescia antes, não importava pra qual lado você arrastasse o range).
   function aoMudarZoom(e: React.ChangeEvent<HTMLInputElement>) {
-    cropperRef.current?.zoom((Number(e.target.value) - 100) / 100)
+    cropperRef.current?.zoomTo(Number(e.target.value) / 100)
   }
 
   function confirmar() {
