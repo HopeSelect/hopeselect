@@ -82,13 +82,6 @@ export function RecorteFotoModal({
     }
   }, [arquivo])
 
-  // .zoomTo() define o zoom exato pro valor do controle (diferente de
-  // .zoom(), que soma/subtrai em cima do zoom atual — por isso ele só
-  // crescia antes, não importava pra qual lado você arrastasse o range).
-  function aoMudarZoom(e: React.ChangeEvent<HTMLInputElement>) {
-    cropperRef.current?.zoomTo(Number(e.target.value) / 100)
-  }
-
   function confirmar() {
     if (!cropperRef.current) return
     setGerando(true)
@@ -121,7 +114,7 @@ export function RecorteFotoModal({
 
         <div className="p-4">
           <p className="mb-3 text-xs text-gray-500">
-            Arraste pra posicionar e ajuste o zoom. A área redonda é o que vai aparecer na bolinha.
+            Arraste pra posicionar e use o scroll do mouse pra dar zoom. A área redonda é o que vai aparecer na bolinha.
           </p>
 
           <div className="recorte-circular mx-auto h-72 w-72 overflow-hidden bg-gray-100">
@@ -131,13 +124,6 @@ export function RecorteFotoModal({
 
           {!pronto && !erro && <p className="mt-3 text-center text-sm text-gray-400">Carregando editor…</p>}
           {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
-
-          {pronto && (
-            <div className="mt-4">
-              <label className="text-xs text-gray-500">Zoom</label>
-              <input type="range" min={100} max={300} defaultValue={100} onChange={aoMudarZoom} className="w-full" />
-            </div>
-          )}
 
           <div className="mt-4 flex items-center gap-3">
             <button
