@@ -35,13 +35,14 @@ export interface Aluno {
   origem: string | null
   professor_id: string | null
   nutricionista: string | null
+  foto_url: string | null
   created_at: string
 }
 // Aluno com o nome do professor vinculado embutido (join usado na listagem).
 export interface AlunoComProfessor extends Aluno {
   professores: Pick<Professor, 'nome'> | null
 }
-export type AlunoResumo = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes'>
+export type AlunoResumo = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas' | 'ultimo_acesso' | 'restricoes' | 'foto_url'>
 export interface AtendimentoAberto {
   id: string
   aluno_id: string
