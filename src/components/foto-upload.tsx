@@ -116,17 +116,40 @@ export function FotoUpload({
     setArquivoParaRecortar(blob)
   }
 
+  // Reabre o recorte numa foto que já está salva — busca o arquivo pela URL
+  // pública (não precisa reenviar do zero). Útil pra fotos antigas que
+  // foram cortadas antes de essa ferramenta existir.
+  async function editarFotoAtual() {
+    if (!url) return
+    setErro(null)
+    try {
+      const resposta = await fetch(url)
+      const blob = await resposta.blob()
+      setArquivoParaRecortar(blob)
+    } catch {
+      setErro('Não foi possível carregar essa foto pra editar. Tenta enviar de novo.')
+    }
+  }
+
   return (
     <div className="space-y-2">
       <input type="hidden" name={nomeCampo} value={url} />
 
       <div className="flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url || '/window.svg'}
-          alt=""
-          className="h-16 w-16 rounded-full border border-gray-200 object-cover"
-        />
+        <button
+          type="button"
+          onClick={editarFotoAtual}
+          disabled={!url}
+          title={url ? 'Clique pra ajustar o recorte' : undefined}
+          className="h-16 w-16 shrink-0 rounded-full border border-gray-200 disabled:cursor-default"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url || '/window.svg'}
+            alt=""
+            className={`h-16 w-16 rounded-full object-cover ${url ? 'hover:opacity-75' : ''}`}
+          />
+        </button>
         <div className="flex flex-col gap-1 text-sm">
           <label className="cursor-pointer text-gray-700 hover:text-gray-900">
             <span className="underline">Enviar arquivo</span>
@@ -135,6 +158,15 @@ export function FotoUpload({
           <button type="button" onClick={abrirCamera} className="text-left text-gray-700 underline hover:text-gray-900">
             Tirar foto
           </button>
+          {url && (
+            <button
+              type="button"
+              onClick={editarFotoAtual}
+              className="text-left text-gray-700 underline hover:text-gray-900"
+            >
+              Editar recorte
+            </button>
+          )}
           {url && (
             <button type="button" onClick={() => setUrl('')} className="text-left text-gray-400 hover:text-gray-900">
               Remover
