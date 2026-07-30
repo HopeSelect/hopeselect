@@ -51,13 +51,24 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
 
           {aluno && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-base font-semibold text-gray-900">{aluno.nome}</p>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 text-lg font-semibold ${CLASSIFICACOES[aluno.classificacao].classe}`}
+                  title={CLASSIFICACOES[aluno.classificacao].rotulo}
+                >
+                  {aluno.foto_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={aluno.foto_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    aluno.classificacao
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base font-semibold text-gray-900">{aluno.nome}</p>
                   {aluno.matricula && <p className="text-xs text-gray-400">Matrícula {aluno.matricula}</p>}
                 </div>
                 <span
-                  className={`rounded border px-2 py-0.5 text-xs font-medium ${CLASSIFICACOES[aluno.classificacao].classe}`}
+                  className={`shrink-0 rounded border px-2 py-0.5 text-xs font-medium ${CLASSIFICACOES[aluno.classificacao].classe}`}
                 >
                   {CLASSIFICACOES[aluno.classificacao].rotulo}
                 </span>
