@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { sair } from '@/lib/acoes-auth'
+import { criarClienteBrowser } from '@/lib/supabase/client'
 import estilos from './app-shell.module.css'
 
 const CHAVE_SIDEBAR_ABERTA = 'hope-select:sidebar-aberta'
@@ -82,6 +83,17 @@ const ITENS: ItemMenu[] = [
   },
 ]
 
+const ITEM_ADMIN: ItemMenu = {
+  href: '/admin',
+  rotulo: 'Admin',
+  icone: (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" />
+      <path d="M9.5 12l1.8 1.8L14.5 10" />
+    </svg>
+  ),
+}
+
 const TITULOS: Record<string, string> = {
   '/': 'Início',
   '/sala': 'Sala',
@@ -89,12 +101,13 @@ const TITULOS: Record<string, string> = {
   '/alunos': 'Alunos',
   '/tarefas': 'Tarefas',
   '/relatorios': 'Relatórios',
+  '/admin': 'Admin',
 }
 
-function tituloDaRota(pathname: string): string {
+function tituloDaRota(pathname: string, itens: ItemMenu[]): string {
   if (pathname === '/') return TITULOS['/']
-  const item = ITENS.find((i) => i.href !== '/' && pathname.startsWith(i.href))
-  return item?.rotulo ?? 'Hope Select'
+  const item = itens.find((i) => i.href !== '/' && pathname.startsWith(i.href))
+  return item?.rotulo ?? TITULOS[pathname] ?? 'Hope Select'
 }
 
 function itemAtivo(pathname: string, href: string): boolean {
@@ -115,6 +128,7 @@ export function AppShell({
   const [sidebarAberta, setSidebarAberta] = useState(true)
   const [menuMobileAberto, setMenuMobileAberto] = useState(false)
   const [agora, setAgora] = useState<Date | null>(null)
+  const [ehAdmin, setEhAdmin] = useState(false)
 
   // Preferência de UI (não é dado de negócio), por isso pode viver no
   // localStorage do navegador — só lida depois da montagem para não
@@ -138,11 +152,23 @@ export function AppShell({
     return () => clearInterval(id)
   }, [])
 
+  // Checa se o usuário logado é admin, pra decidir se mostra o link do
+  // menu. Só decide o que aparece — a página /admin em si confere de novo
+  // no servidor, então esconder o link aqui não é a camada de segurança.
+  useEffect(() => {
+    const supabase = criarClienteBrowser()
+    supabase.rpc('eh_admin').then(({ data }) => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resultado só existe depois da chamada assíncrona
+      setEhAdmin(Boolean(data))
+    })
+  }, [])
+
   // Não precisa de efeito para fechar o menu mobile ao navegar: cada
   // página inclui o próprio <AppShell>, então a troca de rota já
   // desmonta/remonta este componente e `menuMobileAberto` nasce false de novo.
 
-  const tituloExibido = titulo ?? tituloDaRota(pathname)
+  const itens = ehAdmin ? [...ITENS, ITEM_ADMIN] : ITENS
+  const tituloExibido = titulo ?? tituloDaRota(pathname, itens)
 
   return (
     <div className={estilos.shell}>
@@ -165,7 +191,7 @@ export function AppShell({
         </div>
 
         <nav className={estilos.nav}>
-          {ITENS.map((item) => {
+          {itens.map((item) => {
             const ativo = itemAtivo(pathname, item.href)
             return (
               <Link
