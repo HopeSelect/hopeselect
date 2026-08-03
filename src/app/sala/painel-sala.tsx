@@ -576,6 +576,10 @@ function CardProfessor({
                       )}
                     </div>
 
+                    <p className="mt-1 text-xs text-gray-400">
+                      Duração: {formatarDecorrido(atendimentoDaVaga.inicio, agora)}
+                    </p>
+
                     {atendimentoDaVaga.alunos.alertas?.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
                         {atendimentoDaVaga.alunos.alertas.map((a) => (
