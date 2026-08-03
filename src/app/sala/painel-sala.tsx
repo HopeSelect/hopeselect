@@ -101,7 +101,7 @@ export function PainelSala({
   const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
 
   useEffect(() => {
-    const t = setInterval(() => setAgora(Date.now()), 30_000)
+    const t = setInterval(() => setAgora(Date.now()), 1_000)
     return () => clearInterval(t)
   }, [])
 
