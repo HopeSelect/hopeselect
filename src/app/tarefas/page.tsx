@@ -1,20 +1,13 @@
 import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { STATUS_TAREFA, TIPOS_TAREFA, formatarDataTarefa } from '@/lib/utils'
+import { STATUS_TAREFA, TIPOS_TAREFA, formatarDataTarefa, hojeISO, dataDeslocadaISO } from '@/lib/utils'
 import type { LinhaTarefa, StatusTarefa, TarefaComRelacoes } from '@/lib/tipos'
 import { TarefaForm } from './tarefa-form'
 import { criarTarefa, definirStatusTarefa } from './actions'
 import { FiltrosRelatorioTarefas } from './filtros-relatorio'
 import { GraficoTarefas } from './grafico-tarefas'
 import { ExportarTarefas } from './exportar-tarefas'
-
-function hojeISO() {
-  return new Date().toISOString().slice(0, 10)
-}
-function diasAtrasISO(dias: number) {
-  return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10)
-}
 
 export default async function TarefasPage({
   searchParams,
@@ -24,7 +17,7 @@ export default async function TarefasPage({
   const params = await searchParams
   const usaPeriodoPersonalizado = Boolean(params.de && params.ate)
   const dias = Number(params.dias ?? '7') || 7
-  const de = usaPeriodoPersonalizado ? (params.de as string) : diasAtrasISO(dias)
+  const de = usaPeriodoPersonalizado ? (params.de as string) : dataDeslocadaISO(-dias)
   const ate = usaPeriodoPersonalizado ? (params.ate as string) : hojeISO()
 
   const supabase = await criarClienteServer()
