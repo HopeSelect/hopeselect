@@ -1,4 +1,4 @@
-import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo } from '@/lib/tipos'
+import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao } from '@/lib/tipos'
 
 // "Hoje" no fuso de Brasília — nunca use new Date().toISOString().slice(0,10)
 // pra isso: o JS usa UTC (3h à frente de Brasília), então o "dia vira" cedo
@@ -102,4 +102,20 @@ export const TIPOS_INTERVALO: Record<TipoIntervalo, string> = {
   lanche: 'Lanche',
   janta: 'Janta',
   outro: 'Intervalo',
+}
+export const TIPOS_AVALIACAO: Record<TipoAvaliacao, string> = {
+  coach: 'Avaliação coach',
+  nutricional: 'Avaliação nutricional',
+  funcional: 'Avaliação funcional',
+}
+// Selo de situação da avaliação: nunca feita, vencida, vencendo em até 7
+// dias, ou em dia. Diferente de statusPlano, sempre retorna algo (usado
+// pra colorir todo item da lista, não só os que têm problema).
+export function statusAvaliacao(proximaData: string | null): { rotulo: string; classe: string } {
+  if (!proximaData) return { rotulo: 'Nunca avaliada', classe: 'bg-red-100 text-red-800 border-red-300' }
+  const hoje = hojeISO()
+  const emSeteDias = dataDeslocadaISO(7)
+  if (proximaData < hoje) return { rotulo: 'Vencida', classe: 'bg-red-100 text-red-800 border-red-300' }
+  if (proximaData <= emSeteDias) return { rotulo: 'Vence em breve', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' }
+  return { rotulo: 'Em dia', classe: 'bg-green-100 text-green-800 border-green-300' }
 }
