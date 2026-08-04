@@ -5,12 +5,25 @@ export type Genero = 'feminino' | 'masculino' | 'outro'
 export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach' | 'lanche'
 export type StatusTarefa = 'a_realizar' | 'concluida' | 'cancelada' | 'agendar' | 'realizar_novamente'
 export type TipoAvaliacao = 'coach' | 'nutricional' | 'funcional'
+export type TipoEspecialista = 'nutricionista' | 'fisioterapeuta'
 export interface Professor {
   id: string
   nome: string
   funcao: string | null
   foto_url: string | null
   genero: Genero
+  horario_trabalho: string | null
+  ativo: boolean
+  em_sala: boolean
+  pos_x: number | null
+  pos_y: number | null
+  created_at: string
+}
+export interface Especialista {
+  id: string
+  nome: string
+  tipo: TipoEspecialista
+  foto_url: string | null
   horario_trabalho: string | null
   ativo: boolean
   em_sala: boolean
