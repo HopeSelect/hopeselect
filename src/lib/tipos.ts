@@ -4,6 +4,7 @@ export type Papel = 'admin' | 'lider' | 'recepcao' | 'professor'
 export type Genero = 'feminino' | 'masculino' | 'outro'
 export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach' | 'lanche'
 export type StatusTarefa = 'a_realizar' | 'concluida' | 'cancelada' | 'agendar' | 'realizar_novamente'
+export type TipoAvaliacao = 'coach' | 'nutricional' | 'funcional'
 export interface Professor {
   id: string
   nome: string
@@ -139,4 +140,13 @@ export interface LinhaProdutividade {
   professor_nome: string
   total_atendimentos: number
   total_tarefas_concluidas: number
+}
+// Linha de vw_avaliacoes_status (uma linha por aluno + tipo de avaliação).
+export interface LinhaAvaliacaoStatus {
+  aluno_id: string
+  aluno_nome: string
+  aluno_matricula: string | null
+  tipo: TipoAvaliacao
+  ultima_avaliacao: string | null
+  proxima_data: string | null
 }
