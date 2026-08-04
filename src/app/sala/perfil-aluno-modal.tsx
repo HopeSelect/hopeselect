@@ -3,29 +3,47 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES, diasDesde, idadeDesde, statusPlano } from '@/lib/utils'
+import { CLASSIFICACOES, diasDesde, diasParaAniversario, idadeDesde, statusPlano } from '@/lib/utils'
 import type { AlunoComProfessor } from '@/lib/tipos'
+
+interface LinhaHistorico {
+  id: string
+  data: string
+  professor_nome: string
+  duracao_hms: string
+  em_andamento: boolean
+}
 
 export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFechar: () => void }) {
   const supabase = criarClienteBrowser()
   const [aluno, setAluno] = useState<AlunoComProfessor | null>(null)
+  const [historico, setHistorico] = useState<LinhaHistorico[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelado = false
     setCarregando(true)
-    supabase
-      .from('alunos')
-      .select('*, professores(nome)')
-      .eq('id', alunoId)
-      .single()
-      .then(({ data, error }) => {
-        if (cancelado) return
-        if (error) setErro(error.message)
-        setAluno((data as unknown as AlunoComProfessor) ?? null)
-        setCarregando(false)
-      })
+
+    async function carregar() {
+      const [{ data, error }, { data: linhasHistorico }] = await Promise.all([
+        supabase.from('alunos').select('*, professores(nome)').eq('id', alunoId).single(),
+        supabase
+          .from('vw_atendimentos')
+          .select('id, data, professor_nome, duracao_hms, em_andamento')
+          .eq('aluno_id', alunoId)
+          .order('data', { ascending: false })
+          .order('inicio', { ascending: false })
+          .limit(10),
+      ])
+      if (cancelado) return
+      if (error) setErro(error.message)
+      setAluno((data as unknown as AlunoComProfessor) ?? null)
+      setHistorico((linhasHistorico ?? []) as LinhaHistorico[])
+      setCarregando(false)
+    }
+
+    void carregar()
     return () => {
       cancelado = true
     }
@@ -34,6 +52,7 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
   const dias = aluno ? diasDesde(aluno.ultimo_acesso) : null
   const idade = aluno ? idadeDesde(aluno.data_nascimento) : null
   const plano = aluno ? statusPlano(aluno.vencimento_plano) : null
+  const diasAniversario = aluno ? diasParaAniversario(aluno.data_nascimento) : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-20">
@@ -73,6 +92,14 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
                   {CLASSIFICACOES[aluno.classificacao].rotulo}
                 </span>
               </div>
+
+              {diasAniversario !== null && diasAniversario <= 7 && (
+                <p className="rounded-md bg-pink-50 px-3 py-2 text-sm font-medium text-pink-700">
+                  {diasAniversario === 0
+                    ? '🎂 Aniversário hoje!'
+                    : `🎂 Aniversário em ${diasAniversario} dia${diasAniversario === 1 ? '' : 's'}`}
+                </p>
+              )}
 
               {aluno.alertas?.length > 0 && (
                 <div className="flex flex-wrap gap-1">
@@ -143,6 +170,30 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
                   <p className="text-sm text-gray-900">{aluno.observacoes}</p>
                 </div>
               )}
+
+              <div>
+                <p className="mb-1 text-xs text-gray-400">Histórico de atendimentos</p>
+                {historico.length === 0 ? (
+                  <p className="text-sm text-gray-400">Nenhum atendimento registrado ainda.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {historico.map((h) => (
+                      <div
+                        key={h.id}
+                        className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm"
+                      >
+                        <span className="text-gray-900">
+                          {new Date(`${h.data}T00:00:00`).toLocaleDateString('pt-BR')}
+                        </span>
+                        <span className="truncate text-gray-600">{h.professor_nome}</span>
+                        <span className="shrink-0 text-xs text-gray-500">
+                          {h.em_andamento ? 'em andamento' : h.duracao_hms}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <Link
                 href={`/alunos/${aluno.id}`}
