@@ -2,24 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { criarClienteBrowser } from '@/lib/supabase/client'
+import { hojeISO, dataDeslocadaISO } from '@/lib/utils'
 import type { Aluno } from '@/lib/tipos'
 import estilos from './inicio.module.css'
 
 type AtendimentosPorDia = { data: string; total_atendimentos: number }
 type AlertaAluno = Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'alertas'>
 
-function hojeISO() {
-  return new Date().toISOString().slice(0, 10)
-}
-function diasAtrasISO(dias: number) {
-  return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10)
-}
-
 function montarSparkline(porDia: AtendimentosPorDia[]) {
   const porData = new Map(porDia.map((d) => [d.data, d.total_atendimentos]))
   const dias: { label: string; data: string; total: number }[] = []
   for (let i = 6; i >= 0; i--) {
-    const dataISO = diasAtrasISO(i)
+    const dataISO = dataDeslocadaISO(-i)
     const label = new Date(`${dataISO}T00:00:00`)
       .toLocaleDateString('pt-BR', { weekday: 'short' })
       .replace('.', '')
@@ -102,7 +96,7 @@ export function PainelInicioAoVivo({ inicial }: { inicial: DadosInicio }) {
       supabase
         .from('vw_atendimentos_por_dia')
         .select('data, total_atendimentos')
-        .gte('data', diasAtrasISO(6))
+        .gte('data', dataDeslocadaISO(-6))
         .lte('data', hoje),
       supabase
         .from('alunos')
@@ -112,7 +106,7 @@ export function PainelInicioAoVivo({ inicial }: { inicial: DadosInicio }) {
       supabase
         .from('atendimentos')
         .select('inicio')
-        .gte('data', diasAtrasISO(29))
+        .gte('data', dataDeslocadaISO(-29))
         .lte('data', hoje),
     ])
 
