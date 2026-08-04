@@ -51,6 +51,20 @@ export function idadeDesde(dataNascimento: string | null): number | null {
   if (aindaNaoFezAniversario) idade--
   return idade
 }
+// Quantos dias faltam pro próximo aniversário do aluno (0 = hoje).
+// null se não tiver data de nascimento cadastrada. Usa só dia/mês — o ano
+// de nascimento não importa aqui, só serve pra calcular idade em outro lugar.
+export function diasParaAniversario(dataNascimento: string | null): number | null {
+  if (!dataNascimento) return null
+  const hoje = new Date(`${hojeISO()}T00:00:00`)
+  const [, mesTexto, diaTexto] = dataNascimento.split('-')
+  const mes = Number(mesTexto)
+  const dia = Number(diaTexto)
+  let proximo = new Date(hoje.getFullYear(), mes - 1, dia)
+  if (proximo < hoje) proximo = new Date(hoje.getFullYear() + 1, mes - 1, dia)
+  const diffMs = proximo.getTime() - hoje.getTime()
+  return Math.round(diffMs / 86400000)
+}
 // Selo de vencimento do plano: vencido (vermelho) ou vence em até 7 dias
 // (amarelo). Sem selo quando o plano está tranquilo ou não tem data.
 export function statusPlano(vencimento: string | null): { rotulo: string; classe: string } | null {
