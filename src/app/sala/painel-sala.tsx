@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES, TIPOS_INTERVALO, TIPOS_TAREFA, diasDesde } from '@/lib/utils'
+import { CLASSIFICACOES, TIPOS_INTERVALO, TIPOS_TAREFA, diasDesde, hojeISO } from '@/lib/utils'
 import type {
   AlunoResumo,
   AtendimentoAberto,
@@ -89,7 +89,7 @@ export function PainelSala({
   tarefasIniciais: TarefaDoDia[]
 }) {
   const supabase = useMemo(() => criarClienteBrowser(), [])
-  const hoje = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const hoje = useMemo(() => hojeISO(), [])
   const [professores, setProfessores] = useState(professoresIniciais)
   const [atendimentos, setAtendimentos] = useState(atendimentosIniciais)
   const [intervalos, setIntervalos] = useState(intervalosIniciais)
@@ -289,8 +289,6 @@ export function PainelSala({
         {professores.map((professor, indice) => {
           const atendimentosDoProfessor = atendimentos.filter((a) => a.professor_id === professor.id)
           const intervalo = intervalos.find((i) => i.professor_id === professor.id)
-          // Tarefa concluída some daqui — ela já está registrada em /tarefas e
-          // nos relatórios, só não fica poluindo o card de "com quem o professor está".
           const tarefasDoProfessor = tarefas.filter(
             (t) => t.professor_id === professor.id && t.status !== 'concluida',
           )
