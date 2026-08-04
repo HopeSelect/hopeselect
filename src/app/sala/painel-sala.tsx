@@ -64,17 +64,40 @@ function posicaoGrade(indice: number, colunas: number, larguraCard: number) {
   }
 }
 
-function formatarDecorrido(inicioIso: string, agora: number) {
-  const ms = Math.max(0, agora - new Date(inicioIso).getTime())
-  const totalSeg = Math.floor(ms / 1000)
+function segundosDesde(inicioIso: string, agora: number) {
+  return Math.max(0, Math.floor((agora - new Date(inicioIso).getTime()) / 1000))
+}
+
+function formatarDuracao(totalSeg: number) {
   const h = Math.floor(totalSeg / 3600)
   const m = Math.floor((totalSeg % 3600) / 60)
   const s = totalSeg % 60
   return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
 }
 
+function formatarDecorrido(inicioIso: string, agora: number) {
+  return formatarDuracao(segundosDesde(inicioIso, agora))
+}
+
 function formatarHora(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Alerta de tempo de atendimento: normal até 49min, amarelo aos 50min,
+// vermelho na 1h — ajuda a recepção a notar sozinha quem já passou do
+// tempo, sem precisar ficar de olho o tempo todo em cada card.
+function classeTextoDuracao(totalSeg: number): string {
+  const min = totalSeg / 60
+  if (min >= 60) return 'text-red-600 font-semibold'
+  if (min >= 50) return 'text-yellow-700 font-semibold'
+  return 'text-gray-400'
+}
+
+function classeCardDuracao(totalSeg: number): string {
+  const min = totalSeg / 60
+  if (min >= 60) return 'border-red-300 bg-red-50'
+  if (min >= 50) return 'border-yellow-300 bg-yellow-50'
+  return 'border-gray-100 bg-gray-50'
 }
 
 export function PainelSala({
@@ -548,8 +571,14 @@ function CardProfessor({
                   .filter(Boolean)
                   .join(' · ')
 
+                const segundos = segundosDesde(atendimentoDaVaga.inicio, agora)
+                const excedeu1h = segundos / 60 >= 60
+
                 return (
-                  <div key={atendimentoDaVaga.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
+                  <div
+                    key={atendimentoDaVaga.id}
+                    className={`rounded-md border p-2 ${classeCardDuracao(segundos)}`}
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <button
                         onClick={() => onVerPerfil(atendimentoDaVaga.aluno_id)}
@@ -574,9 +603,16 @@ function CardProfessor({
                       )}
                     </div>
 
-                    <p className="mt-1 text-xs text-gray-400">
-                      Duração: {formatarDecorrido(atendimentoDaVaga.inicio, agora)}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      <span className={`text-xs ${classeTextoDuracao(segundos)}`}>
+                        Duração: {formatarDuracao(segundos)}
+                      </span>
+                      {excedeu1h && (
+                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700">
+                          Excedeu 1h
+                        </span>
+                      )}
+                    </div>
 
                     {atendimentoDaVaga.alunos.alertas?.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
