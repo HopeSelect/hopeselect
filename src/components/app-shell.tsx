@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { sair } from '@/lib/acoes-auth'
 import { criarClienteBrowser } from '@/lib/supabase/client'
+import type { Papel } from '@/lib/tipos'
 import estilos from './app-shell.module.css'
 
 const CHAVE_SIDEBAR_ABERTA = 'hope-select:sidebar-aberta'
@@ -128,7 +129,7 @@ export function AppShell({
   const [sidebarAberta, setSidebarAberta] = useState(true)
   const [menuMobileAberto, setMenuMobileAberto] = useState(false)
   const [agora, setAgora] = useState<Date | null>(null)
-  const [ehAdmin, setEhAdmin] = useState(false)
+  const [papel, setPapel] = useState<Papel | null>(null)
 
   // Preferência de UI (não é dado de negócio), por isso pode viver no
   // localStorage do navegador — só lida depois da montagem para não
@@ -152,14 +153,15 @@ export function AppShell({
     return () => clearInterval(id)
   }, [])
 
-  // Checa se o usuário logado é admin, pra decidir se mostra o link do
-  // menu. Só decide o que aparece — a página /admin em si confere de novo
-  // no servidor, então esconder o link aqui não é a camada de segurança.
+  // Papel do usuário logado — decide o que aparece no menu (Tarefas exige
+  // líder+, Admin exige admin). Só decide o que aparece: as páginas em si
+  // conferem de novo no servidor, então esconder o link aqui não é a
+  // camada de segurança.
   useEffect(() => {
     const supabase = criarClienteBrowser()
-    supabase.rpc('eh_admin').then(({ data }) => {
+    supabase.rpc('perfil_papel').then(({ data }) => {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- resultado só existe depois da chamada assíncrona
-      setEhAdmin(Boolean(data))
+      setPapel((data as Papel) ?? null)
     })
   }, [])
 
@@ -167,7 +169,10 @@ export function AppShell({
   // página inclui o próprio <AppShell>, então a troca de rota já
   // desmonta/remonta este componente e `menuMobileAberto` nasce false de novo.
 
-  const itens = ehAdmin ? [...ITENS, ITEM_ADMIN] : ITENS
+  const podeGerenciarTarefas = papel === 'admin' || papel === 'lider'
+  const ehAdmin = papel === 'admin'
+  const itensBase = podeGerenciarTarefas ? ITENS : ITENS.filter((i) => i.href !== '/tarefas')
+  const itens = ehAdmin ? [...itensBase, ITEM_ADMIN] : itensBase
   const tituloExibido = titulo ?? tituloDaRota(pathname, itens)
 
   return (

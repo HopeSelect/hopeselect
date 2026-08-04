@@ -13,21 +13,42 @@ export default async function EditarTarefaPage({
   const { id } = await params
   const supabase = await criarClienteServer()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return (
+      <AppShell titulo="Editar tarefa">
+        <p className="text-sm text-gray-500">Sessão expirada.</p>
+      </AppShell>
+    )
+  }
+
+  const { data: meuPerfil } = await supabase.from('perfis').select('papel').eq('id', user.id).single()
+
+  if (meuPerfil?.papel !== 'admin' && meuPerfil?.papel !== 'lider') {
+    return (
+      <AppShell titulo="Editar tarefa">
+        <p className="text-sm text-gray-500">
+          Essa área é restrita a líderes e administradores. Fala com um líder se precisar de acesso.
+        </p>
+      </AppShell>
+    )
+  }
+
   const [{ data }, { data: alunos }, { data: professores }] = await Promise.all([
     supabase.from('tarefas').select('*').eq('id', id).single(),
     supabase.from('alunos').select('id, nome').order('nome'),
     supabase.from('professores').select('id, nome').eq('ativo', true).order('nome'),
   ])
-
   if (!data) notFound()
   const tarefa = data as Tarefa
-
   async function remover() {
     'use server'
     await excluirTarefa(id)
     redirect('/tarefas')
   }
-
   return (
     <AppShell titulo="Editar tarefa">
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">

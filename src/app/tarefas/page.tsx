@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { STATUS_TAREFA, TIPOS_TAREFA, formatarDataTarefa } from '@/lib/utils'
+import { STATUS_TAREFA, TIPOS_TAREFA, formatarDataTarefa, hojeISO, dataDeslocadaISO } from '@/lib/utils'
 import type { LinhaTarefa, StatusTarefa, TarefaComRelacoes } from '@/lib/tipos'
 import { TarefaForm } from './tarefa-form'
 import { criarTarefa, definirStatusTarefa } from './actions'
@@ -9,31 +9,48 @@ import { FiltrosRelatorioTarefas } from './filtros-relatorio'
 import { GraficoTarefas } from './grafico-tarefas'
 import { ExportarTarefas } from './exportar-tarefas'
 
-function hojeISO() {
-  return new Date().toISOString().slice(0, 10)
-}
-function diasAtrasISO(dias: number) {
-  return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10)
-}
-
 export default async function TarefasPage({
   searchParams,
 }: {
   searchParams: Promise<{ professor?: string; tipo?: string; status?: string; dias?: string; de?: string; ate?: string }>
 }) {
+  const supabase = await criarClienteServer()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return (
+      <AppShell titulo="Tarefas">
+        <p className="text-sm text-gray-500">Sessão expirada.</p>
+      </AppShell>
+    )
+  }
+
+  const { data: meuPerfil } = await supabase.from('perfis').select('papel').eq('id', user.id).single()
+
+  if (meuPerfil?.papel !== 'admin' && meuPerfil?.papel !== 'lider') {
+    return (
+      <AppShell titulo="Tarefas">
+        <p className="text-sm text-gray-500">
+          Essa área é restrita a líderes e administradores. Fala com um líder se precisar de acesso.
+        </p>
+      </AppShell>
+    )
+  }
+
   const params = await searchParams
   const usaPeriodoPersonalizado = Boolean(params.de && params.ate)
   const dias = Number(params.dias ?? '7') || 7
-  const de = usaPeriodoPersonalizado ? (params.de as string) : diasAtrasISO(dias)
+  const de = usaPeriodoPersonalizado ? (params.de as string) : dataDeslocadaISO(-dias)
   const ate = usaPeriodoPersonalizado ? (params.ate as string) : hojeISO()
-
-  const supabase = await criarClienteServer()
 
   const [{ data: tarefas, error }, { data: alunos }, { data: professores }] = await Promise.all([
     supabase
       .from('tarefas')
       .select('*, alunos(id, nome, matricula), professores(id, nome)')
-      .neq('status', 'cancelada')
+      .eq('status', 'a_realizar')
       .order('data')
       .order('created_at'),
     supabase.from('alunos').select('id, nome').order('nome'),
@@ -71,10 +88,11 @@ export default async function TarefasPage({
 
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
           <section className="space-y-6">
-            {lista.length === 0 && <p className="text-sm text-gray-500">Nenhuma tarefa pendente ou concluída.</p>}
+            <h2 className="text-sm font-medium text-gray-900">A realizar</h2>
+            {lista.length === 0 && <p className="text-sm text-gray-500">Nenhuma tarefa a realizar no momento.</p>}
             {[...porProfessor.entries()].map(([nomeProfessor, tarefasDoProfessor]) => (
               <div key={nomeProfessor}>
-                <h2 className="mb-2 text-sm font-medium text-gray-500">{nomeProfessor}</h2>
+                <h3 className="mb-2 text-sm font-medium text-gray-500">{nomeProfessor}</h3>
                 <div className="space-y-2">
                   {tarefasDoProfessor.map((t) => (
                     <div key={t.id} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
@@ -91,11 +109,9 @@ export default async function TarefasPage({
                           {t.observacao ? ` · ${t.observacao}` : ''}
                         </p>
                       </div>
-                      {t.status === 'a_realizar' && (
-                        <form action={definirStatusTarefa.bind(null, t.id, 'concluida' satisfies StatusTarefa)}>
-                          <button className="text-sm text-gray-600 hover:text-gray-900">Concluir</button>
-                        </form>
-                      )}
+                      <form action={definirStatusTarefa.bind(null, t.id, 'concluida' satisfies StatusTarefa)}>
+                        <button className="text-sm text-gray-600 hover:text-gray-900">Concluir</button>
+                      </form>
                       <Link href={`/tarefas/${t.id}`} className="text-sm text-gray-400 hover:text-gray-900">
                         Editar
                       </Link>
@@ -115,7 +131,7 @@ export default async function TarefasPage({
         <section className="mt-12 border-t border-gray-200 pt-8">
           <h2 className="text-lg font-medium text-gray-900">Relatório de tarefas</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Filtre por professor, tipo, status e período. Exporte ou veja os gráficos.
+            Filtre por professor, tipo, status e período. Aqui aparece tudo — inclusive concluídas, agendadas e a repetir.
           </p>
 
           <div className="mt-4 flex flex-wrap items-end justify-between gap-4">

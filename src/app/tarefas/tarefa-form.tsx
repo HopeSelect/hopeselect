@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 import Link from 'next/link'
 import type { StatusTarefa, Tarefa, TipoTarefa } from '@/lib/tipos'
-import { STATUS_TAREFA, STATUS_TAREFA_SELECIONAVEIS, TIPOS_TAREFA } from '@/lib/utils'
+import { STATUS_TAREFA, STATUS_TAREFA_SELECIONAVEIS, TIPOS_TAREFA, dataDeslocadaISO } from '@/lib/utils'
 import type { EstadoForm } from './actions'
 
 type Acao = (prev: EstadoForm, fd: FormData) => Promise<EstadoForm>
@@ -12,11 +12,6 @@ type OpcaoNome = { id: string; nome: string }
 
 const campo =
   'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900'
-
-// Data de amanhã em formato yyyy-mm-dd, já que o líder lança um dia antes (fluxo do cliente).
-function amanhaISO() {
-  return new Date(Date.now() + 86400000).toISOString().slice(0, 10)
-}
 
 export function TarefaForm({
   acao,
@@ -93,7 +88,13 @@ export function TarefaForm({
 
         <label className="block text-sm font-medium text-gray-700">
           Data *
-          <input type="date" name="data" required defaultValue={inicial?.data ?? amanhaISO()} className={campo} />
+          <input
+            type="date"
+            name="data"
+            required
+            defaultValue={inicial?.data ?? dataDeslocadaISO(1)}
+            className={campo}
+          />
         </label>
       </div>
 

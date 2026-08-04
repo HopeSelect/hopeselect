@@ -1,12 +1,9 @@
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
+import { hojeISO } from '@/lib/utils'
 import type { AtendimentoAberto, IntervaloAberto, Professor, TarefaDoDia } from '@/lib/tipos'
 import { PainelSala } from './painel-sala'
 import estilos from './sala.module.css'
-
-function hojeISO() {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export default async function SalaPage() {
   const supabase = await criarClienteServer()

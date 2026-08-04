@@ -1,6 +1,6 @@
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { CLASSIFICACOES, TIPOS_TAREFA, statusPlano } from '@/lib/utils'
+import { CLASSIFICACOES, TIPOS_TAREFA, statusPlano, hojeISO, dataDeslocadaISO } from '@/lib/utils'
 import type {
   Classificacao,
   LinhaAtendimento,
@@ -11,13 +11,6 @@ import type {
 import { FiltrosAtendimentos } from './filtros-atendimentos'
 import { GraficoAtendimentos } from './grafico-atendimentos'
 import { ExportarBotoes } from './exportar-botoes'
-
-function hojeISO() {
-  return new Date().toISOString().slice(0, 10)
-}
-function diasAtrasISO(dias: number) {
-  return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10)
-}
 
 // Linha de aluno pra seção "Alunos matriculados" (lista completa, sem
 // filtro de período — é o cadastro geral, não uma atividade no tempo).
@@ -80,7 +73,7 @@ export default async function RelatoriosPage({
   const params = await searchParams
   const usaPeriodoPersonalizado = Boolean(params.de && params.ate)
   const dias = Number(params.dias ?? '7') || 7
-  const de = usaPeriodoPersonalizado ? (params.de as string) : diasAtrasISO(dias)
+  const de = usaPeriodoPersonalizado ? (params.de as string) : dataDeslocadaISO(-dias)
   const ate = usaPeriodoPersonalizado ? (params.ate as string) : hojeISO()
 
   const supabase = await criarClienteServer()
