@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { hojeISO, dataDeslocadaISO, diasParaAniversario } from '@/lib/utils'
-import type { Aluno } from '@/lib/tipos'
+import { hojeISO, dataDeslocadaISO, diasParaAniversario, TIPOS_AVALIACAO } from '@/lib/utils'
+import type { Aluno, LinhaAvaliacaoStatus } from '@/lib/tipos'
 import estilos from './inicio.module.css'
 import { AtualizadorInicio } from './painel-inicio-ao-vivo'
 
@@ -76,6 +76,11 @@ const ATALHOS = [
     path: 'M4 3.5h16v17H4zM8 8h8M8 12h8M8 16h5',
   },
   {
+    href: '/avaliacoes',
+    rotulo: 'Avaliações',
+    path: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 7.5v5l3.5 2',
+  },
+  {
     href: '/tarefas',
     rotulo: 'Tarefas',
     path: 'M5 4h14v17H5zM9 3.5h6v2H9zM8.5 12l2 2 4-4.2',
@@ -99,6 +104,7 @@ export default async function InicioPage() {
     { data: alunosRecentes },
     { data: atendimentos30dias },
     { data: alunosComNascimento },
+    { data: statusAvaliacoes },
   ] = await Promise.all([
     supabase.from('atendimentos').select('*', { count: 'exact', head: true }).is('fim', null),
     supabase.from('professores').select('*', { count: 'exact', head: true }).eq('ativo', true),
@@ -122,6 +128,7 @@ export default async function InicioPage() {
       .from('alunos')
       .select('id, nome, classificacao, data_nascimento')
       .not('data_nascimento', 'is', null),
+    supabase.from('vw_avaliacoes_status').select('*'),
   ])
 
   const sparkline = montarSparkline((porDia ?? []) as AtendimentosPorDia[])
@@ -146,6 +153,13 @@ export default async function InicioPage() {
     .filter((a): a is typeof a & { dias: number } => a.dias !== null && a.dias <= 7)
     .sort((a, b) => a.dias - b.dias)
     .slice(0, 6)
+
+  // Avaliações vencidas, vencendo em até 7 dias, ou nunca registradas.
+  const emSeteDias = dataDeslocadaISO(7)
+  const todasAvaliacoes = (statusAvaliacoes ?? []) as LinhaAvaliacaoStatus[]
+  const avaliacoesPendentes = todasAvaliacoes
+    .filter((a) => !a.proxima_data || a.proxima_data <= emSeteDias)
+    .sort((a, b) => (a.proxima_data ?? '0000-00-00').localeCompare(b.proxima_data ?? '0000-00-00'))
 
   return (
     <AppShell>
@@ -217,25 +231,60 @@ export default async function InicioPage() {
           </div>
         </div>
 
-        <div className={estilos.cardPainel} style={{ marginBottom: 'var(--space-6)' }}>
-          <div className={estilos.painelTitulo}>Aniversariantes da semana</div>
-          <div className={estilos.listaAlertas}>
-            {aniversariantes.length === 0 && (
-              <p className={estilos.semAlertas}>Nenhum aniversário nos próximos 7 dias.</p>
-            )}
-            {aniversariantes.map((a) => (
-              <div key={a.id} className={estilos.linhaAlerta}>
-                <span className={estilos.avatar} data-classe={a.classificacao}>
-                  {iniciais(a.nome)}
-                </span>
-                <div className={estilos.linhaAlertaTexto}>
-                  <div className={estilos.linhaAlertaNome}>{a.nome}</div>
-                  <div className={estilos.linhaAlertaAlertas}>
-                    {a.dias === 0 ? '🎂 Hoje!' : `🎂 Em ${a.dias} dia${a.dias === 1 ? '' : 's'}`}
+        <div className={estilos.gradeMeio}>
+          <div className={estilos.cardPainel}>
+            <div className={estilos.painelTitulo}>Aniversariantes da semana</div>
+            <div className={estilos.listaAlertas}>
+              {aniversariantes.length === 0 && (
+                <p className={estilos.semAlertas}>Nenhum aniversário nos próximos 7 dias.</p>
+              )}
+              {aniversariantes.map((a) => (
+                <div key={a.id} className={estilos.linhaAlerta}>
+                  <span className={estilos.avatar} data-classe={a.classificacao}>
+                    {iniciais(a.nome)}
+                  </span>
+                  <div className={estilos.linhaAlertaTexto}>
+                    <div className={estilos.linhaAlertaNome}>{a.nome}</div>
+                    <div className={estilos.linhaAlertaAlertas}>
+                      {a.dias === 0 ? '🎂 Hoje!' : `🎂 Em ${a.dias} dia${a.dias === 1 ? '' : 's'}`}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <div className={estilos.cardPainel}>
+            <div className={estilos.painelTitulo}>
+              Avaliações pendentes
+              {avaliacoesPendentes.length > 0 && (
+                <span className={estilos.picoDestaque}> · {avaliacoesPendentes.length}</span>
+              )}
+            </div>
+            <div className={estilos.listaAlertas}>
+              {avaliacoesPendentes.length === 0 && (
+                <p className={estilos.semAlertas}>Nenhuma avaliação pendente. 🎉</p>
+              )}
+              {avaliacoesPendentes.slice(0, 6).map((a) => (
+                <div key={`${a.aluno_id}-${a.tipo}`} className={estilos.linhaAlerta}>
+                  <span className={estilos.avatar} data-classe="C">
+                    {iniciais(a.aluno_nome)}
+                  </span>
+                  <div className={estilos.linhaAlertaTexto}>
+                    <div className={estilos.linhaAlertaNome}>{a.aluno_nome}</div>
+                    <div className={estilos.linhaAlertaAlertas}>
+                      {TIPOS_AVALIACAO[a.tipo]} ·{' '}
+                      {a.proxima_data ? `venceu em ${new Date(`${a.proxima_data}T00:00:00`).toLocaleDateString('pt-BR')}` : 'nunca feita'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {avaliacoesPendentes.length > 0 && (
+                <Link href="/avaliacoes" className="mt-1 block text-center text-xs text-gray-500 underline">
+                  Ver todas
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
