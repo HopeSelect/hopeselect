@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { hojeISO, dataDeslocadaISO } from '@/lib/utils'
+import { hojeISO, dataDeslocadaISO, diasParaAniversario } from '@/lib/utils'
 import type { Aluno } from '@/lib/tipos'
 import estilos from './inicio.module.css'
 import { AtualizadorInicio } from './painel-inicio-ao-vivo'
@@ -98,6 +98,7 @@ export default async function InicioPage() {
     { data: porDia },
     { data: alunosRecentes },
     { data: atendimentos30dias },
+    { data: alunosComNascimento },
   ] = await Promise.all([
     supabase.from('atendimentos').select('*', { count: 'exact', head: true }).is('fim', null),
     supabase.from('professores').select('*', { count: 'exact', head: true }).eq('ativo', true),
@@ -117,6 +118,10 @@ export default async function InicioPage() {
       .select('inicio')
       .gte('data', dataDeslocadaISO(-29))
       .lte('data', hoje),
+    supabase
+      .from('alunos')
+      .select('id, nome, classificacao, data_nascimento')
+      .not('data_nascimento', 'is', null),
   ])
 
   const sparkline = montarSparkline((porDia ?? []) as AtendimentosPorDia[])
@@ -130,6 +135,17 @@ export default async function InicioPage() {
 
   const pico = montarPico((atendimentos30dias ?? []) as { inicio: string }[])
   const maiorPico = Math.max(1, ...pico.horas.map((h) => h.total))
+
+  // Aniversariantes dos próximos 7 dias, ordenado por quem faz aniversário
+  // primeiro — pra recepção conseguir dar parabéns sem ter que procurar
+  // aluno por aluno.
+  const aniversariantes = (
+    (alunosComNascimento ?? []) as Pick<Aluno, 'id' | 'nome' | 'classificacao' | 'data_nascimento'>[]
+  )
+    .map((a) => ({ ...a, dias: diasParaAniversario(a.data_nascimento) }))
+    .filter((a): a is typeof a & { dias: number } => a.dias !== null && a.dias <= 7)
+    .sort((a, b) => a.dias - b.dias)
+    .slice(0, 6)
 
   return (
     <AppShell>
@@ -198,6 +214,28 @@ export default async function InicioPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className={estilos.cardPainel} style={{ marginBottom: 'var(--space-6)' }}>
+          <div className={estilos.painelTitulo}>Aniversariantes da semana</div>
+          <div className={estilos.listaAlertas}>
+            {aniversariantes.length === 0 && (
+              <p className={estilos.semAlertas}>Nenhum aniversário nos próximos 7 dias.</p>
+            )}
+            {aniversariantes.map((a) => (
+              <div key={a.id} className={estilos.linhaAlerta}>
+                <span className={estilos.avatar} data-classe={a.classificacao}>
+                  {iniciais(a.nome)}
+                </span>
+                <div className={estilos.linhaAlertaTexto}>
+                  <div className={estilos.linhaAlertaNome}>{a.nome}</div>
+                  <div className={estilos.linhaAlertaAlertas}>
+                    {a.dias === 0 ? '🎂 Hoje!' : `🎂 Em ${a.dias} dia${a.dias === 1 ? '' : 's'}`}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
