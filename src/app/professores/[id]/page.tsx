@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import type { Professor } from '@/lib/tipos'
+import type { HorarioProfessor, Professor } from '@/lib/tipos'
 import { ProfessorForm } from '../professor-form'
 import { atualizarProfessor } from '../actions'
+import { EscalaProfessor } from './escala-professor'
 
 export default async function EditarProfessorPage({
   params,
@@ -12,11 +13,10 @@ export default async function EditarProfessorPage({
 }) {
   const { id } = await params
   const supabase = await criarClienteServer()
-  const { data } = await supabase
-    .from('professores')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const [{ data }, { data: horarios }] = await Promise.all([
+    supabase.from('professores').select('*').eq('id', id).single(),
+    supabase.from('professor_horarios').select('*').eq('professor_id', id),
+  ])
 
   if (!data) notFound()
   const professor = data as Professor
@@ -30,6 +30,8 @@ export default async function EditarProfessorPage({
             inicial={professor}
           />
         </div>
+
+        <EscalaProfessor professorId={professor.id} horariosIniciais={(horarios ?? []) as HorarioProfessor[]} />
       </main>
     </AppShell>
   )

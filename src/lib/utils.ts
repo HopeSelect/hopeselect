@@ -119,4 +119,9 @@ export function statusAvaliacao(proximaData: string | null): { rotulo: string; c
   if (proximaData <= emSeteDias) return { rotulo: 'Vence em breve', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' }
   return { rotulo: 'Em dia', classe: 'bg-green-100 text-green-800 border-green-300' }
 }
+export const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+// hhmmss vem do Postgres como "HH:MM:SS" — mostra só "HH:MM".
+export function formatarHoraCurta(hhmmss: string): string {
+  return hhmmss.slice(0, 5)
+}
 

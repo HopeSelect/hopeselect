@@ -65,3 +65,32 @@ export async function excluirProfessor(id: string): Promise<{ erro: string } | n
   revalidatePath('/professores')
   return null
 }
+
+export async function adicionarHorarioProfessor(
+  professorId: string,
+  fd: FormData,
+): Promise<{ erro: string } | null> {
+  const diaSemana = Number(fd.get('dia_semana'))
+  const horaInicio = String(fd.get('hora_inicio') ?? '')
+  const horaFim = String(fd.get('hora_fim') ?? '')
+
+  if (!horaInicio || !horaFim) return { erro: 'Preencha início e fim.' }
+  if (horaFim <= horaInicio) return { erro: 'O fim precisa ser depois do início.' }
+
+  const supabase = await criarClienteServer()
+  const { error } = await supabase.from('professor_horarios').insert({
+    professor_id: professorId,
+    dia_semana: diaSemana,
+    hora_inicio: horaInicio,
+    hora_fim: horaFim,
+  })
+  if (error) return { erro: error.message }
+  revalidatePath(`/professores/${professorId}`)
+  return null
+}
+
+export async function removerHorarioProfessor(id: string, professorId: string) {
+  const supabase = await criarClienteServer()
+  await supabase.from('professor_horarios').delete().eq('id', id)
+  revalidatePath(`/professores/${professorId}`)
+}

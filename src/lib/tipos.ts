@@ -37,6 +37,15 @@ export interface Fisioterapeuta {
   ativo: boolean
   created_at: string
 }
+// Bloco de escala do professor (dia da semana + faixa de horário). Um
+// professor pode ter vários blocos no mesmo dia (ex: manhã e noite).
+export interface HorarioProfessor {
+  id: string
+  professor_id: string
+  dia_semana: number // 0=domingo .. 6=sábado
+  hora_inicio: string // formato "HH:MM:SS" (tipo time do Postgres)
+  hora_fim: string
+}
 export interface Aluno {
   id: string
   matricula: string | null
