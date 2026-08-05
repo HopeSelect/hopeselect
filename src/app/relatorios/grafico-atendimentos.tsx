@@ -115,7 +115,7 @@ export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) 
       // --- Quais tarefas foram realizadas ---
       const porTarefa = new Map<string, number>()
       for (const l of linhas) {
-        const chave = l.tarefa ? TIPOS_TAREFA[l.tarefa as TipoTarefa] : 'Sem tarefa'
+        const chave = l.tarefa ? TIPOS_TAREFA[l.tarefa as TipoTarefa] : 'Atendimento comum'
         porTarefa.set(chave, (porTarefa.get(chave) ?? 0) + 1)
       }
       const tarefasComDado = [...porTarefa.keys()]
@@ -162,7 +162,7 @@ export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) 
         <canvas ref={canvasPorProfessorRef} />
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Tarefas realizadas</h3>
+        <h3 className="mb-2 text-sm font-medium text-gray-700">Atendimentos e tarefas</h3>
         <canvas ref={canvasPorTarefaRef} />
       </div>
     </div>
