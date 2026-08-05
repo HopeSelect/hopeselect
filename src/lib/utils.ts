@@ -1,4 +1,4 @@
-import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao, TipoEspecialista } from '@/lib/tipos'
+import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao } from '@/lib/tipos'
 
 // "Hoje" no fuso de Brasília — nunca use new Date().toISOString().slice(0,10)
 // pra isso: o JS usa UTC (3h à frente de Brasília), então o "dia vira" cedo
@@ -119,7 +119,4 @@ export function statusAvaliacao(proximaData: string | null): { rotulo: string; c
   if (proximaData <= emSeteDias) return { rotulo: 'Vence em breve', classe: 'bg-yellow-100 text-yellow-800 border-yellow-300' }
   return { rotulo: 'Em dia', classe: 'bg-green-100 text-green-800 border-green-300' }
 }
-export const TIPOS_ESPECIALISTA: Record<TipoEspecialista, string> = {
-  nutricionista: 'Nutricionista',
-  fisioterapeuta: 'Fisioterapeuta',
-}
+

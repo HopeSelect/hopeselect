@@ -52,24 +52,13 @@ const ITENS: ItemMenu[] = [
     ),
   },
   {
-    href: '/especialistas',
-    rotulo: 'Especialistas',
+    href: '/nutri',
+    rotulo: 'Nutri',
     icone: (
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="8" r="3.5" />
         <path d="M4.5 19.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7" />
         <path d="M9 8h6" />
-      </svg>
-    ),
-  },
-  {
-    href: '/sala-especialistas',
-    rotulo: 'Sala — Especialistas',
-    icone: (
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <circle cx="10" cy="10.5" r="2.3" />
-        <path d="M6.5 16c0-2 1.6-3.3 3.5-3.3s3.5 1.3 3.5 3.3" />
       </svg>
     ),
   },
@@ -131,8 +120,7 @@ const TITULOS: Record<string, string> = {
   '/': 'Início',
   '/sala': 'Sala',
   '/professores': 'Professores',
-  '/especialistas': 'Especialistas',
-  '/sala-especialistas': 'Sala — Especialistas',
+  '/nutri': 'Nutri',
   '/alunos': 'Alunos',
   '/avaliacoes': 'Avaliações',
   '/tarefas': 'Tarefas',

@@ -5,7 +5,6 @@ export type Genero = 'feminino' | 'masculino' | 'outro'
 export type TipoTarefa = 'prescricao' | 'laudo' | 'momento_coach' | 'lanche'
 export type StatusTarefa = 'a_realizar' | 'concluida' | 'cancelada' | 'agendar' | 'realizar_novamente'
 export type TipoAvaliacao = 'coach' | 'nutricional' | 'funcional'
-export type TipoEspecialista = 'nutricionista' | 'fisioterapeuta'
 export interface Professor {
   id: string
   nome: string
@@ -19,16 +18,23 @@ export interface Professor {
   pos_y: number | null
   created_at: string
 }
-export interface Especialista {
+// Nutri e Fisio são sistemas separados de verdade (não compartilham tabela
+// nem tela) — cada um mais simples que Professor: sem "em_sala"/posição,
+// porque a lista mostra direto todo mundo cadastrado (são poucos).
+export interface Nutricionista {
   id: string
   nome: string
-  tipo: TipoEspecialista
   foto_url: string | null
   horario_trabalho: string | null
   ativo: boolean
-  em_sala: boolean
-  pos_x: number | null
-  pos_y: number | null
+  created_at: string
+}
+export interface Fisioterapeuta {
+  id: string
+  nome: string
+  foto_url: string | null
+  horario_trabalho: string | null
+  ativo: boolean
   created_at: string
 }
 export interface Aluno {
@@ -63,6 +69,20 @@ export interface AtendimentoAberto {
   professor_id: string
   inicio: string
   tarefa: TipoTarefa | null
+  alunos: AlunoResumo
+}
+export interface AtendimentoNutriAberto {
+  id: string
+  aluno_id: string
+  nutricionista_id: string
+  inicio: string
+  alunos: AlunoResumo
+}
+export interface AtendimentoFisioAberto {
+  id: string
+  aluno_id: string
+  fisioterapeuta_id: string
+  inicio: string
   alunos: AlunoResumo
 }
 export type TipoIntervalo = 'almoco' | 'lanche' | 'janta' | 'outro'

@@ -3,15 +3,17 @@
 import { useEffect, useState } from 'react'
 import { criarClienteBrowser } from '@/lib/supabase/client'
 import { CLASSIFICACOES, diasDesde } from '@/lib/utils'
-import type { AlunoResumo, Especialista } from '@/lib/tipos'
-import { alocarAlunoEspecialista } from './actions'
+import type { AlunoResumo } from '@/lib/tipos'
+import { alocarAlunoNutri } from './actions'
 
-export function BuscarAlunoEspecialista({
-  especialista,
+export function BuscarAlunoNutri({
+  nutricionistaId,
+  nutricionistaNome,
   onFechar,
   onAlocado,
 }: {
-  especialista: Especialista
+  nutricionistaId: string
+  nutricionistaNome: string
   onFechar: () => void
   onAlocado: (alunoId: string, alunoResumo: AlunoResumo) => void
 }) {
@@ -48,7 +50,7 @@ export function BuscarAlunoEspecialista({
   async function alocar(aluno: AlunoResumo) {
     setAlocandoId(aluno.id)
     setErro(null)
-    const resultado = await alocarAlunoEspecialista(aluno.id, especialista.id)
+    const resultado = await alocarAlunoNutri(aluno.id, nutricionistaId)
     if (resultado?.erro) {
       setErro(resultado.erro)
       setAlocandoId(null)
@@ -61,9 +63,7 @@ export function BuscarAlunoEspecialista({
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-20">
       <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-gray-900">
-            Alocar aluno em {especialista.nome}
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-900">Alocar aluno em {nutricionistaNome}</h2>
           <button onClick={onFechar} className="text-gray-400 hover:text-gray-700" aria-label="Fechar">
             ✕
           </button>
@@ -107,16 +107,12 @@ export function BuscarAlunoEspecialista({
                         </span>
                       ))}
                     </div>
-                    {alocandoId === aluno.id && (
-                      <span className="mt-1 block text-xs text-gray-400">Alocando…</span>
-                    )}
+                    {alocandoId === aluno.id && <span className="mt-1 block text-xs text-gray-400">Alocando…</span>}
                   </button>
                 </li>
               )
             })}
-            {!buscando && resultados.length === 0 && (
-              <li className="text-sm text-gray-400">Nenhum aluno encontrado.</li>
-            )}
+            {!buscando && resultados.length === 0 && <li className="text-sm text-gray-400">Nenhum aluno encontrado.</li>}
           </ul>
         </div>
       </div>
