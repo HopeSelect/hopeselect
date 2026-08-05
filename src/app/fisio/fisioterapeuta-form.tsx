@@ -1,0 +1,47 @@
+'use client'
+
+import { useActionState } from 'react'
+import { criarFisioterapeuta, type EstadoForm } from './actions'
+import { FotoFisioterapeuta } from './foto-fisioterapeuta'
+
+const campo =
+  'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900'
+
+export function FisioterapeutaForm() {
+  const [estado, submit, pendente] = useActionState<EstadoForm, FormData>(criarFisioterapeuta, null)
+
+  return (
+    <form action={submit} className="space-y-4">
+      <label className="block text-sm font-medium text-gray-700">
+        Foto
+        <div className="mt-1">
+          <FotoFisioterapeuta />
+        </div>
+      </label>
+
+      <label className="block text-sm font-medium text-gray-700">
+        Nome *
+        <input name="nome" required className={campo} />
+      </label>
+
+      <label className="block text-sm font-medium text-gray-700">
+        Horário de trabalho
+        <input name="horario_trabalho" placeholder="Ex: 08:00h - 14:00h" className={campo} />
+      </label>
+
+      {estado?.erro && (
+        <p className="text-sm text-red-600" role="alert">
+          {estado.erro}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={pendente}
+        className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
+      >
+        {pendente ? 'Salvando…' : 'Cadastrar fisioterapeuta'}
+      </button>
+    </form>
+  )
+}
