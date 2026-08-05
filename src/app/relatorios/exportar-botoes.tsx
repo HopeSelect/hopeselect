@@ -75,7 +75,14 @@ export function ExportarBotoes({
         Saída: l.em_andamento ? 'em andamento' : l.saida_hms,
         Duração: l.duracao_hms,
       }))
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), 'Atendimentos')
+      const wsAtendimentos = XLSX.utils.json_to_sheet(linhas)
+      // Linha em branco + total, logo depois da última linha de dado.
+      XLSX.utils.sheet_add_aoa(
+        wsAtendimentos,
+        [[], [`Total: ${atendimentos.length} atendimento${atendimentos.length === 1 ? '' : 's'}`]],
+        { origin: -1 },
+      )
+      XLSX.utils.book_append_sheet(wb, wsAtendimentos, 'Atendimentos')
     }
 
     if (incluirProdutividade) {
@@ -146,7 +153,10 @@ export function ExportarBotoes({
         styles: { fontSize: 8 },
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      y = (doc as any).lastAutoTable.finalY + 10
+      y = (doc as any).lastAutoTable.finalY + 6
+      doc.setFontSize(9)
+      doc.text(`Total: ${atendimentos.length} atendimento${atendimentos.length === 1 ? '' : 's'}`, 14, y)
+      y += 10
     }
 
     if (incluirProdutividade) {

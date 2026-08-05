@@ -158,7 +158,7 @@ export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) 
         <canvas ref={canvasDuracaoRef} />
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Com quais professores treinou</h3>
+        <h3 className="mb-2 text-sm font-medium text-gray-700">Atendimentos realizados por professor</h3>
         <canvas ref={canvasPorProfessorRef} />
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
