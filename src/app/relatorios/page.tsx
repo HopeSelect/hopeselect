@@ -81,6 +81,7 @@ export default async function RelatoriosPage({
     de?: string
     ate?: string
     pagina?: string
+    paginaAlunos?: string
   }>
 }) {
   const params = await searchParams
@@ -191,6 +192,31 @@ export default async function RelatoriosPage({
     (tarefasPorProfessor ?? []) as LinhaTarefasPorProfessor[],
   )
   const linhasAlunos = (todosAlunos ?? []) as unknown as LinhaAlunoRelatorio[]
+
+  // Mesmo padrão da tabela de Atendimentos: paginação só na tabela visual,
+  // o export continua trazendo a lista completa.
+  const POR_PAGINA_ALUNOS = 50
+  const paginaAlunos = Math.max(1, Number(params.paginaAlunos ?? '1') || 1)
+  const totalPaginasAlunos = Math.max(1, Math.ceil(linhasAlunos.length / POR_PAGINA_ALUNOS))
+  const alunosDaPagina = linhasAlunos.slice(
+    (paginaAlunos - 1) * POR_PAGINA_ALUNOS,
+    paginaAlunos * POR_PAGINA_ALUNOS,
+  )
+  function linkPaginaAlunos(p: number) {
+    const sp = new URLSearchParams()
+    if (params.aluno) sp.set('aluno', params.aluno)
+    if (params.professor) sp.set('professor', params.professor)
+    if (params.tipo) sp.set('tipo', params.tipo)
+    if (usaPeriodoPersonalizado) {
+      sp.set('de', de)
+      sp.set('ate', ate)
+    } else if (params.dias) {
+      sp.set('dias', params.dias)
+    }
+    if (params.pagina) sp.set('pagina', params.pagina)
+    sp.set('paginaAlunos', String(p))
+    return `/relatorios?${sp.toString()}`
+  }
   const linhasOcupacao = calcularOcupacaoProfessor(
     professores ?? [],
     (horariosProfessores ?? []) as HorarioProfessor[],
@@ -454,7 +480,10 @@ export default async function RelatoriosPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Alunos matriculados</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Alunos matriculados{' '}
+            <span className="text-sm font-normal text-gray-400">({linhasAlunos.length} no total)</span>
+          </h2>
           <p className="mt-1 text-sm text-gray-500">
             Lista completa de alunos cadastrados no sistema, independente do período filtrado acima.
           </p>
@@ -472,14 +501,14 @@ export default async function RelatoriosPage({
                 </tr>
               </thead>
               <tbody>
-                {linhasAlunos.length === 0 && (
+                {alunosDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
                       Nenhum aluno cadastrado.
                     </td>
                   </tr>
                 )}
-                {linhasAlunos.map((a) => {
+                {alunosDaPagina.map((a) => {
                   const plano = statusPlano(a.vencimento_plano)
                   return (
                     <tr key={a.nome + (a.matricula ?? '')} className="border-b border-gray-100 last:border-0">
@@ -512,6 +541,34 @@ export default async function RelatoriosPage({
               </tbody>
             </table>
           </div>
+
+          {totalPaginasAlunos > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Link
+                href={linkPaginaAlunos(paginaAlunos - 1)}
+                aria-disabled={paginaAlunos <= 1}
+                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  paginaAlunos <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                Anterior
+              </Link>
+              <span className="text-sm text-gray-500">
+                Página {paginaAlunos} de {totalPaginasAlunos}
+              </span>
+              <Link
+                href={linkPaginaAlunos(paginaAlunos + 1)}
+                aria-disabled={paginaAlunos >= totalPaginasAlunos}
+                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  paginaAlunos >= totalPaginasAlunos
+                    ? 'pointer-events-none text-gray-300'
+                    : 'text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                Próxima
+              </Link>
+            </div>
+          )}
         </section>
       </main>
     </AppShell>
