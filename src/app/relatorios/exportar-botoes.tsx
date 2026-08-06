@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { TIPOS_TAREFA, statusPlano } from '@/lib/utils'
-import type { LinhaAtendimento, LinhaProdutividade } from '@/lib/tipos'
+import type { LinhaAtendimento, LinhaOcupacaoProfessor, LinhaProdutividade } from '@/lib/tipos'
 import type { LinhaAlunoRelatorio } from './page'
 
 const botao =
@@ -31,12 +31,14 @@ export function ExportarBotoes({
   atendimentos,
   produtividade,
   alunos,
+  ocupacao,
   de,
   ate,
 }: {
   atendimentos: LinhaAtendimento[]
   produtividade: LinhaProdutividade[]
   alunos: LinhaAlunoRelatorio[]
+  ocupacao: LinhaOcupacaoProfessor[]
   de: string
   ate: string
 }) {
@@ -44,15 +46,19 @@ export function ExportarBotoes({
   const [incluirAtendimentos, setIncluirAtendimentos] = useState(true)
   const [incluirProdutividade, setIncluirProdutividade] = useState(true)
   const [incluirAlunos, setIncluirAlunos] = useState(true)
+  const [incluirOcupacao, setIncluirOcupacao] = useState(true)
   const [gerando, setGerando] = useState(false)
 
-  const nadaSelecionado = !incluirAtendimentos && !incluirProdutividade && !incluirAlunos
-  const quantosSelecionados = [incluirAtendimentos, incluirProdutividade, incluirAlunos].filter(Boolean).length
+  const nadaSelecionado = !incluirAtendimentos && !incluirProdutividade && !incluirAlunos && !incluirOcupacao
+  const quantosSelecionados = [incluirAtendimentos, incluirProdutividade, incluirAlunos, incluirOcupacao].filter(
+    Boolean,
+  ).length
 
   function nomeArquivo(extensao: string) {
     if (quantosSelecionados > 1) return `relatorio_${de}_a_${ate}.${extensao}`
     if (incluirAlunos) return `alunos_cadastrados.${extensao}`
     if (incluirAtendimentos) return `atendimentos_${de}_a_${ate}.${extensao}`
+    if (incluirOcupacao) return `ocupacao_professores_${de}_a_${ate}.${extensao}`
     return `produtividade_${de}_a_${ate}.${extensao}`
   }
 
@@ -108,6 +114,17 @@ export function ExportarBotoes({
         Situação: statusPlano(a.vencimento_plano)?.rotulo ?? 'Em dia',
       }))
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), 'Alunos')
+    }
+
+    if (incluirOcupacao) {
+      const linhas = ocupacao.map((o) => ({
+        Professor: o.professor_nome,
+        'Horas escaladas': o.horas_escaladas,
+        'Horas trabalhadas': o.horas_trabalhadas,
+        'Ocupação (%)': o.percentual ?? '',
+        'Ganhou premiação (≥40%)': o.percentual !== null && o.percentual >= 40 ? 'Sim' : 'Não',
+      }))
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), 'Ocupação')
     }
 
     XLSX.writeFile(wb, nomeArquivo('xlsx'))
@@ -205,6 +222,28 @@ export function ExportarBotoes({
       })
     }
 
+    if (incluirOcupacao) {
+      if (incluirAtendimentos || incluirProdutividade || incluirAlunos) {
+        doc.addPage()
+        y = 16
+      }
+      doc.setFontSize(11)
+      doc.text('Ocupação por professor', 14, y)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(doc as any).autoTable({
+        startY: y + 4,
+        head: [['Professor', 'Horas escaladas', 'Horas trabalhadas', 'Ocupação', 'Premiação (≥40%)']],
+        body: ocupacao.map((o) => [
+          o.professor_nome,
+          `${o.horas_escaladas}h`,
+          `${o.horas_trabalhadas}h`,
+          o.percentual !== null ? `${o.percentual}%` : '—',
+          o.percentual !== null && o.percentual >= 40 ? 'Sim' : 'Não',
+        ]),
+        styles: { fontSize: 8 },
+      })
+    }
+
     doc.save(nomeArquivo('pdf'))
     setGerando(false)
     setFormatoAberto(null)
@@ -284,6 +323,21 @@ export function ExportarBotoes({
                   Alunos cadastrados
                   <span className="block text-xs text-gray-400">
                     Lista completa — não considera o período filtrado
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={incluirOcupacao}
+                  onChange={(e) => setIncluirOcupacao(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Ocupação por professor
+                  <span className="block text-xs text-gray-400">
+                    Horas escaladas x trabalhadas, do período filtrado
                   </span>
                 </span>
               </label>

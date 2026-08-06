@@ -1,3 +1,11 @@
+# Dependências
+node_modules
+
+# Build do Next.js
+.next
+out
+build
+
 # Supabase
 .branches
 .temp
@@ -6,3 +14,9 @@
 .env.keys
 .env.local
 .env.*.local
+
+# Outros
+.DS_Store
+*.log
+npm-debug.log*
+tsconfig.tsbuildinfo

@@ -183,6 +183,17 @@ export interface LinhaProdutividade {
   total_atendimentos: number
   total_tarefas_concluidas: number
 }
+// Linha de ocupação por professor: horas escaladas (da escala semanal) x
+// horas trabalhadas (atendimentos + tarefas com cronômetro), no período
+// filtrado. percentual é null quando o professor não tem escala cadastrada
+// ainda (não dá pra calcular % sem saber quanto ele deveria trabalhar).
+export interface LinhaOcupacaoProfessor {
+  professor_id: string
+  professor_nome: string
+  horas_escaladas: number
+  horas_trabalhadas: number
+  percentual: number | null
+}
 // Linha de vw_avaliacoes_status (uma linha por aluno + tipo de avaliação).
 export interface LinhaAvaliacaoStatus {
   aluno_id: string

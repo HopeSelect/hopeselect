@@ -1,8 +1,10 @@
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, TIPOS_TAREFA, statusPlano, hojeISO, dataDeslocadaISO } from '@/lib/utils'
+import { calcularOcupacaoProfessor } from '@/lib/ocupacao'
 import type {
   Classificacao,
+  HorarioProfessor,
   LinhaAtendimento,
   LinhaAtendimentosPorProfessor,
   LinhaProdutividade,
@@ -106,6 +108,8 @@ export default async function RelatoriosPage({
     { data: tarefasPorProfessor, error: erroTarefas },
     { data: professores },
     { data: todosAlunos, error: erroAlunos },
+    { data: horariosProfessores, error: erroHorarios },
+    { data: tarefasComTempo, error: erroTarefasComTempo },
   ] = await Promise.all([
     consultaAtendimentos,
     consultaAtPorProf,
@@ -115,9 +119,24 @@ export default async function RelatoriosPage({
       .from('alunos')
       .select('matricula, nome, classificacao, telefone, email, data_matricula, vencimento_plano, professores(nome)')
       .order('nome'),
+    supabase.from('professor_horarios').select('*'),
+    supabase
+      .from('tarefas')
+      .select('professor_id, inicio, fim')
+      .gte('data', de)
+      .lte('data', ate)
+      .not('inicio', 'is', null)
+      .not('fim', 'is', null),
   ])
 
-  const erro = erroAtendimentos?.message ?? erroAtPorProf?.message ?? erroTarefas?.message ?? erroAlunos?.message ?? null
+  const erro =
+    erroAtendimentos?.message ??
+    erroAtPorProf?.message ??
+    erroTarefas?.message ??
+    erroAlunos?.message ??
+    erroHorarios?.message ??
+    erroTarefasComTempo?.message ??
+    null
 
   const linhasAtendimentos = (atendimentos ?? []) as LinhaAtendimento[]
   const linhasProdutividade = combinarProdutividade(
@@ -125,6 +144,14 @@ export default async function RelatoriosPage({
     (tarefasPorProfessor ?? []) as LinhaTarefasPorProfessor[],
   )
   const linhasAlunos = (todosAlunos ?? []) as unknown as LinhaAlunoRelatorio[]
+  const linhasOcupacao = calcularOcupacaoProfessor(
+    professores ?? [],
+    (horariosProfessores ?? []) as HorarioProfessor[],
+    linhasAtendimentos.map((l) => ({ professor_id: l.professor_id, duracao_min: l.duracao_min })),
+    (tarefasComTempo ?? []) as { professor_id: string; inicio: string; fim: string }[],
+    de,
+    ate,
+  )
 
   return (
     <AppShell>
@@ -147,6 +174,7 @@ export default async function RelatoriosPage({
             atendimentos={linhasAtendimentos}
             produtividade={linhasProdutividade}
             alunos={linhasAlunos}
+            ocupacao={linhasOcupacao}
             de={de}
             ate={ate}
           />
@@ -235,6 +263,56 @@ export default async function RelatoriosPage({
                     <td className="px-4 py-2 text-gray-900">{l.professor_nome}</td>
                     <td className="px-4 py-2 text-gray-600">{l.total_atendimentos}</td>
                     <td className="px-4 py-2 text-gray-600">{l.total_tarefas_concluidas}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-medium text-gray-900">Ocupação por professor</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Horas trabalhadas (atendimento + tarefa com cronômetro) sobre horas escaladas, no período filtrado. Acima de 40% ganha premiação.
+          </p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+                <tr>
+                  <th className="px-4 py-2">Professor</th>
+                  <th className="px-4 py-2">Horas escaladas</th>
+                  <th className="px-4 py-2">Horas trabalhadas</th>
+                  <th className="px-4 py-2">Ocupação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhasOcupacao.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                      Nenhum professor ativo.
+                    </td>
+                  </tr>
+                )}
+                {linhasOcupacao.map((l) => (
+                  <tr key={l.professor_id} className="border-b border-gray-100 last:border-0">
+                    <td className="px-4 py-2 text-gray-900">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600">{l.horas_escaladas}h</td>
+                    <td className="px-4 py-2 text-gray-600">{l.horas_trabalhadas}h</td>
+                    <td className="px-4 py-2">
+                      {l.percentual === null ? (
+                        <span className="text-xs text-gray-400">Sem escala cadastrada</span>
+                      ) : (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            l.percentual >= 40
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {l.percentual}% {l.percentual >= 40 && '🏆'}
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
