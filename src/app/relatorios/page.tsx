@@ -9,6 +9,7 @@ import type {
   LinhaAtendimentosPorProfessor,
   LinhaProdutividade,
   LinhaTarefasPorProfessor,
+  TipoTarefa,
 } from '@/lib/tipos'
 import { FiltrosAtendimentos } from './filtros-atendimentos'
 import { GraficoAtendimentos } from './grafico-atendimentos'
@@ -102,6 +103,14 @@ export default async function RelatoriosPage({
   let consultaTarefas = supabase.from('vw_tarefas_por_professor_dia').select('*').gte('data', de).lte('data', ate)
   if (params.professor) consultaTarefas = consultaTarefas.eq('professor_id', params.professor)
 
+  let consultaTarefasConcluidas = supabase
+    .from('tarefas')
+    .select('tipo')
+    .eq('status', 'concluida')
+    .gte('data', de)
+    .lte('data', ate)
+  if (params.professor) consultaTarefasConcluidas = consultaTarefasConcluidas.eq('professor_id', params.professor)
+
   const [
     { data: atendimentos, error: erroAtendimentos },
     { data: atendimentosPorProfessor, error: erroAtPorProf },
@@ -110,6 +119,7 @@ export default async function RelatoriosPage({
     { data: todosAlunos, error: erroAlunos },
     { data: horariosProfessores, error: erroHorarios },
     { data: tarefasComTempo, error: erroTarefasComTempo },
+    { data: tarefasConcluidas, error: erroTarefasConcluidas },
   ] = await Promise.all([
     consultaAtendimentos,
     consultaAtPorProf,
@@ -127,6 +137,7 @@ export default async function RelatoriosPage({
       .lte('data', ate)
       .not('inicio', 'is', null)
       .not('fim', 'is', null),
+    consultaTarefasConcluidas,
   ])
 
   const erro =
@@ -136,6 +147,7 @@ export default async function RelatoriosPage({
     erroAlunos?.message ??
     erroHorarios?.message ??
     erroTarefasComTempo?.message ??
+    erroTarefasConcluidas?.message ??
     null
 
   const linhasAtendimentos = (atendimentos ?? []) as LinhaAtendimento[]
@@ -182,7 +194,7 @@ export default async function RelatoriosPage({
 
         {erro && <p className="mt-4 text-sm text-red-600">Erro ao carregar: {erro}</p>}
 
-        <GraficoAtendimentos linhas={linhasAtendimentos} />
+        <GraficoAtendimentos linhas={linhasAtendimentos} tarefasConcluidas={(tarefasConcluidas ?? []) as { tipo: TipoTarefa }[]} />
 
         <section className="mt-8">
           <h2 className="text-lg font-medium text-gray-900">Atendimentos</h2>

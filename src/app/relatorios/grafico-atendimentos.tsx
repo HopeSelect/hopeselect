@@ -21,7 +21,13 @@ function carregarScript(src: string, chaveGlobal: string): Promise<void> {
 
 const CORES = ['#111827', '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0d9488', '#be185d']
 
-export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) {
+export function GraficoAtendimentos({
+  linhas,
+  tarefasConcluidas,
+}: {
+  linhas: LinhaAtendimento[]
+  tarefasConcluidas: { tipo: TipoTarefa }[]
+}) {
   const canvasPorDiaRef = useRef<HTMLCanvasElement>(null)
   const canvasDuracaoRef = useRef<HTMLCanvasElement>(null)
   const canvasPorProfessorRef = useRef<HTMLCanvasElement>(null)
@@ -112,10 +118,12 @@ export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) 
         )
       }
 
-      // --- Quais tarefas foram realizadas ---
+      // --- Tarefas concluídas por tipo (histórico real do módulo Tarefas,
+      // não a etiqueta opcional do atendimento — por isso conta certo mesmo
+      // quando a tarefa foi lançada e concluída em datas diferentes) ---
       const porTarefa = new Map<string, number>()
-      for (const l of linhas) {
-        const chave = l.tarefa ? TIPOS_TAREFA[l.tarefa as TipoTarefa] : 'Atendimento comum'
+      for (const t of tarefasConcluidas) {
+        const chave = TIPOS_TAREFA[t.tipo]
         porTarefa.set(chave, (porTarefa.get(chave) ?? 0) + 1)
       }
       const tarefasComDado = [...porTarefa.keys()]
@@ -141,9 +149,9 @@ export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) 
       graficosRef.current.forEach((g) => g.destroy())
       graficosRef.current = []
     }
-  }, [linhas])
+  }, [linhas, tarefasConcluidas])
 
-  if (linhas.length === 0) {
+  if (linhas.length === 0 && tarefasConcluidas.length === 0) {
     return <p className="mt-6 text-sm text-gray-400">Sem dados no período pra gerar gráficos.</p>
   }
 
@@ -162,7 +170,7 @@ export function GraficoAtendimentos({ linhas }: { linhas: LinhaAtendimento[] }) 
         <canvas ref={canvasPorProfessorRef} />
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Atendimentos e tarefas</h3>
+        <h3 className="mb-2 text-sm font-medium text-gray-700">Tarefas concluídas por tipo</h3>
         <canvas ref={canvasPorTarefaRef} />
       </div>
     </div>
