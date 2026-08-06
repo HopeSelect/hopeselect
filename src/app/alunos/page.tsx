@@ -6,7 +6,7 @@ import { CLASSIFICACOES, diasDesde, statusPlano } from '@/lib/utils'
 import type { AlunoComProfessor } from '@/lib/tipos'
 import { BuscarAlunoSelect } from './buscar-aluno-select'
 
-const POR_PAGINA = 50
+const POR_PAGINA = 15
 
 export default async function AlunosPage({
   searchParams,

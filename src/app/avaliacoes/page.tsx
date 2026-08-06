@@ -1,11 +1,19 @@
 import { AppShell } from '@/components/app-shell'
+import Link from 'next/link'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { TIPOS_AVALIACAO, statusAvaliacao, dataDeslocadaISO } from '@/lib/utils'
 import type { LinhaAvaliacaoStatus } from '@/lib/tipos'
 import { AvaliacaoForm } from './avaliacao-form'
 import { registrarAvaliacao } from './actions'
 
-export default async function AvaliacoesPage() {
+const POR_PAGINA = 15
+
+export default async function AvaliacoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ paginaPendentes?: string; paginaEmDia?: string }>
+}) {
+  const { paginaPendentes: paginaPendentesParam, paginaEmDia: paginaEmDiaParam } = await searchParams
   const supabase = await criarClienteServer()
 
   const [{ data: status, error }, { data: alunos }] = await Promise.all([
@@ -18,6 +26,14 @@ export default async function AvaliacoesPage() {
   const pendentes = linhas.filter((l) => !l.proxima_data || l.proxima_data <= emSeteDias)
   const emDia = linhas.filter((l) => l.proxima_data && l.proxima_data > emSeteDias)
 
+  const paginaPendentes = Math.max(1, Number(paginaPendentesParam ?? '1') || 1)
+  const totalPaginasPendentes = Math.max(1, Math.ceil(pendentes.length / POR_PAGINA))
+  const pendentesDaPagina = pendentes.slice((paginaPendentes - 1) * POR_PAGINA, paginaPendentes * POR_PAGINA)
+
+  const paginaEmDia = Math.max(1, Number(paginaEmDiaParam ?? '1') || 1)
+  const totalPaginasEmDia = Math.max(1, Math.ceil(emDia.length / POR_PAGINA))
+  const emDiaDaPagina = emDia.slice((paginaEmDia - 1) * POR_PAGINA, paginaEmDia * POR_PAGINA)
+
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
@@ -29,11 +45,13 @@ export default async function AvaliacoesPage() {
 
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
           <section className="space-y-2">
-            <h2 className="text-sm font-medium text-gray-900">Pendentes</h2>
+            <h2 className="text-sm font-medium text-gray-900">
+              Pendentes <span className="text-xs font-normal text-gray-400">({pendentes.length} no total)</span>
+            </h2>
             {pendentes.length === 0 && (
               <p className="text-sm text-gray-500">Nenhuma avaliação pendente. 🎉</p>
             )}
-            {pendentes.map((l) => {
+            {pendentesDaPagina.map((l) => {
               const selo = statusAvaliacao(l.proxima_data)
               return (
                 <div
@@ -59,10 +77,40 @@ export default async function AvaliacoesPage() {
               )
             })}
 
+            {totalPaginasPendentes > 1 && (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Link
+                  href={`/avaliacoes?paginaPendentes=${paginaPendentes - 1}`}
+                  aria-disabled={paginaPendentes <= 1}
+                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                    paginaPendentes <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Anterior
+                </Link>
+                <span className="text-sm text-gray-500">
+                  Página {paginaPendentes} de {totalPaginasPendentes}
+                </span>
+                <Link
+                  href={`/avaliacoes?paginaPendentes=${paginaPendentes + 1}`}
+                  aria-disabled={paginaPendentes >= totalPaginasPendentes}
+                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                    paginaPendentes >= totalPaginasPendentes
+                      ? 'pointer-events-none text-gray-300'
+                      : 'text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Próxima
+                </Link>
+              </div>
+            )}
+
             {emDia.length > 0 && (
               <>
-                <h2 className="mt-8 text-sm font-medium text-gray-900">Em dia</h2>
-                {emDia.map((l) => {
+                <h2 className="mt-8 text-sm font-medium text-gray-900">
+                  Em dia <span className="text-xs font-normal text-gray-400">({emDia.length} no total)</span>
+                </h2>
+                {emDiaDaPagina.map((l) => {
                   const selo = statusAvaliacao(l.proxima_data)
                   return (
                     <div
@@ -82,6 +130,34 @@ export default async function AvaliacoesPage() {
                     </div>
                   )
                 })}
+
+                {totalPaginasEmDia > 1 && (
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <Link
+                      href={`/avaliacoes?paginaEmDia=${paginaEmDia - 1}`}
+                      aria-disabled={paginaEmDia <= 1}
+                      className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                        paginaEmDia <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      Anterior
+                    </Link>
+                    <span className="text-sm text-gray-500">
+                      Página {paginaEmDia} de {totalPaginasEmDia}
+                    </span>
+                    <Link
+                      href={`/avaliacoes?paginaEmDia=${paginaEmDia + 1}`}
+                      aria-disabled={paginaEmDia >= totalPaginasEmDia}
+                      className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                        paginaEmDia >= totalPaginasEmDia
+                          ? 'pointer-events-none text-gray-300'
+                          : 'text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      Próxima
+                    </Link>
+                  </div>
+                )}
               </>
             )}
           </section>

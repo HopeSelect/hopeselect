@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import type { Papel } from '@/lib/tipos'
@@ -37,7 +38,24 @@ interface TarefaAtrasada {
   professor_nome: string
 }
 
-export default async function AdminPage() {
+const POR_PAGINA = 15
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    paginaUsuarios?: string
+    paginaAtendimentos?: string
+    paginaTarefas?: string
+    paginaParecidos?: string
+  }>
+}) {
+  const {
+    paginaUsuarios: paginaUsuariosParam,
+    paginaAtendimentos: paginaAtendimentosParam,
+    paginaTarefas: paginaTarefasParam,
+    paginaParecidos: paginaParecidosParam,
+  } = await searchParams
   const supabase = await criarClienteServer()
 
   const {
@@ -67,15 +85,65 @@ export default async function AdminPage() {
   const [{ data: usuarios, error: erroUsuarios }, { data: parecidos }, { data: atendimentosLongos }, { data: tarefasAtrasadas }] =
     await Promise.all([
       supabase.rpc('admin_listar_perfis'),
-      supabase.from('vw_admin_alunos_parecidos').select('*').limit(20),
+      supabase.from('vw_admin_alunos_parecidos').select('*'),
       supabase.from('vw_admin_atendimentos_longos').select('*'),
-      supabase.from('vw_admin_tarefas_atrasadas').select('*').limit(30),
+      supabase.from('vw_admin_tarefas_atrasadas').select('*'),
     ])
 
   const listaUsuarios = (usuarios ?? []) as PerfilComEmail[]
   const listaParecidos = (parecidos ?? []) as AlunoParecido[]
   const listaAtendimentosLongos = (atendimentosLongos ?? []) as AtendimentoLongo[]
   const listaTarefasAtrasadas = (tarefasAtrasadas ?? []) as TarefaAtrasada[]
+
+  const paginaUsuarios = Math.max(1, Number(paginaUsuariosParam ?? '1') || 1)
+  const totalPaginasUsuarios = Math.max(1, Math.ceil(listaUsuarios.length / POR_PAGINA))
+  const usuariosDaPagina = listaUsuarios.slice((paginaUsuarios - 1) * POR_PAGINA, paginaUsuarios * POR_PAGINA)
+
+  const paginaAtendimentos = Math.max(1, Number(paginaAtendimentosParam ?? '1') || 1)
+  const totalPaginasAtendimentos = Math.max(1, Math.ceil(listaAtendimentosLongos.length / POR_PAGINA))
+  const atendimentosDaPagina = listaAtendimentosLongos.slice(
+    (paginaAtendimentos - 1) * POR_PAGINA,
+    paginaAtendimentos * POR_PAGINA,
+  )
+
+  const paginaTarefas = Math.max(1, Number(paginaTarefasParam ?? '1') || 1)
+  const totalPaginasTarefas = Math.max(1, Math.ceil(listaTarefasAtrasadas.length / POR_PAGINA))
+  const tarefasDaPagina = listaTarefasAtrasadas.slice((paginaTarefas - 1) * POR_PAGINA, paginaTarefas * POR_PAGINA)
+
+  const paginaParecidos = Math.max(1, Number(paginaParecidosParam ?? '1') || 1)
+  const totalPaginasParecidos = Math.max(1, Math.ceil(listaParecidos.length / POR_PAGINA))
+  const parecidosDaPagina = listaParecidos.slice((paginaParecidos - 1) * POR_PAGINA, paginaParecidos * POR_PAGINA)
+
+  // Botão de página genérico — cada tabela usa seu próprio parâmetro na URL,
+  // pra trocar de página numa não bagunçar a posição das outras 3.
+  function BotoesPagina({ chave, pagina, totalPaginas }: { chave: string; pagina: number; totalPaginas: number }) {
+    if (totalPaginas <= 1) return null
+    return (
+      <div className="mt-3 flex items-center justify-center gap-3">
+        <Link
+          href={`/admin?${chave}=${pagina - 1}`}
+          aria-disabled={pagina <= 1}
+          className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+            pagina <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+          }`}
+        >
+          Anterior
+        </Link>
+        <span className="text-sm text-gray-500">
+          Página {pagina} de {totalPaginas}
+        </span>
+        <Link
+          href={`/admin?${chave}=${pagina + 1}`}
+          aria-disabled={pagina >= totalPaginas}
+          className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+            pagina >= totalPaginas ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+          }`}
+        >
+          Próxima
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <AppShell titulo="Admin">
@@ -85,7 +153,9 @@ export default async function AdminPage() {
         </p>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Usuários com acesso</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Usuários com acesso <span className="text-sm font-normal text-gray-400">({listaUsuarios.length})</span>
+          </h2>
           {erroUsuarios && <p className="mt-2 text-sm text-red-600">Erro: {erroUsuarios.message}</p>}
           <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full text-left text-sm">
@@ -99,14 +169,14 @@ export default async function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {listaUsuarios.length === 0 && (
+                {usuariosDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
                       Nenhum usuário encontrado.
                     </td>
                   </tr>
                 )}
-                {listaUsuarios.map((u) => (
+                {usuariosDaPagina.map((u) => (
                   <tr key={u.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-2 text-gray-900">{u.nome}</td>
                     <td className="px-4 py-2 text-gray-600">{u.email ?? '—'}</td>
@@ -126,10 +196,14 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+          <BotoesPagina chave="paginaUsuarios" pagina={paginaUsuarios} totalPaginas={totalPaginasUsuarios} />
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Atendimentos abertos há muito tempo</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Atendimentos abertos há muito tempo{' '}
+            <span className="text-sm font-normal text-gray-400">({listaAtendimentosLongos.length})</span>
+          </h2>
           <p className="mt-1 text-sm text-gray-500">Mais de 4 horas sem finalizar — pode ser esquecimento.</p>
           <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full text-left text-sm">
@@ -141,14 +215,14 @@ export default async function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {listaAtendimentosLongos.length === 0 && (
+                {atendimentosDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-4 py-6 text-center text-gray-400">
                       Nada fora do padrão agora.
                     </td>
                   </tr>
                 )}
-                {listaAtendimentosLongos.map((a) => (
+                {atendimentosDaPagina.map((a) => (
                   <tr key={a.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-2 text-gray-900">{a.aluno_nome}</td>
                     <td className="px-4 py-2 text-gray-600">{a.professor_nome}</td>
@@ -158,10 +232,13 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+          <BotoesPagina chave="paginaAtendimentos" pagina={paginaAtendimentos} totalPaginas={totalPaginasAtendimentos} />
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Tarefas atrasadas</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Tarefas atrasadas <span className="text-sm font-normal text-gray-400">({listaTarefasAtrasadas.length})</span>
+          </h2>
           <p className="mt-1 text-sm text-gray-500">Data já passou e ainda não foi concluída nem cancelada.</p>
           <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full text-left text-sm">
@@ -174,14 +251,14 @@ export default async function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {listaTarefasAtrasadas.length === 0 && (
+                {tarefasDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
                       Nenhuma tarefa atrasada.
                     </td>
                   </tr>
                 )}
-                {listaTarefasAtrasadas.map((t) => (
+                {tarefasDaPagina.map((t) => (
                   <tr key={t.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-2 text-gray-600">
                       {new Date(`${t.data}T00:00:00`).toLocaleDateString('pt-BR')}
@@ -194,10 +271,13 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+          <BotoesPagina chave="paginaTarefas" pagina={paginaTarefas} totalPaginas={totalPaginasTarefas} />
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Alunos com nomes parecidos</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Alunos com nomes parecidos <span className="text-sm font-normal text-gray-400">({listaParecidos.length})</span>
+          </h2>
           <p className="mt-1 text-sm text-gray-500">Pode ser cadastro duplicado com pequena diferença de digitação.</p>
           <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full text-left text-sm">
@@ -209,14 +289,14 @@ export default async function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {listaParecidos.length === 0 && (
+                {parecidosDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-4 py-6 text-center text-gray-400">
                       Nenhum nome parecido encontrado.
                     </td>
                   </tr>
                 )}
-                {listaParecidos.map((p) => (
+                {parecidosDaPagina.map((p) => (
                   <tr key={`${p.id_a}-${p.id_b}`} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-2 text-gray-900">{p.nome_a}</td>
                     <td className="px-4 py-2 text-gray-900">{p.nome_b}</td>
@@ -226,6 +306,7 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+          <BotoesPagina chave="paginaParecidos" pagina={paginaParecidos} totalPaginas={totalPaginasParecidos} />
         </section>
       </div>
     </AppShell>

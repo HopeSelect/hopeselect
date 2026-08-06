@@ -9,10 +9,21 @@ import { FiltrosRelatorioTarefas } from './filtros-relatorio'
 import { GraficoTarefas } from './grafico-tarefas'
 import { ExportarTarefas } from './exportar-tarefas'
 
+const POR_PAGINA = 15
+
 export default async function TarefasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ professor?: string; tipo?: string; status?: string; dias?: string; de?: string; ate?: string }>
+  searchParams: Promise<{
+    professor?: string
+    tipo?: string
+    status?: string
+    dias?: string
+    de?: string
+    ate?: string
+    pagina?: string
+    paginaRelatorio?: string
+  }>
 }) {
   const supabase = await criarClienteServer()
 
@@ -59,8 +70,12 @@ export default async function TarefasPage({
 
   const lista = (tarefas ?? []) as unknown as TarefaComRelacoes[]
 
+  const pagina = Math.max(1, Number(params.pagina ?? '1') || 1)
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA))
+  const listaDaPagina = lista.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+
   const porProfessor = new Map<string, TarefaComRelacoes[]>()
-  for (const t of lista) {
+  for (const t of listaDaPagina) {
     const chave = t.professores.nome
     porProfessor.set(chave, [...(porProfessor.get(chave) ?? []), t])
   }
@@ -79,6 +94,25 @@ export default async function TarefasPage({
   const { data: linhasRelatorio, error: erroRelatorio } = await consultaRelatorio
   const relatorio = (linhasRelatorio ?? []) as LinhaTarefa[]
 
+  const paginaRelatorio = Math.max(1, Number(params.paginaRelatorio ?? '1') || 1)
+  const totalPaginasRelatorio = Math.max(1, Math.ceil(relatorio.length / POR_PAGINA))
+  const relatorioDaPagina = relatorio.slice((paginaRelatorio - 1) * POR_PAGINA, paginaRelatorio * POR_PAGINA)
+  function linkPaginaRelatorio(p: number) {
+    const sp = new URLSearchParams()
+    if (params.professor) sp.set('professor', params.professor)
+    if (params.tipo) sp.set('tipo', params.tipo)
+    if (params.status) sp.set('status', params.status)
+    if (usaPeriodoPersonalizado) {
+      sp.set('de', de)
+      sp.set('ate', ate)
+    } else if (params.dias) {
+      sp.set('dias', params.dias)
+    }
+    if (params.pagina) sp.set('pagina', params.pagina)
+    sp.set('paginaRelatorio', String(p))
+    return `/tarefas?${sp.toString()}`
+  }
+
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
@@ -88,7 +122,9 @@ export default async function TarefasPage({
 
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
           <section className="space-y-6">
-            <h2 className="text-sm font-medium text-gray-900">A realizar</h2>
+            <h2 className="text-sm font-medium text-gray-900">
+              A realizar <span className="text-xs font-normal text-gray-400">({lista.length} no total)</span>
+            </h2>
             {lista.length === 0 && <p className="text-sm text-gray-500">Nenhuma tarefa a realizar no momento.</p>}
             {[...porProfessor.entries()].map(([nomeProfessor, tarefasDoProfessor]) => (
               <div key={nomeProfessor}>
@@ -120,6 +156,32 @@ export default async function TarefasPage({
                 </div>
               </div>
             ))}
+
+            {totalPaginas > 1 && (
+              <div className="flex items-center justify-center gap-3">
+                <Link
+                  href={`/tarefas?pagina=${pagina - 1}`}
+                  aria-disabled={pagina <= 1}
+                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                    pagina <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Anterior
+                </Link>
+                <span className="text-sm text-gray-500">
+                  Página {pagina} de {totalPaginas}
+                </span>
+                <Link
+                  href={`/tarefas?pagina=${pagina + 1}`}
+                  aria-disabled={pagina >= totalPaginas}
+                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                    pagina >= totalPaginas ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Próxima
+                </Link>
+              </div>
+            )}
           </section>
 
           <aside className="rounded-xl border border-gray-200 bg-white p-5">
@@ -129,7 +191,9 @@ export default async function TarefasPage({
         </div>
 
         <section className="mt-12 border-t border-gray-200 pt-8">
-          <h2 className="text-lg font-medium text-gray-900">Relatório de tarefas</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Relatório de tarefas <span className="text-sm font-normal text-gray-400">({relatorio.length} no total)</span>
+          </h2>
           <p className="mt-1 text-sm text-gray-500">
             Filtre por professor, tipo, status e período. Aqui aparece tudo — inclusive concluídas, agendadas e a repetir.
           </p>
@@ -164,14 +228,14 @@ export default async function TarefasPage({
                 </tr>
               </thead>
               <tbody>
-                {relatorio.length === 0 && (
+                {relatorioDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
                       Nenhuma tarefa no período com esses filtros.
                     </td>
                   </tr>
                 )}
-                {relatorio.map((l) => (
+                {relatorioDaPagina.map((l) => (
                   <tr key={l.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-2 text-gray-600">{new Date(l.data).toLocaleDateString('pt-BR')}</td>
                     <td className="px-4 py-2 text-gray-600">{l.aluno_matricula ?? '—'}</td>
@@ -188,6 +252,34 @@ export default async function TarefasPage({
               </tbody>
             </table>
           </div>
+
+          {totalPaginasRelatorio > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Link
+                href={linkPaginaRelatorio(paginaRelatorio - 1)}
+                aria-disabled={paginaRelatorio <= 1}
+                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  paginaRelatorio <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                Anterior
+              </Link>
+              <span className="text-sm text-gray-500">
+                Página {paginaRelatorio} de {totalPaginasRelatorio}
+              </span>
+              <Link
+                href={linkPaginaRelatorio(paginaRelatorio + 1)}
+                aria-disabled={paginaRelatorio >= totalPaginasRelatorio}
+                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  paginaRelatorio >= totalPaginasRelatorio
+                    ? 'pointer-events-none text-gray-300'
+                    : 'text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                Próxima
+              </Link>
+            </div>
+          )}
         </section>
       </main>
     </AppShell>

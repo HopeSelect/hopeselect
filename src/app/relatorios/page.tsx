@@ -166,7 +166,7 @@ export default async function RelatoriosPage({
   // Paginação só afeta a tabela abaixo — gráficos, export e os cálculos de
   // ocupação/proporção continuam usando linhasAtendimentos por completo,
   // senão o gráfico ficaria mostrando só a página atual.
-  const POR_PAGINA_ATENDIMENTOS = 50
+  const POR_PAGINA_ATENDIMENTOS = 15
   const paginaAtendimentos = Math.max(1, Number(params.pagina ?? '1') || 1)
   const totalPaginasAtendimentos = Math.max(1, Math.ceil(linhasAtendimentos.length / POR_PAGINA_ATENDIMENTOS))
   const atendimentosDaPagina = linhasAtendimentos.slice(
@@ -193,7 +193,7 @@ export default async function RelatoriosPage({
     (tarefasPorProfessor ?? []) as LinhaTarefasPorProfessor[],
   )
 
-  const POR_PAGINA_PRODUTIVIDADE = 50
+  const POR_PAGINA_PRODUTIVIDADE = 15
   const paginaProdutividade = Math.max(1, Number(params.paginaProdutividade ?? '1') || 1)
   const totalPaginasProdutividade = Math.max(1, Math.ceil(linhasProdutividade.length / POR_PAGINA_PRODUTIVIDADE))
   const produtividadeDaPagina = linhasProdutividade.slice(
@@ -221,7 +221,7 @@ export default async function RelatoriosPage({
 
   // Mesmo padrão da tabela de Atendimentos: paginação só na tabela visual,
   // o export continua trazendo a lista completa.
-  const POR_PAGINA_ALUNOS = 50
+  const POR_PAGINA_ALUNOS = 15
   const paginaAlunos = Math.max(1, Number(params.paginaAlunos ?? '1') || 1)
   const totalPaginasAlunos = Math.max(1, Math.ceil(linhasAlunos.length / POR_PAGINA_ALUNOS))
   const alunosDaPagina = linhasAlunos.slice(
