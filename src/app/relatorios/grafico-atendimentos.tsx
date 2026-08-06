@@ -118,10 +118,12 @@ export function GraficoAtendimentos({
         )
       }
 
-      // --- Tarefas concluídas por tipo (histórico real do módulo Tarefas,
-      // não a etiqueta opcional do atendimento — por isso conta certo mesmo
-      // quando a tarefa foi lançada e concluída em datas diferentes) ---
+      // --- Atendimento (total de sessões no período) + tarefas concluídas
+      // por tipo (histórico real do módulo Tarefas, não a etiqueta opcional
+      // do atendimento — por isso conta certo mesmo quando a tarefa foi
+      // lançada e concluída em datas diferentes) ---
       const porTarefa = new Map<string, number>()
+      porTarefa.set('Atendimento', linhas.length)
       for (const t of tarefasConcluidas) {
         const chave = TIPOS_TAREFA[t.tipo]
         porTarefa.set(chave, (porTarefa.get(chave) ?? 0) + 1)
@@ -170,7 +172,7 @@ export function GraficoAtendimentos({
         <canvas ref={canvasPorProfessorRef} />
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Tarefas concluídas por tipo</h3>
+        <h3 className="mb-2 text-sm font-medium text-gray-700">Atendimentos e tarefas</h3>
         <canvas ref={canvasPorTarefaRef} />
       </div>
     </div>
