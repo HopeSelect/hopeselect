@@ -23,6 +23,10 @@ function dadosAluno(fd: FormData) {
     professor_id: valorOuNull(fd.get('professor_id')),
     nutricionista: valorOuNull(fd.get('nutricionista')),
     foto_url: valorOuNull(fd.get('foto_url')),
+    ultimo_momento_coach: valorOuNull(fd.get('ultimo_momento_coach')),
+    ultima_prescricao: valorOuNull(fd.get('ultima_prescricao')),
+    ultimo_laudo: valorOuNull(fd.get('ultimo_laudo')),
+    ultimo_atendimento_nutri: valorOuNull(fd.get('ultimo_atendimento_nutri')),
   }
 }
 // Nome igual (sem diferenciar maiúscula/minúscula) já cadastrado -> bloqueia.

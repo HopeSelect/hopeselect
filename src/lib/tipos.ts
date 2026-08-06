@@ -65,6 +65,10 @@ export interface Aluno {
   professor_id: string | null
   nutricionista: string | null
   foto_url: string | null
+  ultimo_momento_coach: string | null
+  ultima_prescricao: string | null
+  ultimo_laudo: string | null
+  ultimo_atendimento_nutri: string | null
   created_at: string
 }
 // Aluno com o nome do professor vinculado embutido (join usado na listagem).

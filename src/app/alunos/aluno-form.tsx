@@ -135,6 +135,52 @@ export function AlunoForm({
         </label>
       </div>
 
+      <div>
+        <p className="text-sm font-medium text-gray-700">Acompanhamento (preenchimento manual)</p>
+        <p className="mt-0.5 text-xs text-gray-400">
+          Use pra registrar histórico anterior ao sistema — se o aluno já teve isso feito pelo Tarefas ou pela Sala do
+          Nutri, o sistema já mostra automático, sem precisar preencher aqui.
+        </p>
+        <div className="mt-2 grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Último momento coach
+            <input
+              name="ultimo_momento_coach"
+              type="date"
+              defaultValue={inicial?.ultimo_momento_coach?.slice(0, 10) ?? ''}
+              className={campo}
+            />
+          </label>
+          <label className="block text-sm font-medium text-gray-700">
+            Última prescrição de treino
+            <input
+              name="ultima_prescricao"
+              type="date"
+              defaultValue={inicial?.ultima_prescricao?.slice(0, 10) ?? ''}
+              className={campo}
+            />
+          </label>
+          <label className="block text-sm font-medium text-gray-700">
+            Último laudo
+            <input
+              name="ultimo_laudo"
+              type="date"
+              defaultValue={inicial?.ultimo_laudo?.slice(0, 10) ?? ''}
+              className={campo}
+            />
+          </label>
+          <label className="block text-sm font-medium text-gray-700">
+            Último atendimento com a nutricionista
+            <input
+              name="ultimo_atendimento_nutri"
+              type="date"
+              defaultValue={inicial?.ultimo_atendimento_nutri?.slice(0, 10) ?? ''}
+              className={campo}
+            />
+          </label>
+        </div>
+      </div>
+
       <label className="block text-sm font-medium text-gray-700">
         Restrições
         <textarea name="restricoes" rows={2} defaultValue={inicial?.restricoes ?? ''} className={campo} />
