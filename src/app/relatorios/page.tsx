@@ -2,6 +2,7 @@ import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, TIPOS_TAREFA, statusPlano, hojeISO, dataDeslocadaISO } from '@/lib/utils'
 import { calcularOcupacaoProfessor } from '@/lib/ocupacao'
+import { calcularProporcaoPorPeriodo, NOMES_PERIODO, PROPORCAO_IDEAL } from '@/lib/periodos'
 import type {
   Classificacao,
   HorarioProfessor,
@@ -163,6 +164,12 @@ export default async function RelatoriosPage({
     (tarefasComTempo ?? []) as { professor_id: string; inicio: string; fim: string }[],
     de,
     ate,
+  )
+  const numeroDeDias = Math.round((new Date(`${ate}T00:00:00`).getTime() - new Date(`${de}T00:00:00`).getTime()) / 86400000) + 1
+  const linhasProporcao = calcularProporcaoPorPeriodo(
+    linhasAtendimentos.map((l) => ({ inicio: l.inicio })),
+    (horariosProfessores ?? []) as HorarioProfessor[],
+    numeroDeDias,
   )
 
   return (
@@ -327,6 +334,51 @@ export default async function RelatoriosPage({
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-medium text-gray-900">Alunos por professor, por período do dia</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Média de alunos que entraram por dia (do período filtrado) sobre a média de professores escalados nesse
+            horário (da escala semanal). Proporção ideal: {PROPORCAO_IDEAL} alunos por professor.
+          </p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+                <tr>
+                  <th className="px-4 py-2">Período</th>
+                  <th className="px-4 py-2">Média de alunos/dia</th>
+                  <th className="px-4 py-2">Média de professores escalados</th>
+                  <th className="px-4 py-2">Proporção</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhasProporcao.map((l) => {
+                  const foraDoIdeal = l.proporcao !== null && (l.proporcao > PROPORCAO_IDEAL + 1 || l.proporcao < PROPORCAO_IDEAL - 1.5)
+                  return (
+                    <tr key={l.periodo} className="border-b border-gray-100 last:border-0">
+                      <td className="px-4 py-2 text-gray-900">{NOMES_PERIODO[l.periodo]}</td>
+                      <td className="px-4 py-2 text-gray-600">{l.media_alunos}</td>
+                      <td className="px-4 py-2 text-gray-600">{l.media_professores}</td>
+                      <td className="px-4 py-2">
+                        {l.proporcao === null ? (
+                          <span className="text-xs text-gray-400">Sem professor escalado</span>
+                        ) : (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                              foraDoIdeal ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {l.proporcao} : 1 {l.proporcao > PROPORCAO_IDEAL + 1 ? '(sobrecarga)' : l.proporcao < PROPORCAO_IDEAL - 1.5 ? '(ociosidade)' : ''}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

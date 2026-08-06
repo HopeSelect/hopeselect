@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { hojeISO, dataDeslocadaISO, diasParaAniversario, TIPOS_AVALIACAO } from '@/lib/utils'
-import type { Aluno, LinhaAvaliacaoStatus } from '@/lib/tipos'
+import { mediaProfessoresEscalados } from '@/lib/periodos'
+import type { Aluno, HorarioProfessor, LinhaAvaliacaoStatus } from '@/lib/tipos'
 import estilos from './inicio.module.css'
 import { AtualizadorInicio } from './painel-inicio-ao-vivo'
 
@@ -105,6 +106,7 @@ export default async function InicioPage() {
     { data: atendimentos30dias },
     { data: alunosComNascimento },
     { data: statusAvaliacoes },
+    { data: horariosProfessores },
   ] = await Promise.all([
     supabase.from('atendimentos').select('*', { count: 'exact', head: true }).is('fim', null),
     supabase.from('professores').select('*', { count: 'exact', head: true }).eq('ativo', true),
@@ -129,6 +131,7 @@ export default async function InicioPage() {
       .select('id, nome, classificacao, data_nascimento')
       .not('data_nascimento', 'is', null),
     supabase.from('vw_avaliacoes_status').select('*'),
+    supabase.from('professor_horarios').select('*'),
   ])
 
   const sparkline = montarSparkline((porDia ?? []) as AtendimentosPorDia[])
@@ -142,6 +145,14 @@ export default async function InicioPage() {
 
   const pico = montarPico((atendimentos30dias ?? []) as { inicio: string }[])
   const maiorPico = Math.max(1, ...pico.horas.map((h) => h.total))
+  // Cruza cada hora do horário de pico com a escala semanal — mostra se
+  // tem gente demais escalada pra pouco aluno (ociosidade) ou gente de
+  // menos pra muito aluno (sobrecarga), sem precisar abrir Relatórios.
+  const listaHorariosProfessores = (horariosProfessores ?? []) as HorarioProfessor[]
+  const picoComEscala = pico.horas.map((h) => ({
+    ...h,
+    professores: mediaProfessoresEscalados(listaHorariosProfessores, h.hora, h.hora + 1),
+  }))
 
   // Aniversariantes dos próximos 7 dias, ordenado por quem faz aniversário
   // primeiro — pra recepção conseguir dar parabéns sem ter que procurar
@@ -293,27 +304,36 @@ export default async function InicioPage() {
             Horário de pico — últimos 30 dias
             {pico.picoLabel && <span className={estilos.picoDestaque}> · pico: {pico.picoLabel}</span>}
           </div>
-          {pico.horas.length === 0 ? (
+          <p className="mt-0 mb-3 text-xs text-gray-400">
+            Número pequeno embaixo do valor = média de professores escalados nesse horário (da escala semanal).
+          </p>
+          {picoComEscala.length === 0 ? (
             <p className={estilos.semAlertas}>Ainda não há atendimentos suficientes pra calcular.</p>
           ) : (
             <div className={estilos.sparkline}>
-              {pico.horas.map((h) => (
-                <div key={h.hora} className={estilos.sparklineColuna}>
-                  <span className={estilos.sparklineValor}>{h.total > 0 ? h.total : '\u00A0'}</span>
-                  <div
-                    className={estilos.sparklineBarraTrilho}
-                    title={`${String(h.hora).padStart(2, '0')}h–${String((h.hora + 1) % 24).padStart(2, '0')}h: ${h.total} atendimento${h.total === 1 ? '' : 's'}`}
-                  >
+              {picoComEscala.map((h) => {
+                const sobrecarga = h.professores > 0 && h.total / h.professores > 6
+                return (
+                  <div key={h.hora} className={estilos.sparklineColuna}>
+                    <span className={estilos.sparklineValor}>{h.total > 0 ? h.total : '\u00A0'}</span>
                     <div
-                      className={estilos.sparklineBarra}
-                      style={{
-                        height: `${h.total === 0 ? 4 : Math.max(10, Math.round((h.total / maiorPico) * 100))}%`,
-                      }}
-                    />
+                      className={estilos.sparklineBarraTrilho}
+                      title={`${String(h.hora).padStart(2, '0')}h–${String((h.hora + 1) % 24).padStart(2, '0')}h: ${h.total} atendimento${h.total === 1 ? '' : 's'} · ${h.professores} professor(es) escalado(s) em média`}
+                    >
+                      <div
+                        className={estilos.sparklineBarra}
+                        style={{
+                          height: `${h.total === 0 ? 4 : Math.max(10, Math.round((h.total / maiorPico) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                    <span className={estilos.sparklineLabel}>{h.hora}h</span>
+                    <span className={estilos.sparklineProfessores} data-sobrecarga={sobrecarga}>
+                      👤{h.professores}
+                    </span>
                   </div>
-                  <span className={estilos.sparklineLabel}>{h.hora}h</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

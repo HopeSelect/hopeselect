@@ -203,3 +203,13 @@ export interface LinhaAvaliacaoStatus {
   ultima_avaliacao: string | null
   proxima_data: string | null
 }
+export type Periodo = 'manha' | 'tarde' | 'noite'
+// Proporção de alunos por professor num período do dia (manhã/tarde/noite).
+// media_alunos vem do período de data filtrado; media_professores vem da
+// escala semanal (não depende do filtro de data, é fixa).
+export interface LinhaProporcaoPeriodo {
+  periodo: Periodo
+  media_alunos: number
+  media_professores: number
+  proporcao: number | null
+}

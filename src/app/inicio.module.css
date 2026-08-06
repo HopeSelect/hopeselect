@@ -115,6 +115,16 @@
   text-transform: capitalize;
 }
 
+.sparklineProfessores {
+  font-size: 10px;
+  color: var(--neutral-400);
+  font-variant-numeric: tabular-nums;
+}
+.sparklineProfessores[data-sobrecarga='true'] {
+  color: #c2410c;
+  font-weight: 600;
+}
+
 /* ---------- Alertas recentes ---------- */
 
 .listaAlertas {
