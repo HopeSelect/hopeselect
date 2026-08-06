@@ -3,8 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { criarClienteBrowser } from '@/lib/supabase/client'
-import { CLASSIFICACOES, diasDesde, diasParaAniversario, idadeDesde, statusPlano } from '@/lib/utils'
-import type { AlunoComProfessor } from '@/lib/tipos'
+import {
+  CLASSIFICACOES,
+  diasDesde,
+  diasParaAniversario,
+  idadeDesde,
+  statusAlertaAluno,
+  statusPlano,
+  TIPOS_ALERTA_ALUNO,
+} from '@/lib/utils'
+import type { AlunoComProfessor, LinhaAlertaAlunoStatus, TipoAlertaAluno } from '@/lib/tipos'
 
 interface LinhaHistorico {
   id: string
@@ -14,10 +22,14 @@ interface LinhaHistorico {
   em_andamento: boolean
 }
 
+const ORDEM_ALERTAS: TipoAlertaAluno[] = ['prescricao', 'laudo', 'nutri']
+
 export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFechar: () => void }) {
   const supabase = criarClienteBrowser()
   const [aluno, setAluno] = useState<AlunoComProfessor | null>(null)
   const [historico, setHistorico] = useState<LinhaHistorico[]>([])
+  const [alertas, setAlertas] = useState<LinhaAlertaAlunoStatus[]>([])
+  const [ultimoMomentoCoach, setUltimoMomentoCoach] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -26,20 +38,25 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
     setCarregando(true)
 
     async function carregar() {
-      const [{ data, error }, { data: linhasHistorico }] = await Promise.all([
-        supabase.from('alunos').select('*, professores(nome)').eq('id', alunoId).single(),
-        supabase
-          .from('vw_atendimentos')
-          .select('id, data, professor_nome, duracao_hms, em_andamento')
-          .eq('aluno_id', alunoId)
-          .order('data', { ascending: false })
-          .order('inicio', { ascending: false })
-          .limit(10),
-      ])
+      const [{ data, error }, { data: linhasHistorico }, { data: linhasAlertas }, { data: momentoCoach }] =
+        await Promise.all([
+          supabase.from('alunos').select('*, professores(nome)').eq('id', alunoId).single(),
+          supabase
+            .from('vw_atendimentos')
+            .select('id, data, professor_nome, duracao_hms, em_andamento')
+            .eq('aluno_id', alunoId)
+            .order('data', { ascending: false })
+            .order('inicio', { ascending: false })
+            .limit(10),
+          supabase.from('vw_alertas_aluno_status').select('*').eq('aluno_id', alunoId),
+          supabase.from('vw_ultimo_momento_coach').select('ultima_data').eq('aluno_id', alunoId).maybeSingle(),
+        ])
       if (cancelado) return
       if (error) setErro(error.message)
       setAluno((data as unknown as AlunoComProfessor) ?? null)
       setHistorico((linhasHistorico ?? []) as LinhaHistorico[])
+      setAlertas((linhasAlertas ?? []) as LinhaAlertaAlunoStatus[])
+      setUltimoMomentoCoach(momentoCoach?.ultima_data ?? null)
       setCarregando(false)
     }
 
@@ -170,6 +187,32 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
                   <p className="text-sm text-gray-900">{aluno.observacoes}</p>
                 </div>
               )}
+
+              <div>
+                <p className="mb-1 text-xs text-gray-400">Acompanhamento</p>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm">
+                    <span className="text-gray-700">Último momento coach</span>
+                    <span className="shrink-0 text-xs text-gray-500">
+                      {ultimoMomentoCoach
+                        ? new Date(`${ultimoMomentoCoach}T00:00:00`).toLocaleDateString('pt-BR')
+                        : 'Nunca realizado'}
+                    </span>
+                  </div>
+                  {ORDEM_ALERTAS.map((tipo) => {
+                    const linha = alertas.find((a) => a.tipo === tipo)
+                    const selo = statusAlertaAluno(linha?.proxima_data ?? null)
+                    return (
+                      <div key={tipo} className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm">
+                        <span className="text-gray-700">{TIPOS_ALERTA_ALUNO[tipo]}</span>
+                        <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-medium ${selo.classe}`}>
+                          {selo.rotulo}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
 
               <div>
                 <p className="mb-1 text-xs text-gray-400">Histórico de atendimentos</p>

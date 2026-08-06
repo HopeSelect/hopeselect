@@ -213,3 +213,17 @@ export interface LinhaProporcaoPeriodo {
   media_professores: number
   proporcao: number | null
 }
+
+export type TipoAlertaAluno = 'prescricao' | 'laudo' | 'nutri'
+// Linha de vw_alertas_aluno_status — mesmo desenho de LinhaAvaliacaoStatus,
+// mas com prazo fixo de 60 dias (prescrição, laudo, atendimento com a
+// nutricionista). Não inclui momento coach nem avaliação nutricional do
+// módulo Avaliações — essas seguem outra regra.
+export interface LinhaAlertaAlunoStatus {
+  aluno_id: string
+  aluno_nome: string
+  aluno_matricula: string | null
+  tipo: TipoAlertaAluno
+  ultima_data: string | null
+  proxima_data: string | null
+}

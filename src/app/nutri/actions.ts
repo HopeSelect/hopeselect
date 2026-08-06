@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { valorOuNull } from '@/lib/utils'
+import { valorOuNull, hojeISO } from '@/lib/utils'
 
 export type EstadoForm = { erro: string } | null
 export type ResultadoAcao = { erro: string } | null
@@ -56,6 +56,8 @@ export async function alocarAlunoNutri(alunoId: string, nutricionistaId: string)
     registrado_por: user?.id ?? null,
   })
   if (error) return { erro: error.message }
+
+  await supabase.from('alunos').update({ ultimo_acesso: hojeISO() }).eq('id', alunoId)
 
   revalidatePath('/nutri')
   return null

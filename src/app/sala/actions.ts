@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { criarClienteServer } from '@/lib/supabase/server'
+import { hojeISO } from '@/lib/utils'
 import type { TipoTarefa } from '@/lib/tipos'
 
 export type ResultadoAcao = { erro: string } | null
@@ -35,6 +36,10 @@ export async function alocarAluno(
     registrado_por: user?.id ?? null,
   })
   if (error) return { erro: error.message }
+
+  // O aluno acabou de aparecer na academia — atualiza "último acesso"
+  // sozinho, sem depender de alguém lembrar de editar a ficha manualmente.
+  await supabase.from('alunos').update({ ultimo_acesso: hojeISO() }).eq('id', alunoId)
 
   revalidatePath('/sala')
   return null

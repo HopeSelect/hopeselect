@@ -1,4 +1,4 @@
-import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao, HorarioProfessor } from '@/lib/tipos'
+import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao, HorarioProfessor, TipoAlertaAluno } from '@/lib/tipos'
 
 // "Hoje" no fuso de Brasília — nunca use new Date().toISOString().slice(0,10)
 // pra isso: o JS usa UTC (3h à frente de Brasília), então o "dia vira" cedo
@@ -162,5 +162,42 @@ export function formatarEscalaResumo(horarios: HorarioProfessor[]): string {
     return `${diasComoIntervalos(dias)} ${formatarHoraCurta(inicio)}–${formatarHoraCurta(fim)}`
   })
   return partes.join('; ')
+}
+
+export const TIPOS_ALERTA_ALUNO: Record<TipoAlertaAluno, string> = {
+  prescricao: 'Prescrição de treino',
+  laudo: 'Laudo',
+  nutri: 'Atendimento com a nutricionista',
+}
+// Contagem regressiva de verdade: mostra os dias exatos que faltam (7, 6,
+// 5...), não só uma faixa genérica tipo "vence em breve". Depois de vencer,
+// mostra há quantos dias passou do prazo.
+export function statusAlertaAluno(proximaData: string | null): {
+  rotulo: string
+  classe: string
+  dias: number | null
+} {
+  if (!proximaData) return { rotulo: 'Nunca realizada', classe: 'bg-red-100 text-red-800 border-red-300', dias: null }
+
+  const hoje = new Date(`${hojeISO()}T00:00:00`)
+  const alvo = new Date(`${proximaData}T00:00:00`)
+  const dias = Math.round((alvo.getTime() - hoje.getTime()) / 86400000)
+
+  if (dias < 0) {
+    return {
+      rotulo: `Vencido há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}`,
+      classe: 'bg-red-100 text-red-800 border-red-300',
+      dias,
+    }
+  }
+  if (dias === 0) return { rotulo: 'Vence hoje', classe: 'bg-red-100 text-red-800 border-red-300', dias: 0 }
+  if (dias <= 7) {
+    return {
+      rotulo: `Faltam ${dias} dia${dias === 1 ? '' : 's'}`,
+      classe: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      dias,
+    }
+  }
+  return { rotulo: 'Em dia', classe: 'bg-green-100 text-green-800 border-green-300', dias }
 }
 

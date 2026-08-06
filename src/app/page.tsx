@@ -1,9 +1,16 @@
 import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { hojeISO, dataDeslocadaISO, diasParaAniversario, TIPOS_AVALIACAO } from '@/lib/utils'
+import {
+  hojeISO,
+  dataDeslocadaISO,
+  diasParaAniversario,
+  TIPOS_AVALIACAO,
+  TIPOS_ALERTA_ALUNO,
+  statusAlertaAluno,
+} from '@/lib/utils'
 import { mediaProfessoresEscalados } from '@/lib/periodos'
-import type { Aluno, HorarioProfessor, LinhaAvaliacaoStatus } from '@/lib/tipos'
+import type { Aluno, HorarioProfessor, LinhaAlertaAlunoStatus, LinhaAvaliacaoStatus } from '@/lib/tipos'
 import estilos from './inicio.module.css'
 import { AtualizadorInicio } from './painel-inicio-ao-vivo'
 
@@ -107,6 +114,7 @@ export default async function InicioPage() {
     { data: alunosComNascimento },
     { data: statusAvaliacoes },
     { data: horariosProfessores },
+    { data: statusAlertas60 },
   ] = await Promise.all([
     supabase.from('atendimentos').select('*', { count: 'exact', head: true }).is('fim', null),
     supabase.from('professores').select('*', { count: 'exact', head: true }).eq('ativo', true),
@@ -132,6 +140,7 @@ export default async function InicioPage() {
       .not('data_nascimento', 'is', null),
     supabase.from('vw_avaliacoes_status').select('*'),
     supabase.from('professor_horarios').select('*'),
+    supabase.from('vw_alertas_aluno_status').select('*'),
   ])
 
   const sparkline = montarSparkline((porDia ?? []) as AtendimentosPorDia[])
@@ -169,6 +178,13 @@ export default async function InicioPage() {
   const emSeteDias = dataDeslocadaISO(7)
   const todasAvaliacoes = (statusAvaliacoes ?? []) as LinhaAvaliacaoStatus[]
   const avaliacoesPendentes = todasAvaliacoes
+    .filter((a) => !a.proxima_data || a.proxima_data <= emSeteDias)
+    .sort((a, b) => (a.proxima_data ?? '0000-00-00').localeCompare(b.proxima_data ?? '0000-00-00'))
+
+  // Alerta de 60 dias: prescrição, laudo e atendimento com a nutricionista
+  // vencidos ou vencendo em até 7 dias.
+  const todosAlertas60 = (statusAlertas60 ?? []) as LinhaAlertaAlunoStatus[]
+  const alertas60Pendentes = todosAlertas60
     .filter((a) => !a.proxima_data || a.proxima_data <= emSeteDias)
     .sort((a, b) => (a.proxima_data ?? '0000-00-00').localeCompare(b.proxima_data ?? '0000-00-00'))
 
@@ -296,6 +312,39 @@ export default async function InicioPage() {
                 </Link>
               )}
             </div>
+          </div>
+        </div>
+
+        <div className={estilos.cardPainel} style={{ marginBottom: 'var(--space-6)' }}>
+          <div className={estilos.painelTitulo}>
+            Prescrição, laudo e nutricionista — vencidos ou vencendo
+            {alertas60Pendentes.length > 0 && (
+              <span className={estilos.picoDestaque}> · {alertas60Pendentes.length}</span>
+            )}
+          </div>
+          <p className="mt-0 mb-3 text-xs text-gray-400">
+            A cada 60 dias, todo aluno deveria ter prescrição de treino, laudo e atendimento com a nutricionista renovados.
+          </p>
+          <div className={estilos.listaAlertas}>
+            {alertas60Pendentes.length === 0 && (
+              <p className={estilos.semAlertas}>Nada vencido ou vencendo em breve. 🎉</p>
+            )}
+            {alertas60Pendentes.slice(0, 6).map((a) => {
+              const selo = statusAlertaAluno(a.proxima_data)
+              return (
+                <div key={`${a.aluno_id}-${a.tipo}`} className={estilos.linhaAlerta}>
+                  <span className={estilos.avatar} data-classe="C">
+                    {iniciais(a.aluno_nome)}
+                  </span>
+                  <div className={estilos.linhaAlertaTexto}>
+                    <div className={estilos.linhaAlertaNome}>{a.aluno_nome}</div>
+                    <div className={estilos.linhaAlertaAlertas}>
+                      {TIPOS_ALERTA_ALUNO[a.tipo]} · {selo.rotulo}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
