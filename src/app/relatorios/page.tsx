@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
 import { CLASSIFICACOES, TIPOS_TAREFA, statusPlano, hojeISO, dataDeslocadaISO } from '@/lib/utils'
@@ -72,7 +73,15 @@ function combinarProdutividade(
 export default async function RelatoriosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ aluno?: string; professor?: string; tipo?: string; dias?: string; de?: string; ate?: string }>
+  searchParams: Promise<{
+    aluno?: string
+    professor?: string
+    tipo?: string
+    dias?: string
+    de?: string
+    ate?: string
+    pagina?: string
+  }>
 }) {
   const params = await searchParams
   const usaPeriodoPersonalizado = Boolean(params.de && params.ate)
@@ -151,6 +160,32 @@ export default async function RelatoriosPage({
     null
 
   const linhasAtendimentos = (atendimentos ?? []) as LinhaAtendimento[]
+
+  // Paginação só afeta a tabela abaixo — gráficos, export e os cálculos de
+  // ocupação/proporção continuam usando linhasAtendimentos por completo,
+  // senão o gráfico ficaria mostrando só a página atual.
+  const POR_PAGINA_ATENDIMENTOS = 50
+  const paginaAtendimentos = Math.max(1, Number(params.pagina ?? '1') || 1)
+  const totalPaginasAtendimentos = Math.max(1, Math.ceil(linhasAtendimentos.length / POR_PAGINA_ATENDIMENTOS))
+  const atendimentosDaPagina = linhasAtendimentos.slice(
+    (paginaAtendimentos - 1) * POR_PAGINA_ATENDIMENTOS,
+    paginaAtendimentos * POR_PAGINA_ATENDIMENTOS,
+  )
+  function linkPaginaAtendimentos(p: number) {
+    const sp = new URLSearchParams()
+    if (params.aluno) sp.set('aluno', params.aluno)
+    if (params.professor) sp.set('professor', params.professor)
+    if (params.tipo) sp.set('tipo', params.tipo)
+    if (usaPeriodoPersonalizado) {
+      sp.set('de', de)
+      sp.set('ate', ate)
+    } else if (params.dias) {
+      sp.set('dias', params.dias)
+    }
+    sp.set('pagina', String(p))
+    return `/relatorios?${sp.toString()}`
+  }
+
   const linhasProdutividade = combinarProdutividade(
     (atendimentosPorProfessor ?? []) as LinhaAtendimentosPorProfessor[],
     (tarefasPorProfessor ?? []) as LinhaTarefasPorProfessor[],
@@ -203,7 +238,12 @@ export default async function RelatoriosPage({
         <GraficoAtendimentos linhas={linhasAtendimentos} tarefasConcluidas={(tarefasConcluidas ?? []) as { tipo: TipoTarefa }[]} />
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Atendimentos</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Atendimentos{' '}
+            <span className="text-sm font-normal text-gray-400">
+              ({linhasAtendimentos.length} no total)
+            </span>
+          </h2>
           <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
@@ -219,14 +259,14 @@ export default async function RelatoriosPage({
                 </tr>
               </thead>
               <tbody>
-                {linhasAtendimentos.length === 0 && (
+                {atendimentosDaPagina.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
                       Nenhum atendimento no período com esses filtros.
                     </td>
                   </tr>
                 )}
-                {linhasAtendimentos.map((l) => (
+                {atendimentosDaPagina.map((l) => (
                   <tr key={l.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-2 text-gray-600">
                       {new Date(l.data).toLocaleDateString('pt-BR')}
@@ -251,6 +291,36 @@ export default async function RelatoriosPage({
               </tbody>
             </table>
           </div>
+
+          {totalPaginasAtendimentos > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Link
+                href={linkPaginaAtendimentos(paginaAtendimentos - 1)}
+                aria-disabled={paginaAtendimentos <= 1}
+                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  paginaAtendimentos <= 1
+                    ? 'pointer-events-none text-gray-300'
+                    : 'text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                Anterior
+              </Link>
+              <span className="text-sm text-gray-500">
+                Página {paginaAtendimentos} de {totalPaginasAtendimentos}
+              </span>
+              <Link
+                href={linkPaginaAtendimentos(paginaAtendimentos + 1)}
+                aria-disabled={paginaAtendimentos >= totalPaginasAtendimentos}
+                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  paginaAtendimentos >= totalPaginasAtendimentos
+                    ? 'pointer-events-none text-gray-300'
+                    : 'text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                Próxima
+              </Link>
+            </div>
+          )}
         </section>
 
         <section className="mt-8">
