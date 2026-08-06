@@ -98,7 +98,7 @@ export function BuscarProfessorParaSala({
           {!buscando &&
             resultados.map((professor) => {
               const jaNaSala = idsNaSala.includes(professor.id)
-              const detalhes = [professor.funcao, professor.horario_trabalho].filter(Boolean).join(' · ')
+              const detalhes = professor.funcao ?? ''
               return (
                 <div
                   key={professor.id}

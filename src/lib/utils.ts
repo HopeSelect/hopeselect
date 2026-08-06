@@ -1,4 +1,4 @@
-import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao } from '@/lib/tipos'
+import type { Classificacao, Genero, TipoTarefa, StatusTarefa, TipoIntervalo, TipoAvaliacao, HorarioProfessor } from '@/lib/tipos'
 
 // "Hoje" no fuso de Brasília — nunca use new Date().toISOString().slice(0,10)
 // pra isso: o JS usa UTC (3h à frente de Brasília), então o "dia vira" cedo
@@ -123,5 +123,44 @@ export const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 
 // hhmmss vem do Postgres como "HH:MM:SS" — mostra só "HH:MM".
 export function formatarHoraCurta(hhmmss: string): string {
   return hhmmss.slice(0, 5)
+}
+// Resume os blocos de escala num texto curto, tipo "Seg-Sex 06:00–12:00".
+// Agrupa dias consecutivos com o mesmo horário; blocos diferentes (ex:
+// manhã e noite) aparecem separados por "; ".
+export function formatarEscalaResumo(horarios: HorarioProfessor[]): string {
+  if (horarios.length === 0) return 'Sem escala cadastrada'
+
+  const porFaixa = new Map<string, number[]>()
+  for (const h of horarios) {
+    const chave = `${h.hora_inicio}|${h.hora_fim}`
+    const dias = porFaixa.get(chave) ?? []
+    dias.push(h.dia_semana)
+    porFaixa.set(chave, dias)
+  }
+
+  function diasComoIntervalos(dias: number[]): string {
+    const ordenados = [...dias].sort((a, b) => a - b)
+    const abrev = (d: number) => DIAS_SEMANA[d].slice(0, 3)
+    const grupos: number[][] = []
+    let atual: number[] = [ordenados[0]]
+    for (let i = 1; i < ordenados.length; i++) {
+      if (ordenados[i] === ordenados[i - 1] + 1) {
+        atual.push(ordenados[i])
+      } else {
+        grupos.push(atual)
+        atual = [ordenados[i]]
+      }
+    }
+    grupos.push(atual)
+    return grupos
+      .map((g) => (g.length === 1 ? abrev(g[0]) : `${abrev(g[0])}-${abrev(g[g.length - 1])}`))
+      .join(', ')
+  }
+
+  const partes = [...porFaixa.entries()].map(([chave, dias]) => {
+    const [inicio, fim] = chave.split('|')
+    return `${diasComoIntervalos(dias)} ${formatarHoraCurta(inicio)}–${formatarHoraCurta(fim)}`
+  })
+  return partes.join('; ')
 }
 

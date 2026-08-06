@@ -50,16 +50,6 @@ export function ProfessorForm({
         </label>
       </div>
 
-      <label className="block text-sm font-medium text-gray-700">
-        Horário de trabalho
-        <input
-          name="horario_trabalho"
-          defaultValue={inicial?.horario_trabalho ?? ''}
-          placeholder="ex.: 06h–14h"
-          className={campo}
-        />
-      </label>
-
       <div className="text-sm font-medium text-gray-700">
         Foto
         <div className="mt-1">

@@ -2,18 +2,24 @@ import Link from 'next/link'
 import estilos from './professores.module.css'
 import { AppShell } from '@/components/app-shell'
 import { criarClienteServer } from '@/lib/supabase/server'
-import { GENEROS } from '@/lib/utils'
-import type { Professor } from '@/lib/tipos'
+import { GENEROS, formatarEscalaResumo } from '@/lib/utils'
+import type { HorarioProfessor, Professor } from '@/lib/tipos'
 import { ProfessorForm } from './professor-form'
 import { criarProfessor, definirAtivoProfessor } from './actions'
 import { ExcluirProfessorBotao } from './excluir-professor-botao'
 export default async function ProfessoresPage() {
   const supabase = await criarClienteServer()
-  const { data, error } = await supabase
-    .from('professores')
-    .select('*')
-    .order('nome')
+  const [{ data, error }, { data: todosHorarios }] = await Promise.all([
+    supabase.from('professores').select('*').order('nome'),
+    supabase.from('professor_horarios').select('*'),
+  ])
   const professores = (data ?? []) as Professor[]
+  const horariosPorProfessor = new Map<string, HorarioProfessor[]>()
+  for (const h of (todosHorarios ?? []) as HorarioProfessor[]) {
+    const lista = horariosPorProfessor.get(h.professor_id) ?? []
+    lista.push(h)
+    horariosPorProfessor.set(h.professor_id, lista)
+  }
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
@@ -49,7 +55,7 @@ export default async function ProfessoresPage() {
                     )}
                   </p>
                   <p className="truncate text-xs text-gray-500">
-                    {[p.funcao, GENEROS[p.genero], p.horario_trabalho]
+                    {[p.funcao, GENEROS[p.genero], formatarEscalaResumo(horariosPorProfessor.get(p.id) ?? [])]
                       .filter(Boolean)
                       .join(' · ')}
                   </p>

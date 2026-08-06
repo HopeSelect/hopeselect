@@ -10,7 +10,9 @@ function dadosProfessor(fd: FormData) {
     funcao: valorOuNull(fd.get('funcao')),
     foto_url: valorOuNull(fd.get('foto_url')),
     genero: String(fd.get('genero') ?? 'outro'),
-    horario_trabalho: valorOuNull(fd.get('horario_trabalho')),
+    // horario_trabalho não é mais editável por aqui — a fonte de verdade
+    // agora é a escala estruturada (professor_horarios). O valor antigo
+    // fica intacto no banco só como referência histórica pra conferência.
   }
 }
 export async function criarProfessor(
