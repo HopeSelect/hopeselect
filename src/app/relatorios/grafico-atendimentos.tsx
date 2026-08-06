@@ -172,7 +172,10 @@ export function GraficoAtendimentos({
         <canvas ref={canvasPorProfessorRef} />
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Atendimentos e tarefas</h3>
+        <h3 className="mb-1 text-sm font-medium text-gray-700">Atendimentos e tarefas</h3>
+        <p className="mb-2 text-xs text-gray-400">
+          &quot;Atendimento&quot; é do período filtrado; as tarefas concluídas por tipo são de todos os tempos.
+        </p>
         <canvas ref={canvasPorTarefaRef} />
       </div>
     </div>

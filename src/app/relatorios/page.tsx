@@ -104,12 +104,11 @@ export default async function RelatoriosPage({
   let consultaTarefas = supabase.from('vw_tarefas_por_professor_dia').select('*').gte('data', de).lte('data', ate)
   if (params.professor) consultaTarefas = consultaTarefas.eq('professor_id', params.professor)
 
-  let consultaTarefasConcluidas = supabase
-    .from('tarefas')
-    .select('tipo')
-    .eq('status', 'concluida')
-    .gte('data', de)
-    .lte('data', ate)
+  // Sem filtro de período de propósito — o padrão da tela é "últimos 7
+  // dias", o que escondia tarefas concluídas mais antigas sem ninguém
+  // perceber (bug relatado: "tem mais prescrições, não está contando").
+  // Só o filtro de professor continua valendo, se selecionado.
+  let consultaTarefasConcluidas = supabase.from('tarefas').select('tipo').eq('status', 'concluida')
   if (params.professor) consultaTarefasConcluidas = consultaTarefasConcluidas.eq('professor_id', params.professor)
 
   const [
