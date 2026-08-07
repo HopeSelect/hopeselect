@@ -76,12 +76,12 @@ export function BuscarProfessorParaSala({
           onChange={(e) => setTermo(e.target.value)}
           onFocus={() => setAberto(true)}
           placeholder="Buscar ou selecionar professor para adicionar à sala…"
-          className="w-full rounded-md border border-gray-300 py-2 pl-3 pr-9 text-sm outline-none focus:border-gray-900"
+          className="w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 pl-3 pr-9 text-sm outline-none focus:border-gray-900 dark:focus:border-brand-400"
         />
         <button
           type="button"
           onClick={() => setAberto((v) => !v)}
-          className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-gray-400 hover:text-gray-700"
+          className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
           aria-label={aberto ? 'Fechar lista' : 'Abrir lista de professores'}
         >
           <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
@@ -93,8 +93,8 @@ export function BuscarProfessorParaSala({
       {erro && <p className="mt-1 text-xs text-red-600">{erro}</p>}
 
       {aberto && (
-        <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-          {buscando && <p className="px-3 py-2 text-xs text-gray-400">Buscando…</p>}
+        <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
+          {buscando && <p className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">Buscando…</p>}
           {!buscando &&
             resultados.map((professor) => {
               const jaNaSala = idsNaSala.includes(professor.id)
@@ -102,19 +102,19 @@ export function BuscarProfessorParaSala({
               return (
                 <div
                   key={professor.id}
-                  className="flex items-center justify-between gap-2 border-b border-gray-50 px-3 py-2 last:border-0 hover:bg-gray-50"
+                  className="flex items-center justify-between gap-2 border-b border-gray-50 dark:border-gray-800 px-3 py-2 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-gray-900">{professor.nome}</p>
-                    {detalhes && <p className="truncate text-xs text-gray-400">{detalhes}</p>}
+                    <p className="truncate text-sm text-gray-900 dark:text-gray-100">{professor.nome}</p>
+                    {detalhes && <p className="truncate text-xs text-gray-400 dark:text-gray-500">{detalhes}</p>}
                   </div>
                   {jaNaSala ? (
-                    <span className="shrink-0 text-xs text-gray-400">Já está na sala</span>
+                    <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">Já está na sala</span>
                   ) : (
                     <button
                       onClick={() => adicionar(professor)}
                       disabled={adicionandoId !== null}
-                      className="shrink-0 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:border-gray-400 disabled:opacity-60"
+                      className="shrink-0 rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-60"
                     >
                       {adicionandoId === professor.id ? 'Adicionando…' : '+ Adicionar'}
                     </button>
@@ -123,7 +123,7 @@ export function BuscarProfessorParaSala({
               )
             })}
           {!buscando && resultados.length === 0 && (
-            <p className="px-3 py-2 text-xs text-gray-400">Nenhum professor encontrado.</p>
+            <p className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">Nenhum professor encontrado.</p>
           )}
         </div>
       )}

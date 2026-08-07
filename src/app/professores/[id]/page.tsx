@@ -24,7 +24,7 @@ export default async function EditarProfessorPage({
   return (
     <AppShell titulo="Editar professor">
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
           <ProfessorForm
             acao={atualizarProfessor.bind(null, professor.id)}
             inicial={professor}

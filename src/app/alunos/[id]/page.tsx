@@ -42,12 +42,12 @@ export default async function EditarAlunoPage({
           </form>
         </div>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="mb-3 text-sm font-medium text-gray-900">Acompanhamento</h2>
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+          <h2 className="mb-3 text-sm font-medium text-gray-900 dark:text-gray-100">Acompanhamento</h2>
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-3 py-2 text-sm">
-              <span className="text-gray-700">Último momento coach</span>
-              <span className="shrink-0 text-xs text-gray-500">
+            <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm">
+              <span className="text-gray-700 dark:text-gray-300">Último momento coach</span>
+              <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
                 {momentoCoach?.ultima_data
                   ? new Date(`${momentoCoach.ultima_data}T00:00:00`).toLocaleDateString('pt-BR')
                   : 'Nunca realizado'}
@@ -57,8 +57,8 @@ export default async function EditarAlunoPage({
               const linha = listaAlertas.find((a) => a.tipo === tipo)
               const selo = statusAlertaAluno(linha?.proxima_data ?? null)
               return (
-                <div key={tipo} className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-3 py-2 text-sm">
-                  <span className="text-gray-700">{TIPOS_ALERTA_ALUNO[tipo]}</span>
+                <div key={tipo} className="flex items-center justify-between gap-2 rounded-md bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm">
+                  <span className="text-gray-700 dark:text-gray-300">{TIPOS_ALERTA_ALUNO[tipo]}</span>
                   <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-medium ${selo.classe}`}>
                     {selo.rotulo}
                   </span>
@@ -66,10 +66,10 @@ export default async function EditarAlunoPage({
               )
             })}
           </div>
-          <p className="mt-2 text-xs text-gray-400">Prazo de 60 dias entre uma prescrição/laudo/atendimento com a nutricionista e o próximo.</p>
+          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Prazo de 60 dias entre uma prescrição/laudo/atendimento com a nutricionista e o próximo.</p>
         </div>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
           <AlunoForm acao={atualizarAluno.bind(null, aluno.id)} professores={professores ?? []} inicial={aluno} />
         </div>
       </main>

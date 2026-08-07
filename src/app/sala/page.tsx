@@ -35,7 +35,7 @@ export default async function SalaPage() {
   return (
     <AppShell>
       <main className="flex w-full flex-1 flex-col">
-        <div className="border-b border-gray-200 bg-white px-4 py-3">
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
           {erro && <p className="mt-1 text-sm text-red-600">Erro ao carregar: {erro}</p>}
         </div>
         <PainelSala

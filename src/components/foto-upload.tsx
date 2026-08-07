@@ -141,7 +141,7 @@ export function FotoUpload({
           onClick={editarFotoAtual}
           disabled={!url}
           title={url ? 'Clique pra ajustar o recorte' : undefined}
-          className="h-16 w-16 shrink-0 rounded-full border border-gray-200 disabled:cursor-default"
+          className="h-16 w-16 shrink-0 rounded-full border border-gray-200 dark:border-gray-700 disabled:cursor-default"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -151,41 +151,41 @@ export function FotoUpload({
           />
         </button>
         <div className="flex flex-col gap-1 text-sm">
-          <label className="cursor-pointer text-gray-700 hover:text-gray-900">
+          <label className="cursor-pointer text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
             <span className="underline">Enviar arquivo</span>
             <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={aoEscolherArquivo} />
           </label>
-          <button type="button" onClick={abrirCamera} className="text-left text-gray-700 underline hover:text-gray-900">
+          <button type="button" onClick={abrirCamera} className="text-left text-gray-700 dark:text-gray-300 underline hover:text-gray-900 dark:hover:text-gray-100">
             Tirar foto
           </button>
           {url && (
             <button
               type="button"
               onClick={editarFotoAtual}
-              className="text-left text-gray-700 underline hover:text-gray-900"
+              className="text-left text-gray-700 dark:text-gray-300 underline hover:text-gray-900 dark:hover:text-gray-100"
             >
               Editar recorte
             </button>
           )}
           {url && (
-            <button type="button" onClick={() => setUrl('')} className="text-left text-gray-400 hover:text-gray-900">
+            <button type="button" onClick={() => setUrl('')} className="text-left text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
               Remover
             </button>
           )}
         </div>
       </div>
 
-      {enviando && <p className="text-xs text-gray-500">Enviando…</p>}
+      {enviando && <p className="text-xs text-gray-500 dark:text-gray-400">Enviando…</p>}
       {erro && <p className="text-xs text-red-600">{erro}</p>}
 
       {camAberta && (
-        <div className="rounded-lg border border-gray-200 p-2">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-2">
           <video ref={videoRef} className="w-full max-w-xs rounded" playsInline muted />
           <div className="mt-2 flex gap-2">
-            <button type="button" onClick={capturar} className="rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white">
+            <button type="button" onClick={capturar} className="rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-sm text-white">
               Capturar
             </button>
-            <button type="button" onClick={fecharCamera} className="rounded-md border border-gray-300 px-3 py-1.5 text-sm">
+            <button type="button" onClick={fecharCamera} className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm">
               Cancelar
             </button>
           </div>

@@ -51,7 +51,7 @@ export default async function ProfessoresPage({
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {total} professor{total === 1 ? '' : 'es'} cadastrado{total === 1 ? '' : 's'}
         </p>
         {error && (
@@ -63,29 +63,29 @@ export default async function ProfessoresPage({
           {/* Lista */}
           <section className="space-y-2">
             {professores.length === 0 && (
-              <p className="text-sm text-gray-500">Nenhum professor cadastrado ainda.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum professor cadastrado ainda.</p>
             )}
             {professores.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3"
+                className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.foto_url ?? '/window.svg'}
                   alt=""
-                  className="h-10 w-10 rounded-full border border-gray-200 object-cover"
+                  className="h-10 w-10 rounded-full border border-gray-200 dark:border-gray-700 object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-gray-900">
+                  <p className="truncate font-medium text-gray-900 dark:text-gray-100">
                     {p.nome}
                     {!p.ativo && (
-                      <span className="ml-2 text-xs font-normal text-gray-400">
+                      <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
                         (inativo)
                       </span>
                     )}
                   </p>
-                  <p className="truncate text-xs text-gray-500">
+                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                     {[p.funcao, GENEROS[p.genero], formatarEscalaResumo(horariosPorProfessor.get(p.id) ?? [])]
                       .filter(Boolean)
                       .join(' · ')}
@@ -93,12 +93,12 @@ export default async function ProfessoresPage({
                 </div>
                 <Link
                   href={`/professores/${p.id}`}
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                   Editar
                 </Link>
                 <form action={definirAtivoProfessor.bind(null, p.id, !p.ativo)}>
-                  <button className="text-sm text-gray-400 hover:text-gray-900">
+                  <button className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
                     {p.ativo ? 'Desativar' : 'Ativar'}
                   </button>
                 </form>
@@ -111,20 +111,20 @@ export default async function ProfessoresPage({
                 <Link
                   href={linkPagina(pagina - 1)}
                   aria-disabled={pagina <= 1}
-                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-                    pagina <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                  className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+                    pagina <= 1 ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 >
                   Anterior
                 </Link>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   Página {pagina} de {totalPaginas}
                 </span>
                 <Link
                   href={linkPagina(pagina + 1)}
                   aria-disabled={pagina >= totalPaginas}
-                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-                    pagina >= totalPaginas ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                  className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+                    pagina >= totalPaginas ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 >
                   Próxima
@@ -133,8 +133,8 @@ export default async function ProfessoresPage({
             )}
           </section>
           {/* Novo */}
-          <aside className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 font-medium text-gray-900">Novo professor</h2>
+          <aside className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+            <h2 className="mb-4 font-medium text-gray-900 dark:text-gray-100">Novo professor</h2>
             <ProfessorForm acao={criarProfessor} />
           </aside>
         </div>

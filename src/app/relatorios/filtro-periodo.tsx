@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 const campo =
-  'rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900'
+  'rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-brand-400'
 
 export function FiltroPeriodo({ de, ate }: { de: string; ate: string }) {
   const router = useRouter()
@@ -17,7 +17,7 @@ export function FiltroPeriodo({ de, ate }: { de: string; ate: string }) {
 
   return (
     <div className="flex items-end gap-3">
-      <label className="text-sm text-gray-700">
+      <label className="text-sm text-gray-700 dark:text-gray-300">
         De
         <input
           type="date"
@@ -26,7 +26,7 @@ export function FiltroPeriodo({ de, ate }: { de: string; ate: string }) {
           className={`mt-1 block ${campo}`}
         />
       </label>
-      <label className="text-sm text-gray-700">
+      <label className="text-sm text-gray-700 dark:text-gray-300">
         Até
         <input
           type="date"
@@ -37,7 +37,7 @@ export function FiltroPeriodo({ de, ate }: { de: string; ate: string }) {
       </label>
       <button
         onClick={aplicar}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+        className="rounded-md bg-gray-900 dark:bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
       >
         Filtrar
       </button>

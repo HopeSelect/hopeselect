@@ -261,7 +261,7 @@ export default async function RelatoriosPage({
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Acessos dos alunos: quantas vezes vieram, duração de treino, com quais professores treinaram e quais tarefas foram realizadas.
         </p>
 
@@ -290,15 +290,15 @@ export default async function RelatoriosPage({
         <GraficoAtendimentos linhas={linhasAtendimentos} tarefasConcluidas={(tarefasConcluidas ?? []) as { tipo: TipoTarefa }[]} />
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
             Atendimentos{' '}
-            <span className="text-sm font-normal text-gray-400">
+            <span className="text-sm font-normal text-gray-400 dark:text-gray-500">
               ({linhasAtendimentos.length} no total)
             </span>
           </h2>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Data</th>
                   <th className="px-4 py-2">Aluno</th>
@@ -313,17 +313,17 @@ export default async function RelatoriosPage({
               <tbody>
                 {atendimentosDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={8} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nenhum atendimento no período com esses filtros.
                     </td>
                   </tr>
                 )}
                 {atendimentosDaPagina.map((l) => (
-                  <tr key={l.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-600">
+                  <tr key={l.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
                       {new Date(l.data).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-4 py-2 text-gray-900">{l.aluno_nome}</td>
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{l.aluno_nome}</td>
                     <td className="px-4 py-2">
                       <span
                         className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[l.aluno_classificacao].classe}`}
@@ -331,13 +331,13 @@ export default async function RelatoriosPage({
                         {l.aluno_classificacao}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-gray-600">{l.professor_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{l.tarefa ? TIPOS_TAREFA[l.tarefa] : '—'}</td>
-                    <td className="px-4 py-2 text-gray-600">{l.entrada_hms}</td>
-                    <td className="px-4 py-2 text-gray-600">
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.tarefa ? TIPOS_TAREFA[l.tarefa] : '—'}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.entrada_hms}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
                       {l.em_andamento ? '—' : l.saida_hms}
                     </td>
-                    <td className="px-4 py-2 text-gray-600">{l.duracao_hms}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.duracao_hms}</td>
                   </tr>
                 ))}
               </tbody>
@@ -349,24 +349,24 @@ export default async function RelatoriosPage({
               <Link
                 href={linkPaginaAtendimentos(paginaAtendimentos - 1)}
                 aria-disabled={paginaAtendimentos <= 1}
-                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                   paginaAtendimentos <= 1
-                    ? 'pointer-events-none text-gray-300'
-                    : 'text-gray-700 hover:border-gray-400'
+                    ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                    : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 Anterior
               </Link>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 Página {paginaAtendimentos} de {totalPaginasAtendimentos}
               </span>
               <Link
                 href={linkPaginaAtendimentos(paginaAtendimentos + 1)}
                 aria-disabled={paginaAtendimentos >= totalPaginasAtendimentos}
-                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                   paginaAtendimentos >= totalPaginasAtendimentos
-                    ? 'pointer-events-none text-gray-300'
-                    : 'text-gray-700 hover:border-gray-400'
+                    ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                    : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 Próxima
@@ -376,13 +376,13 @@ export default async function RelatoriosPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
             Produtividade por professor{' '}
-            <span className="text-sm font-normal text-gray-400">({linhasProdutividade.length} no total)</span>
+            <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({linhasProdutividade.length} no total)</span>
           </h2>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Data</th>
                   <th className="px-4 py-2">Professor</th>
@@ -393,19 +393,19 @@ export default async function RelatoriosPage({
               <tbody>
                 {produtividadeDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Sem dados no período.
                     </td>
                   </tr>
                 )}
                 {produtividadeDaPagina.map((l) => (
-                  <tr key={`${l.professor_id}-${l.data}`} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-600">
+                  <tr key={`${l.professor_id}-${l.data}`} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
                       {new Date(l.data).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-4 py-2 text-gray-900">{l.professor_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{l.total_atendimentos}</td>
-                    <td className="px-4 py-2 text-gray-600">{l.total_tarefas_concluidas}</td>
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.total_atendimentos}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.total_tarefas_concluidas}</td>
                   </tr>
                 ))}
               </tbody>
@@ -417,24 +417,24 @@ export default async function RelatoriosPage({
               <Link
                 href={linkPaginaProdutividade(paginaProdutividade - 1)}
                 aria-disabled={paginaProdutividade <= 1}
-                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                   paginaProdutividade <= 1
-                    ? 'pointer-events-none text-gray-300'
-                    : 'text-gray-700 hover:border-gray-400'
+                    ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                    : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 Anterior
               </Link>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 Página {paginaProdutividade} de {totalPaginasProdutividade}
               </span>
               <Link
                 href={linkPaginaProdutividade(paginaProdutividade + 1)}
                 aria-disabled={paginaProdutividade >= totalPaginasProdutividade}
-                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                   paginaProdutividade >= totalPaginasProdutividade
-                    ? 'pointer-events-none text-gray-300'
-                    : 'text-gray-700 hover:border-gray-400'
+                    ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                    : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 Próxima
@@ -444,13 +444,13 @@ export default async function RelatoriosPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Ocupação por professor</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Ocupação por professor</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Horas trabalhadas (atendimento + tarefa com cronômetro) sobre horas escaladas, no período filtrado. Acima de 40% ganha premiação.
           </p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Professor</th>
                   <th className="px-4 py-2">Horas escaladas</th>
@@ -461,25 +461,25 @@ export default async function RelatoriosPage({
               <tbody>
                 {linhasOcupacao.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nenhum professor ativo.
                     </td>
                   </tr>
                 )}
                 {linhasOcupacao.map((l) => (
-                  <tr key={l.professor_id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-900">{l.professor_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{l.horas_escaladas}h</td>
-                    <td className="px-4 py-2 text-gray-600">{l.horas_trabalhadas}h</td>
+                  <tr key={l.professor_id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{l.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.horas_escaladas}h</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.horas_trabalhadas}h</td>
                     <td className="px-4 py-2">
                       {l.percentual === null ? (
-                        <span className="text-xs text-gray-400">Sem escala cadastrada</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">Sem escala cadastrada</span>
                       ) : (
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                             l.percentual >= 40
                               ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-600'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                           }`}
                         >
                           {l.percentual}% {l.percentual >= 40 && '🏆'}
@@ -494,14 +494,14 @@ export default async function RelatoriosPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Alunos por professor, por período do dia</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Alunos por professor, por período do dia</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Média de alunos que entraram por dia (do período filtrado) sobre a média de professores escalados nesse
             horário (da escala semanal). Proporção ideal: {PROPORCAO_IDEAL} alunos por professor.
           </p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Período</th>
                   <th className="px-4 py-2">Média de alunos/dia</th>
@@ -513,13 +513,13 @@ export default async function RelatoriosPage({
                 {linhasProporcao.map((l) => {
                   const foraDoIdeal = l.proporcao !== null && (l.proporcao > PROPORCAO_IDEAL + 1 || l.proporcao < PROPORCAO_IDEAL - 1.5)
                   return (
-                    <tr key={l.periodo} className="border-b border-gray-100 last:border-0">
-                      <td className="px-4 py-2 text-gray-900">{NOMES_PERIODO[l.periodo]}</td>
-                      <td className="px-4 py-2 text-gray-600">{l.media_alunos}</td>
-                      <td className="px-4 py-2 text-gray-600">{l.media_professores}</td>
+                    <tr key={l.periodo} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{NOMES_PERIODO[l.periodo]}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.media_alunos}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.media_professores}</td>
                       <td className="px-4 py-2">
                         {l.proporcao === null ? (
-                          <span className="text-xs text-gray-400">Sem professor escalado</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">Sem professor escalado</span>
                         ) : (
                           <span
                             className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -539,16 +539,16 @@ export default async function RelatoriosPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
             Alunos matriculados{' '}
-            <span className="text-sm font-normal text-gray-400">({linhasAlunos.length} no total)</span>
+            <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({linhasAlunos.length} no total)</span>
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Lista completa de alunos cadastrados no sistema, independente do período filtrado acima.
           </p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Matrícula</th>
                   <th className="px-4 py-2">Nome</th>
@@ -562,7 +562,7 @@ export default async function RelatoriosPage({
               <tbody>
                 {alunosDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={7} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nenhum aluno cadastrado.
                     </td>
                   </tr>
@@ -570,9 +570,9 @@ export default async function RelatoriosPage({
                 {alunosDaPagina.map((a) => {
                   const plano = statusPlano(a.vencimento_plano)
                   return (
-                    <tr key={a.nome + (a.matricula ?? '')} className="border-b border-gray-100 last:border-0">
-                      <td className="px-4 py-2 text-gray-600">{a.matricula ?? '—'}</td>
-                      <td className="px-4 py-2 text-gray-900">{a.nome}</td>
+                    <tr key={a.nome + (a.matricula ?? '')} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{a.matricula ?? '—'}</td>
+                      <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{a.nome}</td>
                       <td className="px-4 py-2">
                         <span
                           className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[a.classificacao].classe}`}
@@ -580,9 +580,9 @@ export default async function RelatoriosPage({
                           {a.classificacao}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-gray-600">{a.telefone ?? '—'}</td>
-                      <td className="px-4 py-2 text-gray-600">{a.professores?.nome ?? '—'}</td>
-                      <td className="px-4 py-2 text-gray-600">
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{a.telefone ?? '—'}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{a.professores?.nome ?? '—'}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
                         {a.data_matricula ? new Date(`${a.data_matricula}T00:00:00`).toLocaleDateString('pt-BR') : '—'}
                       </td>
                       <td className="px-4 py-2">
@@ -591,7 +591,7 @@ export default async function RelatoriosPage({
                             {plano.rotulo}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400">Em dia</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">Em dia</span>
                         )}
                       </td>
                     </tr>
@@ -606,22 +606,22 @@ export default async function RelatoriosPage({
               <Link
                 href={linkPaginaAlunos(paginaAlunos - 1)}
                 aria-disabled={paginaAlunos <= 1}
-                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-                  paginaAlunos <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+                  paginaAlunos <= 1 ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 Anterior
               </Link>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 Página {paginaAlunos} de {totalPaginasAlunos}
               </span>
               <Link
                 href={linkPaginaAlunos(paginaAlunos + 1)}
                 aria-disabled={paginaAlunos >= totalPaginasAlunos}
-                className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                   paginaAlunos >= totalPaginasAlunos
-                    ? 'pointer-events-none text-gray-300'
-                    : 'text-gray-700 hover:border-gray-400'
+                    ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                    : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 Próxima

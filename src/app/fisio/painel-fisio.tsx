@@ -25,13 +25,13 @@ function classeTextoDuracao(totalSeg: number): string {
   const min = totalSeg / 60
   if (min >= 60) return 'text-red-600 font-semibold'
   if (min >= 50) return 'text-yellow-700 font-semibold'
-  return 'text-gray-400'
+  return 'text-gray-400 dark:text-gray-500'
 }
 function classeCardDuracao(totalSeg: number): string {
   const min = totalSeg / 60
   if (min >= 60) return 'border-red-300 bg-red-50'
   if (min >= 50) return 'border-yellow-300 bg-yellow-50'
-  return 'border-gray-100 bg-gray-50'
+  return 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
 }
 
 export function PainelFisio({
@@ -118,7 +118,7 @@ export function PainelFisio({
 
   if (fisioterapeutas.length === 0) {
     return (
-      <p className="p-4 text-sm text-gray-400">
+      <p className="p-4 text-sm text-gray-400 dark:text-gray-500">
         Nenhum fisioterapeuta cadastrado ainda. Cadastre em &quot;Novo fisioterapeuta&quot;, ao lado.
       </p>
     )
@@ -134,21 +134,21 @@ export function PainelFisio({
         const ocupado = atendimentosDoFisio.length > 0
 
         return (
-          <div key={fisioterapeuta.id} className="w-64 shrink-0 rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center gap-2 rounded-t-lg border-b border-gray-100 bg-gray-50 px-3 py-2">
-              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-200">
+          <div key={fisioterapeuta.id} className="w-64 shrink-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+            <div className="flex items-center gap-2 rounded-t-lg border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 px-3 py-2">
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                 {fisioterapeuta.foto_url ? (
                   <Image src={fisioterapeuta.foto_url} alt={fisioterapeuta.nome} fill className="object-cover" />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-500">
+                  <span className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-500 dark:text-gray-400">
                     {fisioterapeuta.nome.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-900">{fisioterapeuta.nome}</p>
+                <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{fisioterapeuta.nome}</p>
                 {fisioterapeuta.horario_trabalho && (
-                  <p className="truncate text-xs text-gray-500">{fisioterapeuta.horario_trabalho}</p>
+                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">{fisioterapeuta.horario_trabalho}</p>
                 )}
               </div>
               <span
@@ -177,7 +177,7 @@ export function PainelFisio({
                       <div className="flex items-center justify-between gap-2">
                         <button
                           onClick={() => setVerPerfilAlunoId(atendimentoDaVaga.aluno_id)}
-                          className="truncate text-left text-sm font-medium text-gray-900 hover:underline"
+                          className="truncate text-left text-sm font-medium text-gray-900 dark:text-gray-100 hover:underline"
                         >
                           {atendimentoDaVaga.alunos.nome}
                         </button>
@@ -187,7 +187,7 @@ export function PainelFisio({
                           {atendimentoDaVaga.alunos.classificacao}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-400">Entrou às {formatarHora(atendimentoDaVaga.inicio)}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Entrou às {formatarHora(atendimentoDaVaga.inicio)}</span>
                       <div className="mt-1 flex flex-wrap items-center gap-1">
                         <span className={`text-xs ${classeTextoDuracao(segundos)}`}>
                           Duração: {formatarDuracao(segundos)}
@@ -207,10 +207,10 @@ export function PainelFisio({
                           ))}
                         </div>
                       )}
-                      {infoSecundaria && <p className="mt-1 text-xs text-gray-400">{infoSecundaria}</p>}
+                      {infoSecundaria && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{infoSecundaria}</p>}
                       <button
                         onClick={() => void aoFinalizar(atendimentoDaVaga.id)}
-                        className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+                        className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
                       >
                         Finalizar atendimento
                       </button>
@@ -223,7 +223,7 @@ export function PainelFisio({
                   <div key={`vaga-${fisioterapeuta.id}-${i}`} className="flex items-center gap-1">
                     <button
                       onClick={() => setAlocandoPara(fisioterapeuta)}
-                      className="flex-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                      className="flex-1 rounded-md border border-dashed border-gray-300 dark:border-gray-600 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                       + Alocar aluno
                     </button>
@@ -236,7 +236,7 @@ export function PainelFisio({
                           }))
                         }
                         title="Remover vaga"
-                        className="shrink-0 rounded p-1.5 text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                        className="shrink-0 rounded p-1.5 text-gray-300 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-400"
                       >
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                           <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -248,12 +248,12 @@ export function PainelFisio({
               })}
             </div>
 
-            <div className="border-t border-gray-100 p-3">
+            <div className="border-t border-gray-100 dark:border-gray-800 p-3">
               <button
                 onClick={() =>
                   setExtrasPorId((prev) => ({ ...prev, [fisioterapeuta.id]: (prev[fisioterapeuta.id] ?? 0) + 1 }))
                 }
-                className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-400 hover:border-gray-400 hover:text-gray-600"
+                className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-2 py-1 text-xs text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
               >
                 + Adicionar vaga
               </button>

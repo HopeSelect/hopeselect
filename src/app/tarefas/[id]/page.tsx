@@ -20,7 +20,7 @@ export default async function EditarTarefaPage({
   if (!user) {
     return (
       <AppShell titulo="Editar tarefa">
-        <p className="text-sm text-gray-500">Sessão expirada.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Sessão expirada.</p>
       </AppShell>
     )
   }
@@ -30,7 +30,7 @@ export default async function EditarTarefaPage({
   if (meuPerfil?.papel !== 'admin' && meuPerfil?.papel !== 'lider') {
     return (
       <AppShell titulo="Editar tarefa">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Essa área é restrita a líderes e administradores. Fala com um líder se precisar de acesso.
         </p>
       </AppShell>
@@ -57,7 +57,7 @@ export default async function EditarTarefaPage({
             <button className="text-sm text-red-600 hover:text-red-800">Excluir</button>
           </form>
         </div>
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
           <TarefaForm
             acao={atualizarTarefa.bind(null, tarefa.id)}
             alunos={alunos ?? []}

@@ -14,7 +14,7 @@ export default async function NovoAlunoPage() {
   return (
     <AppShell titulo="Novo aluno">
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
           <AlunoForm acao={criarAluno} professores={professores ?? []} />
         </div>
       </main>

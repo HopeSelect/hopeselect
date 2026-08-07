@@ -73,16 +73,16 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-20">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-gray-900">Ficha do aluno</h2>
-          <button onClick={onFechar} className="text-gray-400 hover:text-gray-700" aria-label="Fechar">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Ficha do aluno</h2>
+          <button onClick={onFechar} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" aria-label="Fechar">
             ✕
           </button>
         </div>
 
         <div className="max-h-[75vh] overflow-y-auto p-4">
-          {carregando && <p className="text-sm text-gray-400">Carregando…</p>}
+          {carregando && <p className="text-sm text-gray-400 dark:text-gray-500">Carregando…</p>}
           {erro && <p className="text-sm text-red-600">{erro}</p>}
 
           {aluno && (
@@ -100,8 +100,8 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-semibold text-gray-900">{aluno.nome}</p>
-                  {aluno.matricula && <p className="text-xs text-gray-400">Matrícula {aluno.matricula}</p>}
+                  <p className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">{aluno.nome}</p>
+                  {aluno.matricula && <p className="text-xs text-gray-400 dark:text-gray-500">Matrícula {aluno.matricula}</p>}
                 </div>
                 <span
                   className={`shrink-0 rounded border px-2 py-0.5 text-xs font-medium ${CLASSIFICACOES[aluno.classificacao].classe}`}
@@ -130,32 +130,32 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <div>
-                  <dt className="text-xs text-gray-400">Idade</dt>
-                  <dd className="text-gray-900">{idade !== null ? `${idade} anos` : '—'}</dd>
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Idade</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{idade !== null ? `${idade} anos` : '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Último acesso</dt>
-                  <dd className="text-gray-900">{dias !== null ? `Há ${dias} dia${dias === 1 ? '' : 's'}` : '—'}</dd>
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Último acesso</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{dias !== null ? `Há ${dias} dia${dias === 1 ? '' : 's'}` : '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Telefone</dt>
-                  <dd className="text-gray-900">{aluno.telefone ?? '—'}</dd>
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Telefone</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{aluno.telefone ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Email</dt>
-                  <dd className="truncate text-gray-900">{aluno.email ?? '—'}</dd>
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Email</dt>
+                  <dd className="truncate text-gray-900 dark:text-gray-100">{aluno.email ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Professor</dt>
-                  <dd className="text-gray-900">{aluno.professores?.nome ?? '—'}</dd>
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Professor</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{aluno.professores?.nome ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Nutricionista</dt>
-                  <dd className="text-gray-900">{aluno.nutricionista ?? '—'}</dd>
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Nutricionista</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{aluno.nutricionista ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Vencimento do plano</dt>
-                  <dd className="text-gray-900">
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Vencimento do plano</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">
                     {aluno.vencimento_plano
                       ? new Date(`${aluno.vencimento_plano}T00:00:00`).toLocaleDateString('pt-BR')
                       : '—'}
@@ -167,8 +167,8 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-400">Início do plano</dt>
-                  <dd className="text-gray-900">
+                  <dt className="text-xs text-gray-400 dark:text-gray-500">Início do plano</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">
                     {aluno.inicio_plano ? new Date(`${aluno.inicio_plano}T00:00:00`).toLocaleDateString('pt-BR') : '—'}
                   </dd>
                 </div>
@@ -176,24 +176,24 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
 
               {aluno.restricoes && (
                 <div>
-                  <p className="text-xs text-gray-400">Restrições</p>
-                  <p className="text-sm text-gray-900">{aluno.restricoes}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Restrições</p>
+                  <p className="text-sm text-gray-900 dark:text-gray-100">{aluno.restricoes}</p>
                 </div>
               )}
 
               {aluno.observacoes && (
                 <div>
-                  <p className="text-xs text-gray-400">Observações</p>
-                  <p className="text-sm text-gray-900">{aluno.observacoes}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Observações</p>
+                  <p className="text-sm text-gray-900 dark:text-gray-100">{aluno.observacoes}</p>
                 </div>
               )}
 
               <div>
-                <p className="mb-1 text-xs text-gray-400">Acompanhamento</p>
+                <p className="mb-1 text-xs text-gray-400 dark:text-gray-500">Acompanhamento</p>
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm">
-                    <span className="text-gray-700">Último momento coach</span>
-                    <span className="shrink-0 text-xs text-gray-500">
+                  <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 dark:bg-gray-800 px-2 py-1.5 text-sm">
+                    <span className="text-gray-700 dark:text-gray-300">Último momento coach</span>
+                    <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
                       {ultimoMomentoCoach
                         ? new Date(`${ultimoMomentoCoach}T00:00:00`).toLocaleDateString('pt-BR')
                         : 'Nunca realizado'}
@@ -203,8 +203,8 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
                     const linha = alertas.find((a) => a.tipo === tipo)
                     const selo = statusAlertaAluno(linha?.proxima_data ?? null)
                     return (
-                      <div key={tipo} className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm">
-                        <span className="text-gray-700">{TIPOS_ALERTA_ALUNO[tipo]}</span>
+                      <div key={tipo} className="flex items-center justify-between gap-2 rounded-md bg-gray-50 dark:bg-gray-800 px-2 py-1.5 text-sm">
+                        <span className="text-gray-700 dark:text-gray-300">{TIPOS_ALERTA_ALUNO[tipo]}</span>
                         <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-medium ${selo.classe}`}>
                           {selo.rotulo}
                         </span>
@@ -215,21 +215,21 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
               </div>
 
               <div>
-                <p className="mb-1 text-xs text-gray-400">Histórico de atendimentos</p>
+                <p className="mb-1 text-xs text-gray-400 dark:text-gray-500">Histórico de atendimentos</p>
                 {historico.length === 0 ? (
-                  <p className="text-sm text-gray-400">Nenhum atendimento registrado ainda.</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">Nenhum atendimento registrado ainda.</p>
                 ) : (
                   <div className="space-y-1">
                     {historico.map((h) => (
                       <div
                         key={h.id}
-                        className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm"
+                        className="flex items-center justify-between gap-2 rounded-md bg-gray-50 dark:bg-gray-800 px-2 py-1.5 text-sm"
                       >
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-100">
                           {new Date(`${h.data}T00:00:00`).toLocaleDateString('pt-BR')}
                         </span>
-                        <span className="truncate text-gray-600">{h.professor_nome}</span>
-                        <span className="shrink-0 text-xs text-gray-500">
+                        <span className="truncate text-gray-600 dark:text-gray-400">{h.professor_nome}</span>
+                        <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
                           {h.em_andamento ? 'em andamento' : h.duracao_hms}
                         </span>
                       </div>
@@ -240,7 +240,7 @@ export function PerfilAlunoModal({ alunoId, onFechar }: { alunoId: string; onFec
 
               <Link
                 href={`/alunos/${aluno.id}`}
-                className="mt-2 block text-center text-sm text-gray-600 underline hover:text-gray-900"
+                className="mt-2 block text-center text-sm text-gray-600 dark:text-gray-400 underline hover:text-gray-900 dark:hover:text-gray-100"
               >
                 Editar cadastro completo
               </Link>

@@ -10,6 +10,7 @@ import type { Papel } from '@/lib/tipos'
 import estilos from './app-shell.module.css'
 
 const CHAVE_SIDEBAR_ABERTA = 'hope-select:sidebar-aberta'
+const CHAVE_TEMA = 'hope-select:tema'
 
 type ItemMenu = {
   href: string
@@ -164,6 +165,10 @@ export function AppShell({
   const [menuMobileAberto, setMenuMobileAberto] = useState(false)
   const [agora, setAgora] = useState<Date | null>(null)
   const [papel, setPapel] = useState<Papel | null>(null)
+  // Começa lendo a classe que o script anti-flash (no layout raiz) já
+  // aplicou no <html> antes do React montar — assim não há divergência
+  // entre o que a página mostra e o que este botão exibe.
+  const [temaEscuro, setTemaEscuro] = useState(false)
 
   // Preferência de UI (não é dado de negócio), por isso pode viver no
   // localStorage do navegador — só lida depois da montagem para não
@@ -177,6 +182,20 @@ export function AppShell({
   useEffect(() => {
     window.localStorage.setItem(CHAVE_SIDEBAR_ABERTA, sidebarAberta ? '1' : '0')
   }, [sidebarAberta])
+
+  // Sincroniza com o que o script anti-flash já decidiu no <html> (evita
+  // "piscar" o botão errado por uma fração de segundo ao montar).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- só dá pra ler a classe do <html> depois de montar no cliente
+    setTemaEscuro(document.documentElement.classList.contains('dark'))
+  }, [])
+
+  function alternarTema() {
+    const novoEscuro = !temaEscuro
+    setTemaEscuro(novoEscuro)
+    document.documentElement.classList.toggle('dark', novoEscuro)
+    window.localStorage.setItem(CHAVE_TEMA, novoEscuro ? 'dark' : 'light')
+  }
 
   // Relógio do cabeçalho: sincroniza com o sistema externo "hora atual",
   // por isso mora num efeito (mesmo padrão do exemplo de relógio da doc do React).
@@ -258,6 +277,24 @@ export function AppShell({
               {sidebarAberta && <span>Sair</span>}
             </button>
           </form>
+          <button
+            type="button"
+            onClick={alternarTema}
+            className={estilos.botaoColapsar}
+            title={sidebarAberta ? undefined : temaEscuro ? 'Modo claro' : 'Modo escuro'}
+          >
+            {temaEscuro ? (
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4.5" />
+                <path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+              </svg>
+            ) : (
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z" />
+              </svg>
+            )}
+            {sidebarAberta && <span>{temaEscuro ? 'Modo claro' : 'Modo escuro'}</span>}
+          </button>
           <button
             type="button"
             onClick={() => setSidebarAberta((v) => !v)}

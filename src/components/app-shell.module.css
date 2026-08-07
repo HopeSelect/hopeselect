@@ -25,7 +25,7 @@
 .sidebar {
   width: 240px;
   flex-shrink: 0;
-  background: var(--neutral-900);
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -50,7 +50,7 @@
   height: 34px;
   border-radius: var(--radius-md);
   object-fit: contain;
-  background: var(--neutral-0);
+  background: var(--sidebar-logo-bg);
   flex-shrink: 0;
 }
 
@@ -58,7 +58,7 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   font-size: var(--text-sm);
-  color: var(--neutral-0);
+  color: var(--sidebar-text);
   white-space: nowrap;
 }
 
@@ -87,13 +87,13 @@
 }
 .navItem:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--neutral-0);
+  color: var(--sidebar-text);
 }
 
 .navItemAtivo,
 .navItemAtivo:hover {
   background: var(--brand-600);
-  color: var(--neutral-0);
+  color: var(--sidebar-text);
 }
 
 .navIcone {
@@ -131,7 +131,7 @@
   color: #ffb4b4;
 }
 .botaoColapsar:hover {
-  color: var(--neutral-0);
+  color: var(--sidebar-text);
 }
 .botaoColapsar {
   border-top: 1px solid rgba(255, 255, 255, 0.06);

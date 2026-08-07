@@ -90,14 +90,14 @@ function classeTextoDuracao(totalSeg: number): string {
   const min = totalSeg / 60
   if (min >= 60) return 'text-red-600 font-semibold'
   if (min >= 50) return 'text-yellow-700 font-semibold'
-  return 'text-gray-400'
+  return 'text-gray-400 dark:text-gray-500'
 }
 
 function classeCardDuracao(totalSeg: number): string {
   const min = totalSeg / 60
   if (min >= 60) return 'border-red-300 bg-red-50'
   if (min >= 50) return 'border-yellow-300 bg-yellow-50'
-  return 'border-gray-100 bg-gray-50'
+  return 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
 }
 
 export function PainelSala({
@@ -300,7 +300,7 @@ export function PainelSala({
 
   return (
     <div className="flex w-full flex-1 flex-col">
-      <div className="border-b border-gray-200 bg-white px-4 py-3">
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
         <BuscarProfessorParaSala
           idsNaSala={professores.map((p) => p.id)}
           onAdicionado={aoAdicionarProfessor}
@@ -308,7 +308,7 @@ export function PainelSala({
         {erroRemocao && <p className="mt-2 text-sm text-red-600">{erroRemocao}</p>}
       </div>
 
-      <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 p-4">
+      <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 dark:bg-gray-800 p-4">
         {professores.map((professor, indice) => {
           const atendimentosDoProfessor = atendimentos.filter((a) => a.professor_id === professor.id)
           const intervalo = intervalos.find((i) => i.professor_id === professor.id)
@@ -354,7 +354,7 @@ export function PainelSala({
         })}
 
         {professores.length === 0 && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             Nenhum professor na sala ainda. Use a busca acima para adicionar.
           </p>
         )}
@@ -459,7 +459,7 @@ function CardProfessor({
 
   return (
     <div
-      className="absolute rounded-lg border border-gray-200 bg-white shadow-sm"
+      className="absolute rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
       style={{ left: pos.x, top: pos.y, width: larguraCard }}
     >
       <div
@@ -468,21 +468,21 @@ function CardProfessor({
         onPointerMove={aoPointerMove}
         onPointerUp={aoPointerUp}
         onLostPointerCapture={aoPerderCaptura}
-        className="flex cursor-grab items-center gap-2 rounded-t-lg border-b border-gray-100 bg-gray-50 px-3 py-2 active:cursor-grabbing"
+        className="flex cursor-grab items-center gap-2 rounded-t-lg border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 px-3 py-2 active:cursor-grabbing"
         style={{ touchAction: 'none' }}
       >
-        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-200">
+        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
           {professor.foto_url ? (
             <Image src={professor.foto_url} alt={professor.nome} fill className="object-cover" />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-500">
+            <span className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-500 dark:text-gray-400">
               {professor.nome.charAt(0).toUpperCase()}
             </span>
           )}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-gray-900">{professor.nome}</p>
-          {professor.funcao && <p className="truncate text-xs text-gray-500">{professor.funcao}</p>}
+          <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{professor.nome}</p>
+          {professor.funcao && <p className="truncate text-xs text-gray-500 dark:text-gray-400">{professor.funcao}</p>}
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <span
@@ -496,7 +496,7 @@ function CardProfessor({
             onClick={onRemoverDaSala}
             disabled={ocupado}
             title={ocupado ? 'Finalize os atendimentos antes de remover' : 'Remover da sala'}
-            className="rounded p-0.5 text-gray-300 hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded p-0.5 text-gray-300 dark:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -507,12 +507,12 @@ function CardProfessor({
 
       {emIntervalo ? (
         <div className="p-3">
-          <p className="text-sm font-medium text-gray-900">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
-          <p className="mt-1 text-xs text-gray-400">Início: {formatarHora(intervalo!.inicio)}</p>
-          <p className="text-xs text-gray-400">Duração: {formatarDecorrido(intervalo!.inicio, agora)}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{TIPOS_INTERVALO[intervalo!.tipo]}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Início: {formatarHora(intervalo!.inicio)}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Duração: {formatarDecorrido(intervalo!.inicio, agora)}</p>
           <button
             onClick={onFinalizarIntervalo}
-            className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+            className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
           >
             Encerrar intervalo
           </button>
@@ -520,19 +520,19 @@ function CardProfessor({
       ) : (
         <>
           {tarefasDoProfessor.length > 0 && (
-            <div className="max-h-40 space-y-1.5 overflow-y-auto border-b border-gray-100 p-3">
-              <p className="text-xs font-medium text-gray-500">Tarefas de hoje</p>
+            <div className="max-h-40 space-y-1.5 overflow-y-auto border-b border-gray-100 dark:border-gray-800 p-3">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Tarefas de hoje</p>
               {tarefasDoProfessor.map((t) => {
                 const emAndamento = Boolean(t.inicio) && !t.fim
                 return (
-                  <div key={t.id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
+                  <div key={t.id} className="rounded-md border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-2">
                     <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
                       {TIPOS_TAREFA[t.tipo]}
                     </span>
-                    <p className="mt-1 truncate text-xs font-medium text-gray-900">{t.alunos.nome}</p>
-                    {t.observacao && <p className="text-xs text-gray-500">{t.observacao}</p>}
+                    <p className="mt-1 truncate text-xs font-medium text-gray-900 dark:text-gray-100">{t.alunos.nome}</p>
+                    {t.observacao && <p className="text-xs text-gray-500 dark:text-gray-400">{t.observacao}</p>}
                     {emAndamento && (
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                         Em andamento há {formatarDecorrido(t.inicio!, agora)}
                       </p>
                     )}
@@ -540,14 +540,14 @@ function CardProfessor({
                       {!t.inicio && (
                         <button
                           onClick={() => onIniciarTarefa(t.id)}
-                          className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:border-gray-400"
+                          className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500"
                         >
                           Iniciar
                         </button>
                       )}
                       <button
                         onClick={() => onConcluirTarefa(t.id)}
-                        className="flex-1 rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-800"
+                        className="flex-1 rounded-md bg-gray-900 dark:bg-brand-500 px-2 py-1 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
                       >
                         Concluir
                       </button>
@@ -582,7 +582,7 @@ function CardProfessor({
                     <div className="flex items-center justify-between gap-2">
                       <button
                         onClick={() => onVerPerfil(atendimentoDaVaga.aluno_id)}
-                        className="truncate text-left text-sm font-medium text-gray-900 hover:underline"
+                        className="truncate text-left text-sm font-medium text-gray-900 dark:text-gray-100 hover:underline"
                         title="Ver ficha do aluno"
                       >
                         {atendimentoDaVaga.alunos.nome}
@@ -595,7 +595,7 @@ function CardProfessor({
                     </div>
 
                     <div className="mt-1 flex flex-wrap items-center gap-1">
-                      <span className="text-xs text-gray-400">Entrou às {formatarHora(atendimentoDaVaga.inicio)}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Entrou às {formatarHora(atendimentoDaVaga.inicio)}</span>
                       {atendimentoDaVaga.tarefa && (
                         <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
                           {TIPOS_TAREFA[atendimentoDaVaga.tarefa]}
@@ -624,11 +624,11 @@ function CardProfessor({
                       </div>
                     )}
 
-                    {infoSecundaria && <p className="mt-1 text-xs text-gray-400">{infoSecundaria}</p>}
+                    {infoSecundaria && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{infoSecundaria}</p>}
 
                     <button
                       onClick={() => onFinalizar(atendimentoDaVaga.id)}
-                      className="mt-2 w-full rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+                      className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
                     >
                       Finalizar atendimento
                     </button>
@@ -642,7 +642,7 @@ function CardProfessor({
                 <div key={`vaga-${professor.id}-${i}`} className="flex items-center gap-1">
                   <button
                     onClick={onAlocar}
-                    className="flex-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                    className="flex-1 rounded-md border border-dashed border-gray-300 dark:border-gray-600 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                   >
                     + Alocar aluno
                   </button>
@@ -650,7 +650,7 @@ function CardProfessor({
                     <button
                       onClick={() => setExtras((v) => Math.max(0, v - 1))}
                       title="Remover vaga"
-                      className="shrink-0 rounded p-1.5 text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                      className="shrink-0 rounded p-1.5 text-gray-300 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-400"
                     >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                         <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -662,10 +662,10 @@ function CardProfessor({
             })}
           </div>
 
-          <div className="space-y-2 border-t border-gray-100 p-3">
+          <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 p-3">
             <button
               onClick={() => setExtras((v) => v + 1)}
-              className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-400 hover:border-gray-400 hover:text-gray-600"
+              className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-2 py-1 text-xs text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
             >
               + Adicionar vaga
             </button>
@@ -674,12 +674,12 @@ function CardProfessor({
               <div className="relative">
                 <button
                   onClick={() => setMenuIntervaloAberto((v) => !v)}
-                  className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                  className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   Iniciar intervalo
                 </button>
                 {menuIntervaloAberto && (
-                  <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-gray-200 bg-white shadow-lg">
+                  <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
                     {(Object.keys(TIPOS_INTERVALO) as TipoIntervalo[]).map((tipo) => (
                       <button
                         key={tipo}
@@ -687,7 +687,7 @@ function CardProfessor({
                           setMenuIntervaloAberto(false)
                           onIniciarIntervalo(tipo)
                         }}
-                        className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
+                        className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
                         {TIPOS_INTERVALO[tipo]}
                       </button>

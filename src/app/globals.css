@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Ativa dark: por classe (.dark no <html>), não só por preferência do
+   sistema operacional — permite alternar manualmente com um botão. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ================================================================
    HOPE SELECT — TOKENS DE DESIGN
    ================================================================
@@ -137,11 +141,72 @@
 
   --background: var(--neutral-50);
   --foreground: var(--neutral-900);
+
+  /* ---------- Menu lateral: sempre escuro, de propósito ----------
+     Diferente do resto do sistema, o menu lateral NÃO reage ao tema
+     claro/escuro — foi desenhado pra ser uma âncora visual fixa (como
+     em GitHub, Slack etc). Por isso usa tokens PRÓPRIOS, fora da escala
+     --neutral-* que é redefinida em .dark — senão o menu ficaria branco
+     no modo escuro, o oposto do que deveria. */
+  --sidebar-bg: #151716;
+  --sidebar-logo-bg: #ffffff;
+  --sidebar-text: #ffffff;
+}
+
+/* ----------------------------------------------------------------
+   Modo escuro — só redefine os NEUTROS (fundo/texto/borda). A marca
+   (teal) e as cores de classificação do aluno ficam intactas: são
+   regra de negócio, não devem mudar de significado entre os temas.
+   Qualquer tela que já usa var(--neutral-N) (Sala, menu, Home,
+   Professores) fica escura automaticamente, sem precisar editar
+   esses arquivos — é exatamente o motivo de ter um token só.
+   ---------------------------------------------------------------- */
+.dark {
+  --neutral-0:   #16181a;
+  --neutral-50:  #1c1f21;
+  --neutral-100: #24282a;
+  --neutral-200: #2f3436;
+  --neutral-300: #454b4d;
+  --neutral-400: #838a8c;
+  --neutral-500: #9aa0a2;
+  --neutral-600: #bcc1c2;
+  --neutral-700: #d6dad9;
+  --neutral-800: #ebecec;
+  --neutral-900: #f5f6f5;
+
+  --background: var(--neutral-50);
+  --foreground: var(--neutral-900);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-drag: 0 20px 44px rgba(0, 0, 0, 0.55), 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

@@ -12,7 +12,7 @@ type Acao = (prev: EstadoForm, fd: FormData) => Promise<EstadoForm>
 type OpcaoNome = { id: string; nome: string }
 
 const campo =
-  'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900'
+  'mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-brand-400'
 
 export function AlunoForm({
   acao,
@@ -28,37 +28,37 @@ export function AlunoForm({
 
   return (
     <form action={submit} className="space-y-4">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Foto
         <div className="mt-1">
           <FotoAluno inicial={inicial?.foto_url} />
         </div>
       </label>
 
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Nome completo *
         <input name="nome" required defaultValue={inicial?.nome} className={campo} />
       </label>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Matrícula
           <input name="matricula" defaultValue={inicial?.matricula ?? ''} className={campo} />
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Telefone
           <input name="telefone" defaultValue={inicial?.telefone ?? ''} className={campo} />
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Email
           <input name="email" type="email" defaultValue={inicial?.email ?? ''} className={campo} />
         </label>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Data de nascimento
-          {idade !== null && <span className="ml-1 font-normal text-gray-400">({idade} anos)</span>}
+          {idade !== null && <span className="ml-1 font-normal text-gray-400 dark:text-gray-500">({idade} anos)</span>}
           <input
             name="data_nascimento"
             type="date"
@@ -66,7 +66,7 @@ export function AlunoForm({
             className={campo}
           />
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Classificação
           <select name="classificacao" defaultValue={inicial?.classificacao ?? 'A'} className={campo}>
             {(Object.keys(CLASSIFICACOES) as Classificacao[]).map((c) => (
@@ -76,7 +76,7 @@ export function AlunoForm({
             ))}
           </select>
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Último acesso
           <input
             name="ultimo_acesso"
@@ -88,7 +88,7 @@ export function AlunoForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Data da matrícula
           <input
             name="data_matricula"
@@ -97,7 +97,7 @@ export function AlunoForm({
             className={campo}
           />
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Início do plano
           <input
             name="inicio_plano"
@@ -106,7 +106,7 @@ export function AlunoForm({
             className={campo}
           />
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Vencimento do plano
           <input
             name="vencimento_plano"
@@ -118,7 +118,7 @@ export function AlunoForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Professor
           <select name="professor_id" defaultValue={inicial?.professor_id ?? ''} className={campo}>
             <option value="">Nenhum</option>
@@ -129,20 +129,20 @@ export function AlunoForm({
             ))}
           </select>
         </label>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Nutricionista
           <input name="nutricionista" defaultValue={inicial?.nutricionista ?? ''} className={campo} />
         </label>
       </div>
 
       <div>
-        <p className="text-sm font-medium text-gray-700">Acompanhamento (preenchimento manual)</p>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Acompanhamento (preenchimento manual)</p>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
           Use pra registrar histórico anterior ao sistema — se o aluno já teve isso feito pelo Tarefas ou pela Sala do
           Nutri, o sistema já mostra automático, sem precisar preencher aqui.
         </p>
         <div className="mt-2 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Último momento coach
             <input
               name="ultimo_momento_coach"
@@ -151,7 +151,7 @@ export function AlunoForm({
               className={campo}
             />
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Última prescrição de treino
             <input
               name="ultima_prescricao"
@@ -160,7 +160,7 @@ export function AlunoForm({
               className={campo}
             />
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Último laudo
             <input
               name="ultimo_laudo"
@@ -169,7 +169,7 @@ export function AlunoForm({
               className={campo}
             />
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Último atendimento com a nutricionista
             <input
               name="ultimo_atendimento_nutri"
@@ -181,12 +181,12 @@ export function AlunoForm({
         </div>
       </div>
 
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Restrições
         <textarea name="restricoes" rows={2} defaultValue={inicial?.restricoes ?? ''} className={campo} />
       </label>
 
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Alertas (separe por vírgula)
         <input
           name="alertas"
@@ -196,12 +196,12 @@ export function AlunoForm({
         />
       </label>
 
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Observações
         <textarea name="observacoes" rows={2} defaultValue={inicial?.observacoes ?? ''} className={campo} />
       </label>
 
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Origem
         <input name="origem" defaultValue={inicial?.origem ?? ''} className={campo} />
       </label>
@@ -216,11 +216,11 @@ export function AlunoForm({
         <button
           type="submit"
           disabled={pendente}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
+          className="rounded-md bg-gray-900 dark:bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600 disabled:opacity-60"
         >
           {pendente ? 'Salvando…' : 'Salvar'}
         </button>
-        <Link href="/alunos" className="text-sm text-gray-500 hover:text-gray-900">
+        <Link href="/alunos" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
           Cancelar
         </Link>
       </div>

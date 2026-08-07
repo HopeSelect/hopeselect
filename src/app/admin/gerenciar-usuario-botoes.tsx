@@ -42,7 +42,7 @@ export function GerenciarUsuarioBotoes({
         defaultValue={usuario.papel}
         onChange={aoTrocarPapel}
         disabled={pendente}
-        className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+        className="rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs"
       >
         {PAPEIS.map((p) => (
           <option key={p} value={p}>
@@ -53,7 +53,7 @@ export function GerenciarUsuarioBotoes({
       <button
         onClick={aoTrocarAtivo}
         disabled={pendente}
-        className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:border-gray-400 disabled:opacity-60"
+        className="rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-60"
       >
         {usuario.ativo ? 'Desativar' : 'Ativar'}
       </button>

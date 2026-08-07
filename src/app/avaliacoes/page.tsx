@@ -37,7 +37,7 @@ export default async function AvaliacoesPage({
   return (
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Avaliação coach e nutricional a cada 3 meses; avaliação funcional a cada 6 meses.
         </p>
 
@@ -45,28 +45,28 @@ export default async function AvaliacoesPage({
 
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
           <section className="space-y-2">
-            <h2 className="text-sm font-medium text-gray-900">
-              Pendentes <span className="text-xs font-normal text-gray-400">({pendentes.length} no total)</span>
+            <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Pendentes <span className="text-xs font-normal text-gray-400 dark:text-gray-500">({pendentes.length} no total)</span>
             </h2>
             {pendentes.length === 0 && (
-              <p className="text-sm text-gray-500">Nenhuma avaliação pendente. 🎉</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma avaliação pendente. 🎉</p>
             )}
             {pendentesDaPagina.map((l) => {
               const selo = statusAvaliacao(l.proxima_data)
               return (
                 <div
                   key={`${l.aluno_id}-${l.tipo}`}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3"
+                  className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3"
                 >
                   <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${selo.classe}`}>
                     {selo.rotulo}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-gray-900">
+                    <p className="truncate font-medium text-gray-900 dark:text-gray-100">
                       {l.aluno_nome}
-                      {l.aluno_matricula && <span className="ml-1 font-normal text-gray-400">· {l.aluno_matricula}</span>}
+                      {l.aluno_matricula && <span className="ml-1 font-normal text-gray-400 dark:text-gray-500">· {l.aluno_matricula}</span>}
                     </p>
-                    <p className="truncate text-xs text-gray-500">
+                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                       {TIPOS_AVALIACAO[l.tipo]}
                       {l.ultima_avaliacao
                         ? ` · última em ${new Date(`${l.ultima_avaliacao}T00:00:00`).toLocaleDateString('pt-BR')}`
@@ -82,22 +82,22 @@ export default async function AvaliacoesPage({
                 <Link
                   href={`/avaliacoes?paginaPendentes=${paginaPendentes - 1}`}
                   aria-disabled={paginaPendentes <= 1}
-                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-                    paginaPendentes <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                  className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+                    paginaPendentes <= 1 ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 >
                   Anterior
                 </Link>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   Página {paginaPendentes} de {totalPaginasPendentes}
                 </span>
                 <Link
                   href={`/avaliacoes?paginaPendentes=${paginaPendentes + 1}`}
                   aria-disabled={paginaPendentes >= totalPaginasPendentes}
-                  className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                  className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                     paginaPendentes >= totalPaginasPendentes
-                      ? 'pointer-events-none text-gray-300'
-                      : 'text-gray-700 hover:border-gray-400'
+                      ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                      : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 >
                   Próxima
@@ -107,22 +107,22 @@ export default async function AvaliacoesPage({
 
             {emDia.length > 0 && (
               <>
-                <h2 className="mt-8 text-sm font-medium text-gray-900">
-                  Em dia <span className="text-xs font-normal text-gray-400">({emDia.length} no total)</span>
+                <h2 className="mt-8 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Em dia <span className="text-xs font-normal text-gray-400 dark:text-gray-500">({emDia.length} no total)</span>
                 </h2>
                 {emDiaDaPagina.map((l) => {
                   const selo = statusAvaliacao(l.proxima_data)
                   return (
                     <div
                       key={`${l.aluno_id}-${l.tipo}`}
-                      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3"
+                      className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3"
                     >
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${selo.classe}`}>
                         {selo.rotulo}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-gray-900">{l.aluno_nome}</p>
-                        <p className="truncate text-xs text-gray-500">
+                        <p className="truncate font-medium text-gray-900 dark:text-gray-100">{l.aluno_nome}</p>
+                        <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                           {TIPOS_AVALIACAO[l.tipo]} · próxima em{' '}
                           {l.proxima_data ? new Date(`${l.proxima_data}T00:00:00`).toLocaleDateString('pt-BR') : '—'}
                         </p>
@@ -136,22 +136,22 @@ export default async function AvaliacoesPage({
                     <Link
                       href={`/avaliacoes?paginaEmDia=${paginaEmDia - 1}`}
                       aria-disabled={paginaEmDia <= 1}
-                      className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-                        paginaEmDia <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+                      className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+                        paginaEmDia <= 1 ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       }`}
                     >
                       Anterior
                     </Link>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       Página {paginaEmDia} de {totalPaginasEmDia}
                     </span>
                     <Link
                       href={`/avaliacoes?paginaEmDia=${paginaEmDia + 1}`}
                       aria-disabled={paginaEmDia >= totalPaginasEmDia}
-                      className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+                      className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                         paginaEmDia >= totalPaginasEmDia
-                          ? 'pointer-events-none text-gray-300'
-                          : 'text-gray-700 hover:border-gray-400'
+                          ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                          : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       }`}
                     >
                       Próxima
@@ -162,8 +162,8 @@ export default async function AvaliacoesPage({
             )}
           </section>
 
-          <aside className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 font-medium text-gray-900">Registrar avaliação</h2>
+          <aside className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+            <h2 className="mb-4 font-medium text-gray-900 dark:text-gray-100">Registrar avaliação</h2>
             <AvaliacaoForm acao={registrarAvaliacao} alunos={alunos ?? []} />
           </aside>
         </div>

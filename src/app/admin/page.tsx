@@ -65,7 +65,7 @@ export default async function AdminPage({
   if (!user) {
     return (
       <AppShell titulo="Admin">
-        <p className="text-sm text-gray-500">Sessão expirada.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Sessão expirada.</p>
       </AppShell>
     )
   }
@@ -75,7 +75,7 @@ export default async function AdminPage({
   if (meuPerfil?.papel !== 'admin') {
     return (
       <AppShell titulo="Admin">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Essa área é restrita a administradores. Fala com um admin se precisar de acesso.
         </p>
       </AppShell>
@@ -123,20 +123,20 @@ export default async function AdminPage({
         <Link
           href={`/admin?${chave}=${pagina - 1}`}
           aria-disabled={pagina <= 1}
-          className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-            pagina <= 1 ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+          className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+            pagina <= 1 ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
           }`}
         >
           Anterior
         </Link>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           Página {pagina} de {totalPaginas}
         </span>
         <Link
           href={`/admin?${chave}=${pagina + 1}`}
           aria-disabled={pagina >= totalPaginas}
-          className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
-            pagina >= totalPaginas ? 'pointer-events-none text-gray-300' : 'text-gray-700 hover:border-gray-400'
+          className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
+            pagina >= totalPaginas ? 'pointer-events-none text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
           }`}
         >
           Próxima
@@ -148,18 +148,18 @@ export default async function AdminPage({
   return (
     <AppShell titulo="Admin">
       <div className="mx-auto w-full max-w-5xl">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Painel restrito a administradores — gestão de usuários e saúde dos dados do sistema.
         </p>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
-            Usuários com acesso <span className="text-sm font-normal text-gray-400">({listaUsuarios.length})</span>
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Usuários com acesso <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({listaUsuarios.length})</span>
           </h2>
           {erroUsuarios && <p className="mt-2 text-sm text-red-600">Erro: {erroUsuarios.message}</p>}
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Nome</th>
                   <th className="px-4 py-2">Email</th>
@@ -171,21 +171,21 @@ export default async function AdminPage({
               <tbody>
                 {usuariosDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={5} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nenhum usuário encontrado.
                     </td>
                   </tr>
                 )}
                 {usuariosDaPagina.map((u) => (
-                  <tr key={u.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-900">{u.nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{u.email ?? '—'}</td>
-                    <td className="px-4 py-2 text-gray-600">{u.papel}</td>
+                  <tr key={u.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{u.nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{u.email ?? '—'}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{u.papel}</td>
                     <td className="px-4 py-2">
                       {u.ativo ? (
                         <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Ativo</span>
                       ) : (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">Inativo</span>
+                        <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400">Inativo</span>
                       )}
                     </td>
                     <td className="px-4 py-2">
@@ -200,14 +200,14 @@ export default async function AdminPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
             Atendimentos abertos há muito tempo{' '}
-            <span className="text-sm font-normal text-gray-400">({listaAtendimentosLongos.length})</span>
+            <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({listaAtendimentosLongos.length})</span>
           </h2>
-          <p className="mt-1 text-sm text-gray-500">Mais de 4 horas sem finalizar — pode ser esquecimento.</p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Mais de 4 horas sem finalizar — pode ser esquecimento.</p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Aluno</th>
                   <th className="px-4 py-2">Professor</th>
@@ -217,16 +217,16 @@ export default async function AdminPage({
               <tbody>
                 {atendimentosDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={3} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nada fora do padrão agora.
                     </td>
                   </tr>
                 )}
                 {atendimentosDaPagina.map((a) => (
-                  <tr key={a.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-900">{a.aluno_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{a.professor_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{a.horas_aberto}h</td>
+                  <tr key={a.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{a.aluno_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{a.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{a.horas_aberto}h</td>
                   </tr>
                 ))}
               </tbody>
@@ -236,13 +236,13 @@ export default async function AdminPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
-            Tarefas atrasadas <span className="text-sm font-normal text-gray-400">({listaTarefasAtrasadas.length})</span>
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Tarefas atrasadas <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({listaTarefasAtrasadas.length})</span>
           </h2>
-          <p className="mt-1 text-sm text-gray-500">Data já passou e ainda não foi concluída nem cancelada.</p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Data já passou e ainda não foi concluída nem cancelada.</p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Data</th>
                   <th className="px-4 py-2">Aluno</th>
@@ -253,19 +253,19 @@ export default async function AdminPage({
               <tbody>
                 {tarefasDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nenhuma tarefa atrasada.
                     </td>
                   </tr>
                 )}
                 {tarefasDaPagina.map((t) => (
-                  <tr key={t.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-600">
+                  <tr key={t.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
                       {new Date(`${t.data}T00:00:00`).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-4 py-2 text-gray-900">{t.aluno_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{t.professor_nome}</td>
-                    <td className="px-4 py-2 text-gray-600">{t.status}</td>
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{t.aluno_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{t.professor_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{t.status}</td>
                   </tr>
                 ))}
               </tbody>
@@ -275,13 +275,13 @@ export default async function AdminPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">
-            Alunos com nomes parecidos <span className="text-sm font-normal text-gray-400">({listaParecidos.length})</span>
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Alunos com nomes parecidos <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({listaParecidos.length})</span>
           </h2>
-          <p className="mt-1 text-sm text-gray-500">Pode ser cadastro duplicado com pequena diferença de digitação.</p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Pode ser cadastro duplicado com pequena diferença de digitação.</p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2">Aluno 1</th>
                   <th className="px-4 py-2">Aluno 2</th>
@@ -291,16 +291,16 @@ export default async function AdminPage({
               <tbody>
                 {parecidosDaPagina.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-6 text-center text-gray-400">
+                    <td colSpan={3} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
                       Nenhum nome parecido encontrado.
                     </td>
                   </tr>
                 )}
                 {parecidosDaPagina.map((p) => (
-                  <tr key={`${p.id_a}-${p.id_b}`} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 text-gray-900">{p.nome_a}</td>
-                    <td className="px-4 py-2 text-gray-900">{p.nome_b}</td>
-                    <td className="px-4 py-2 text-gray-600">{Math.round(p.parecido * 100)}%</td>
+                  <tr key={`${p.id_a}-${p.id_b}`} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{p.nome_a}</td>
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{p.nome_b}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{Math.round(p.parecido * 100)}%</td>
                   </tr>
                 ))}
               </tbody>

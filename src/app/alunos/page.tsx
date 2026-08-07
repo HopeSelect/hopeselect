@@ -43,12 +43,12 @@ export default async function AlunosPage({
     <AppShell>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {total} aluno{total === 1 ? '' : 's'} cadastrado{total === 1 ? '' : 's'}
           </p>
           <Link
             href="/alunos/novo"
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            className="rounded-md bg-gray-900 dark:bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
           >
             Novo aluno
           </Link>
@@ -61,7 +61,7 @@ export default async function AlunosPage({
         )}
         <div className="mt-6 space-y-2">
           {alunos.length === 0 && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {busca ? 'Nenhum aluno encontrado.' : 'Nenhum aluno cadastrado ainda.'}
             </p>
           )}
@@ -72,7 +72,7 @@ export default async function AlunosPage({
               <Link
                 key={a.id}
                 href={`/alunos/${a.id}`}
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-400"
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 hover:border-gray-400 dark:hover:border-gray-500"
               >
                 <span
                   className={`inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 text-sm font-semibold ${CLASSIFICACOES[a.classificacao].classe}`}
@@ -85,9 +85,9 @@ export default async function AlunosPage({
                     a.classificacao
                   )}
                 </span>
-                <span className="font-medium text-gray-900">{a.nome}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{a.nome}</span>
                 {a.professores?.nome && (
-                  <span className="text-xs text-gray-400">· {a.professores.nome}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">· {a.professores.nome}</span>
                 )}
                 {a.alertas.map((alerta) => (
                   <span
@@ -102,7 +102,7 @@ export default async function AlunosPage({
                     {plano.rotulo}
                   </span>
                 )}
-                <span className="ml-auto text-xs text-gray-500">
+                <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
                   {dias === null ? 'sem registro de acesso' : `Acesso há ${dias} dia(s)`}
                 </span>
               </Link>
@@ -115,24 +115,24 @@ export default async function AlunosPage({
             <Link
               href={linkPagina(pagina - 1)}
               aria-disabled={pagina <= 1}
-              className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+              className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                 pagina <= 1
-                  ? 'pointer-events-none text-gray-300'
-                  : 'text-gray-700 hover:border-gray-400'
+                  ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                  : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
               }`}
             >
               Anterior
             </Link>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               Página {pagina} de {totalPaginas}
             </span>
             <Link
               href={linkPagina(pagina + 1)}
               aria-disabled={pagina >= totalPaginas}
-              className={`rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium ${
+              className={`rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium ${
                 pagina >= totalPaginas
-                  ? 'pointer-events-none text-gray-300'
-                  : 'text-gray-700 hover:border-gray-400'
+                  ? 'pointer-events-none text-gray-300 dark:text-gray-600'
+                  : 'text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
               }`}
             >
               Próxima

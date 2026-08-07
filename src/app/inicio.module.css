@@ -124,6 +124,9 @@
   color: #c2410c;
   font-weight: 600;
 }
+:global(.dark) .sparklineProfessores[data-sobrecarga='true'] {
+  color: #fb923c;
+}
 
 /* ---------- Alertas recentes ---------- */
 

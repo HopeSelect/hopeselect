@@ -307,7 +307,7 @@ export default async function InicioPage() {
                 </div>
               ))}
               {avaliacoesPendentes.length > 0 && (
-                <Link href="/avaliacoes" className="mt-1 block text-center text-xs text-gray-500 underline">
+                <Link href="/avaliacoes" className="mt-1 block text-center text-xs text-gray-500 dark:text-gray-400 underline">
                   Ver todas
                 </Link>
               )}
@@ -322,7 +322,7 @@ export default async function InicioPage() {
               <span className={estilos.picoDestaque}> · {alertas60Pendentes.length}</span>
             )}
           </div>
-          <p className="mt-0 mb-3 text-xs text-gray-400">
+          <p className="mt-0 mb-3 text-xs text-gray-400 dark:text-gray-500">
             A cada 60 dias, todo aluno deveria ter prescrição de treino, laudo e atendimento com a nutricionista renovados.
           </p>
           <div className={estilos.listaAlertas}>
@@ -353,7 +353,7 @@ export default async function InicioPage() {
             Horário de pico — últimos 30 dias
             {pico.picoLabel && <span className={estilos.picoDestaque}> · pico: {pico.picoLabel}</span>}
           </div>
-          <p className="mt-0 mb-3 text-xs text-gray-400">
+          <p className="mt-0 mb-3 text-xs text-gray-400 dark:text-gray-500">
             Número pequeno embaixo do valor = média de professores escalados nesse horário (da escala semanal).
           </p>
           {picoComEscala.length === 0 ? (

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { STATUS_TAREFA, STATUS_TAREFA_SELECIONAVEIS, TIPOS_TAREFA } from '@/lib/utils'
 import type { StatusTarefa, TipoTarefa } from '@/lib/tipos'
 
-const campo = 'rounded-md border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-gray-900'
+const campo = 'rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-sm outline-none focus:border-gray-900 dark:focus:border-brand-400'
 
 export function FiltrosRelatorioTarefas({
   professores,
@@ -89,7 +89,7 @@ export function FiltrosRelatorioTarefas({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="text-sm text-gray-700">
+      <label className="text-sm text-gray-700 dark:text-gray-300">
         Professor
         <select
           value={professorSelecionado}
@@ -105,7 +105,7 @@ export function FiltrosRelatorioTarefas({
         </select>
       </label>
 
-      <label className="text-sm text-gray-700">
+      <label className="text-sm text-gray-700 dark:text-gray-300">
         Tarefa
         <select
           value={tipoSelecionado}
@@ -121,7 +121,7 @@ export function FiltrosRelatorioTarefas({
         </select>
       </label>
 
-      <label className="text-sm text-gray-700">
+      <label className="text-sm text-gray-700 dark:text-gray-300">
         Status
         <select
           value={statusSelecionado}
@@ -143,7 +143,7 @@ export function FiltrosRelatorioTarefas({
             key={n}
             onClick={() => aplicarComDias(n)}
             className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
-              dias === n ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'
+              dias === n ? 'border-gray-900 dark:border-brand-400 bg-gray-900 dark:bg-brand-500 text-white' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
             }`}
           >
             {n}d
@@ -152,7 +152,7 @@ export function FiltrosRelatorioTarefas({
         <button
           onClick={() => setMostrarPersonalizado((v) => !v)}
           className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
-            dias === null ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'
+            dias === null ? 'border-gray-900 dark:border-brand-400 bg-gray-900 dark:bg-brand-500 text-white' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
           }`}
         >
           Personalizado
@@ -161,7 +161,7 @@ export function FiltrosRelatorioTarefas({
 
       {mostrarPersonalizado && (
         <div className="flex items-end gap-2">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-gray-700 dark:text-gray-300">
             De
             <input
               type="date"
@@ -170,7 +170,7 @@ export function FiltrosRelatorioTarefas({
               className={`mt-1 block ${campo}`}
             />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-gray-700 dark:text-gray-300">
             Até
             <input
               type="date"
@@ -181,7 +181,7 @@ export function FiltrosRelatorioTarefas({
           </label>
           <button
             onClick={aplicarPersonalizado}
-            className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+            className="rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
           >
             Aplicar
           </button>

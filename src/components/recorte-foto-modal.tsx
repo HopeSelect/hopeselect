@@ -104,36 +104,36 @@ export function RecorteFotoModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-gray-900">Ajustar foto</h2>
-          <button onClick={onCancelar} className="text-gray-400 hover:text-gray-700" aria-label="Fechar">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Ajustar foto</h2>
+          <button onClick={onCancelar} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" aria-label="Fechar">
             ✕
           </button>
         </div>
 
         <div className="p-4">
-          <p className="mb-3 text-xs text-gray-500">
+          <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Arraste pra posicionar e use o scroll do mouse pra dar zoom. A área redonda é o que vai aparecer na bolinha.
           </p>
 
-          <div className="recorte-circular mx-auto h-72 w-72 overflow-hidden bg-gray-100">
+          <div className="recorte-circular mx-auto h-72 w-72 overflow-hidden bg-gray-100 dark:bg-gray-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img ref={imgRef} alt="" className="block max-w-full" />
           </div>
 
-          {!pronto && !erro && <p className="mt-3 text-center text-sm text-gray-400">Carregando editor…</p>}
+          {!pronto && !erro && <p className="mt-3 text-center text-sm text-gray-400 dark:text-gray-500">Carregando editor…</p>}
           {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
 
           <div className="mt-4 flex items-center gap-3">
             <button
               onClick={confirmar}
               disabled={!pronto || gerando}
-              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+              className="rounded-md bg-gray-900 dark:bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600 disabled:opacity-50"
             >
               {gerando ? 'Salvando…' : 'Usar essa foto'}
             </button>
-            <button onClick={onCancelar} className="text-sm text-gray-500 hover:text-gray-900">
+            <button onClick={onCancelar} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
               Cancelar
             </button>
           </div>

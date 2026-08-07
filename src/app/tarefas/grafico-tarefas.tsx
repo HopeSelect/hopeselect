@@ -104,21 +104,21 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
   }, [linhas])
 
   if (linhas.length === 0) {
-    return <p className="mt-6 text-sm text-gray-400">Sem dados no período pra gerar gráficos.</p>
+    return <p className="mt-6 text-sm text-gray-400 dark:text-gray-500">Sem dados no período pra gerar gráficos.</p>
   }
 
   return (
     <div className="mt-6 grid gap-6 sm:grid-cols-3">
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Por dia</h3>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <h3 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Por dia</h3>
         <canvas ref={canvasPorDiaRef} />
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Por tipo</h3>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <h3 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Por tipo</h3>
         <canvas ref={canvasPorTipoRef} />
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Por status</h3>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <h3 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Por status</h3>
         <canvas ref={canvasPorStatusRef} />
       </div>
     </div>

@@ -4,7 +4,7 @@ import { STATUS_TAREFA, TIPOS_TAREFA } from '@/lib/utils'
 import type { LinhaTarefa } from '@/lib/tipos'
 
 const botao =
-  'rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900'
+  'rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
 
 function carregarScript(src: string, chaveGlobal: string): Promise<void> {
   return new Promise((resolve, reject) => {

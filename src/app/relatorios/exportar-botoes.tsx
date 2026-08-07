@@ -6,7 +6,7 @@ import type { LinhaAtendimento, LinhaOcupacaoProfessor, LinhaProdutividade } fro
 import type { LinhaAlunoRelatorio } from './page'
 
 const botao =
-  'rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900'
+  'rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
 
 // Carrega um script externo uma única vez (cache no window) — evita precisar
 // instalar xlsx/jspdf via npm, já que editamos direto pelo GitHub.
@@ -267,14 +267,14 @@ export function ExportarBotoes({
 
       {formatoAberto && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-24">
-          <div className="w-full max-w-sm rounded-lg bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h2 className="text-sm font-semibold text-gray-900">
+          <div className="w-full max-w-sm rounded-lg bg-white dark:bg-gray-900 shadow-xl">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 O que exportar? ({formatoAberto === 'excel' ? 'Excel' : 'PDF'})
               </h2>
               <button
                 onClick={() => setFormatoAberto(null)}
-                className="text-gray-400 hover:text-gray-700"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 aria-label="Fechar"
               >
                 ✕
@@ -282,7 +282,7 @@ export function ExportarBotoes({
             </div>
 
             <div className="space-y-3 p-4">
-              <label className="flex items-start gap-2 text-sm text-gray-700">
+              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={incluirAtendimentos}
@@ -291,13 +291,13 @@ export function ExportarBotoes({
                 />
                 <span>
                   Atendimentos
-                  <span className="block text-xs text-gray-400">
+                  <span className="block text-xs text-gray-400 dark:text-gray-500">
                     Do período filtrado ({de} a {ate})
                   </span>
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 text-sm text-gray-700">
+              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={incluirProdutividade}
@@ -306,13 +306,13 @@ export function ExportarBotoes({
                 />
                 <span>
                   Produtividade por professor
-                  <span className="block text-xs text-gray-400">
+                  <span className="block text-xs text-gray-400 dark:text-gray-500">
                     Do período filtrado ({de} a {ate})
                   </span>
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 text-sm text-gray-700">
+              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={incluirAlunos}
@@ -321,13 +321,13 @@ export function ExportarBotoes({
                 />
                 <span>
                   Alunos cadastrados
-                  <span className="block text-xs text-gray-400">
+                  <span className="block text-xs text-gray-400 dark:text-gray-500">
                     Lista completa — não considera o período filtrado
                   </span>
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 text-sm text-gray-700">
+              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={incluirOcupacao}
@@ -336,7 +336,7 @@ export function ExportarBotoes({
                 />
                 <span>
                   Ocupação por professor
-                  <span className="block text-xs text-gray-400">
+                  <span className="block text-xs text-gray-400 dark:text-gray-500">
                     Horas escaladas x trabalhadas, do período filtrado
                   </span>
                 </span>
@@ -350,13 +350,13 @@ export function ExportarBotoes({
                 <button
                   onClick={confirmar}
                   disabled={nadaSelecionado || gerando}
-                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                  className="rounded-md bg-gray-900 dark:bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600 disabled:opacity-50"
                 >
                   {gerando ? 'Gerando…' : 'Exportar'}
                 </button>
                 <button
                   onClick={() => setFormatoAberto(null)}
-                  className="text-sm text-gray-500 hover:text-gray-900"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                   Cancelar
                 </button>

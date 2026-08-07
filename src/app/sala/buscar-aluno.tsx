@@ -63,14 +63,14 @@ export function BuscarAluno({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-20">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-gray-900">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             Alocar aluno em {professor.nome}
           </h2>
           <button
             onClick={onFechar}
-            className="text-gray-400 hover:text-gray-700"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
             aria-label="Fechar"
           >
             ✕
@@ -81,7 +81,7 @@ export function BuscarAluno({
           <select
             value={tarefa}
             onChange={(e) => setTarefa(e.target.value as TipoTarefa | '')}
-            className="mb-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="mb-2 w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-brand-400"
           >
             <option value="">Tarefa deste atendimento (opcional)</option>
             {(Object.keys(TIPOS_TAREFA) as TipoTarefa[]).map((t) => (
@@ -96,11 +96,11 @@ export function BuscarAluno({
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
             placeholder="Digite o nome do aluno ou role a lista abaixo…"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-brand-400"
           />
 
           {erro && <p className="mt-2 text-sm text-red-600">{erro}</p>}
-          {buscando && <p className="mt-3 text-sm text-gray-400">Buscando…</p>}
+          {buscando && <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">Buscando…</p>}
 
           <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
             {resultados.map((aluno) => {
@@ -110,17 +110,17 @@ export function BuscarAluno({
                   <button
                     onClick={() => alocar(aluno)}
                     disabled={alocandoId !== null}
-                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-left hover:border-gray-400 disabled:opacity-60"
+                    className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-left hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-60"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-gray-900">{aluno.nome}</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{aluno.nome}</span>
                       <span
                         className={`rounded border px-1.5 py-0.5 text-xs font-medium ${CLASSIFICACOES[aluno.classificacao].classe}`}
                       >
                         {aluno.classificacao}
                       </span>
                     </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-gray-500">
+                    <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                       {dias !== null && <span>Acesso há {dias} dia{dias === 1 ? '' : 's'}</span>}
                       {aluno.alertas?.map((a) => (
                         <span
@@ -132,14 +132,14 @@ export function BuscarAluno({
                       ))}
                     </div>
                     {alocandoId === aluno.id && (
-                      <span className="mt-1 block text-xs text-gray-400">Alocando…</span>
+                      <span className="mt-1 block text-xs text-gray-400 dark:text-gray-500">Alocando…</span>
                     )}
                   </button>
                 </li>
               )
             })}
             {!buscando && resultados.length === 0 && (
-              <li className="text-sm text-gray-400">Nenhum aluno encontrado.</li>
+              <li className="text-sm text-gray-400 dark:text-gray-500">Nenhum aluno encontrado.</li>
             )}
           </ul>
         </div>
