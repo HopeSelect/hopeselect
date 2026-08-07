@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { TIPOS_TAREFA, statusPlano } from '@/lib/utils'
 import type { LinhaAtendimento, LinhaOcupacaoProfessor, LinhaProdutividade } from '@/lib/tipos'
-import type { LinhaAlunoRelatorio } from './page'
+import type { LinhaAlunoRelatorio, LinhaNutriFisioResumo } from './page'
 
 const botao =
   'rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
@@ -32,6 +32,7 @@ export function ExportarBotoes({
   produtividade,
   alunos,
   ocupacao,
+  nutriFisio,
   de,
   ate,
 }: {
@@ -39,6 +40,7 @@ export function ExportarBotoes({
   produtividade: LinhaProdutividade[]
   alunos: LinhaAlunoRelatorio[]
   ocupacao: LinhaOcupacaoProfessor[]
+  nutriFisio: LinhaNutriFisioResumo[]
   de: string
   ate: string
 }) {
@@ -47,18 +49,25 @@ export function ExportarBotoes({
   const [incluirProdutividade, setIncluirProdutividade] = useState(true)
   const [incluirAlunos, setIncluirAlunos] = useState(true)
   const [incluirOcupacao, setIncluirOcupacao] = useState(true)
+  const [incluirNutriFisio, setIncluirNutriFisio] = useState(true)
   const [gerando, setGerando] = useState(false)
 
-  const nadaSelecionado = !incluirAtendimentos && !incluirProdutividade && !incluirAlunos && !incluirOcupacao
-  const quantosSelecionados = [incluirAtendimentos, incluirProdutividade, incluirAlunos, incluirOcupacao].filter(
-    Boolean,
-  ).length
+  const nadaSelecionado =
+    !incluirAtendimentos && !incluirProdutividade && !incluirAlunos && !incluirOcupacao && !incluirNutriFisio
+  const quantosSelecionados = [
+    incluirAtendimentos,
+    incluirProdutividade,
+    incluirAlunos,
+    incluirOcupacao,
+    incluirNutriFisio,
+  ].filter(Boolean).length
 
   function nomeArquivo(extensao: string) {
     if (quantosSelecionados > 1) return `relatorio_${de}_a_${ate}.${extensao}`
     if (incluirAlunos) return `alunos_cadastrados.${extensao}`
     if (incluirAtendimentos) return `atendimentos_${de}_a_${ate}.${extensao}`
     if (incluirOcupacao) return `ocupacao_professores_${de}_a_${ate}.${extensao}`
+    if (incluirNutriFisio) return `nutri_fisio_${de}_a_${ate}.${extensao}`
     return `produtividade_${de}_a_${ate}.${extensao}`
   }
 
@@ -125,6 +134,15 @@ export function ExportarBotoes({
         'Ganhou premiação (≥40%)': o.percentual !== null && o.percentual >= 40 ? 'Sim' : 'Não',
       }))
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), 'Ocupação')
+    }
+
+    if (incluirNutriFisio) {
+      const linhas = nutriFisio.map((l) => ({
+        Profissional: l.profissional_nome,
+        Tipo: l.tipo === 'nutri' ? 'Nutricionista' : 'Fisioterapeuta',
+        Atendimentos: l.total_atendimentos,
+      }))
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), 'Nutri e Fisio')
     }
 
     XLSX.writeFile(wb, nomeArquivo('xlsx'))
@@ -242,6 +260,24 @@ export function ExportarBotoes({
         ]),
         styles: { fontSize: 8 },
       })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 10
+    }
+
+    if (incluirNutriFisio) {
+      if (incluirAtendimentos || incluirProdutividade || incluirAlunos || incluirOcupacao) {
+        doc.addPage()
+        y = 16
+      }
+      doc.setFontSize(11)
+      doc.text('Nutri e Fisio', 14, y)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(doc as any).autoTable({
+        startY: y + 4,
+        head: [['Profissional', 'Tipo', 'Atendimentos']],
+        body: nutriFisio.map((l) => [l.profissional_nome, l.tipo === 'nutri' ? 'Nutricionista' : 'Fisioterapeuta', String(l.total_atendimentos)]),
+        styles: { fontSize: 8 },
+      })
     }
 
     doc.save(nomeArquivo('pdf'))
@@ -338,6 +374,21 @@ export function ExportarBotoes({
                   Ocupação por professor
                   <span className="block text-xs text-gray-400 dark:text-gray-500">
                     Horas escaladas x trabalhadas, do período filtrado
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={incluirNutriFisio}
+                  onChange={(e) => setIncluirNutriFisio(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Nutri e Fisio
+                  <span className="block text-xs text-gray-400 dark:text-gray-500">
+                    Total de atendimentos por profissional, do período filtrado
                   </span>
                 </span>
               </label>

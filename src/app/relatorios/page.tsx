@@ -15,6 +15,7 @@ import type {
 } from '@/lib/tipos'
 import { FiltrosAtendimentos } from './filtros-atendimentos'
 import { GraficoAtendimentos } from './grafico-atendimentos'
+import { GraficoNutriFisio } from './grafico-nutri-fisio'
 import { ExportarBotoes } from './exportar-botoes'
 
 // Linha de aluno pra seção "Alunos matriculados" (lista completa, sem
@@ -28,6 +29,30 @@ export interface LinhaAlunoRelatorio {
   data_matricula: string | null
   vencimento_plano: string | null
   professores: { nome: string } | null
+}
+
+// Total de atendimentos por profissional (nutricionista ou fisioterapeuta),
+// no período filtrado — mesmo desenho de LinhaAtendimentosPorProfessor, só
+// que pros dois módulos novos e mais simples (sem view de banco dedicada,
+// já que o volume é pequeno o suficiente pra agregar aqui mesmo).
+export interface LinhaNutriFisioResumo {
+  tipo: 'nutri' | 'fisio'
+  profissional_id: string
+  profissional_nome: string
+  total_atendimentos: number
+}
+
+function resumirPorProfissional(
+  linhas: { id: string; nome: string }[],
+  tipo: 'nutri' | 'fisio',
+): LinhaNutriFisioResumo[] {
+  const mapa = new Map<string, LinhaNutriFisioResumo>()
+  for (const l of linhas) {
+    const existente = mapa.get(l.id)
+    if (existente) existente.total_atendimentos++
+    else mapa.set(l.id, { tipo, profissional_id: l.id, profissional_nome: l.nome, total_atendimentos: 1 })
+  }
+  return [...mapa.values()].sort((a, b) => b.total_atendimentos - a.total_atendimentos)
 }
 
 // Junta atendimentos + tarefas concluídas por professor/dia. As duas fontes já
@@ -131,6 +156,8 @@ export default async function RelatoriosPage({
     { data: horariosProfessores, error: erroHorarios },
     { data: tarefasComTempo, error: erroTarefasComTempo },
     { data: tarefasConcluidas, error: erroTarefasConcluidas },
+    { data: atendimentosNutri, error: erroNutri },
+    { data: atendimentosFisio, error: erroFisio },
   ] = await Promise.all([
     consultaAtendimentos,
     consultaAtPorProf,
@@ -149,6 +176,16 @@ export default async function RelatoriosPage({
       .not('inicio', 'is', null)
       .not('fim', 'is', null),
     consultaTarefasConcluidas,
+    supabase
+      .from('atendimentos_nutricionista')
+      .select('nutricionista_id, data, nutricionistas(nome)')
+      .gte('data', de)
+      .lte('data', ate),
+    supabase
+      .from('atendimentos_fisioterapeuta')
+      .select('fisioterapeuta_id, data, fisioterapeutas(nome)')
+      .gte('data', de)
+      .lte('data', ate),
   ])
 
   const erro =
@@ -159,6 +196,8 @@ export default async function RelatoriosPage({
     erroHorarios?.message ??
     erroTarefasComTempo?.message ??
     erroTarefasConcluidas?.message ??
+    erroNutri?.message ??
+    erroFisio?.message ??
     null
 
   const linhasAtendimentos = (atendimentos ?? []) as LinhaAtendimento[]
@@ -218,6 +257,28 @@ export default async function RelatoriosPage({
   }
 
   const linhasAlunos = (todosAlunos ?? []) as unknown as LinhaAlunoRelatorio[]
+
+  interface LinhaBrutaNutri {
+    nutricionista_id: string
+    data: string
+    nutricionistas: { nome: string } | null
+  }
+  interface LinhaBrutaFisio {
+    fisioterapeuta_id: string
+    data: string
+    fisioterapeutas: { nome: string } | null
+  }
+  const brutasNutri = (atendimentosNutri ?? []) as unknown as LinhaBrutaNutri[]
+  const brutasFisio = (atendimentosFisio ?? []) as unknown as LinhaBrutaFisio[]
+  const resumoNutri = resumirPorProfissional(
+    brutasNutri.map((l) => ({ id: l.nutricionista_id, nome: l.nutricionistas?.nome ?? '—' })),
+    'nutri',
+  )
+  const resumoFisio = resumirPorProfissional(
+    brutasFisio.map((l) => ({ id: l.fisioterapeuta_id, nome: l.fisioterapeutas?.nome ?? '—' })),
+    'fisio',
+  )
+  const resumoNutriFisio = [...resumoNutri, ...resumoFisio]
 
   // Mesmo padrão da tabela de Atendimentos: paginação só na tabela visual,
   // o export continua trazendo a lista completa.
@@ -280,6 +341,7 @@ export default async function RelatoriosPage({
             produtividade={linhasProdutividade}
             alunos={linhasAlunos}
             ocupacao={linhasOcupacao}
+            nutriFisio={resumoNutriFisio}
             de={de}
             ate={ate}
           />
@@ -491,6 +553,48 @@ export default async function RelatoriosPage({
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Nutri e Fisio{' '}
+            <span className="text-sm font-normal text-gray-400 dark:text-gray-500">
+              ({resumoNutriFisio.reduce((soma, l) => soma + l.total_atendimentos, 0)} atendimentos no período)
+            </span>
+          </h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Total de atendimentos por profissional, no período filtrado.</p>
+
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th className="px-4 py-2">Profissional</th>
+                  <th className="px-4 py-2">Tipo</th>
+                  <th className="px-4 py-2">Atendimentos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resumoNutriFisio.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
+                      Nenhum atendimento de Nutri/Fisio no período.
+                    </td>
+                  </tr>
+                )}
+                {resumoNutriFisio.map((l) => (
+                  <tr key={`${l.tipo}-${l.profissional_id}`} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{l.profissional_nome}</td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                      {l.tipo === 'nutri' ? 'Nutricionista' : 'Fisioterapeuta'}
+                    </td>
+                    <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{l.total_atendimentos}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <GraficoNutriFisio nutri={brutasNutri.map((l) => ({ data: l.data }))} fisio={brutasFisio.map((l) => ({ data: l.data }))} />
         </section>
 
         <section className="mt-8">
