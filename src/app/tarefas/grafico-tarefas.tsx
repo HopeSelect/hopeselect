@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { STATUS_TAREFA, TIPOS_TAREFA } from '@/lib/utils'
+import { ehModoEscuro, useTemaObservado } from '@/lib/use-tema'
 import type { LinhaTarefa, StatusTarefa, TipoTarefa } from '@/lib/tipos'
 
 function carregarScript(src: string, chaveGlobal: string): Promise<void> {
@@ -19,14 +20,13 @@ function carregarScript(src: string, chaveGlobal: string): Promise<void> {
   })
 }
 
-const CORES = ['#111827', '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed']
-
 export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
   const canvasPorDiaRef = useRef<HTMLCanvasElement>(null)
   const canvasPorTipoRef = useRef<HTMLCanvasElement>(null)
   const canvasPorStatusRef = useRef<HTMLCanvasElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const graficosRef = useRef<any[]>([])
+  const temaTick = useTemaObservado()
 
   useEffect(() => {
     let cancelado = false
@@ -40,6 +40,16 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
       graficosRef.current.forEach((g) => g.destroy())
       graficosRef.current = []
 
+      const escuro = ehModoEscuro()
+      const corPrincipal = escuro ? '#e5e7eb' : '#111827'
+      const corTexto = escuro ? '#9ca3af' : '#4b5563'
+      const corGrade = escuro ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+      const CORES = [corPrincipal, '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed']
+      const opcoesEscala = {
+        x: { ticks: { color: corTexto }, grid: { color: corGrade } },
+        y: { ticks: { color: corTexto }, grid: { color: corGrade } },
+      }
+
       const porDia = new Map<string, number>()
       for (const l of linhas) porDia.set(l.data, (porDia.get(l.data) ?? 0) + 1)
       const diasOrdenados = [...porDia.keys()].sort()
@@ -51,10 +61,10 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
             data: {
               labels: diasOrdenados.map((d) => new Date(`${d}T00:00:00`).toLocaleDateString('pt-BR')),
               datasets: [
-                { label: 'Tarefas por dia', data: diasOrdenados.map((d) => porDia.get(d) ?? 0), backgroundColor: '#111827' },
+                { label: 'Tarefas por dia', data: diasOrdenados.map((d) => porDia.get(d) ?? 0), backgroundColor: corPrincipal },
               ],
             },
-            options: { responsive: true, plugins: { legend: { display: false } } },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: opcoesEscala },
           }),
         )
       }
@@ -71,7 +81,7 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
               labels: tiposComDado.map((t) => TIPOS_TAREFA[t]),
               datasets: [{ label: 'Tarefas por tipo', data: tiposComDado.map((t) => porTipo.get(t) ?? 0), backgroundColor: CORES }],
             },
-            options: { responsive: true, plugins: { legend: { display: false } } },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: opcoesEscala },
           }),
         )
       }
@@ -88,7 +98,7 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
               labels: chaves.map((s) => STATUS_TAREFA[s].rotulo),
               datasets: [{ data: chaves.map((s) => porStatus.get(s) ?? 0), backgroundColor: CORES }],
             },
-            options: { responsive: true },
+            options: { responsive: true, plugins: { legend: { labels: { color: corTexto } } } },
           }),
         )
       }
@@ -101,7 +111,7 @@ export function GraficoTarefas({ linhas }: { linhas: LinhaTarefa[] }) {
       graficosRef.current.forEach((g) => g.destroy())
       graficosRef.current = []
     }
-  }, [linhas])
+  }, [linhas, temaTick])
 
   if (linhas.length === 0) {
     return <p className="mt-6 text-sm text-gray-400 dark:text-gray-500">Sem dados no período pra gerar gráficos.</p>
