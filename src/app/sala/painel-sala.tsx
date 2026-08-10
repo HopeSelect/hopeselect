@@ -120,7 +120,8 @@ export function PainelSala({
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
   const [verPerfilAlunoId, setVerPerfilAlunoId] = useState<string | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
-  const [erroRemocao, setErroRemocao] = useState<string | null>(null)
+  const [erroAcao, setErroAcao] = useState<string | null>(null)
+  const [sincronizando, setSincronizando] = useState(false)
   const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
 
   useEffect(() => {
@@ -129,6 +130,44 @@ export function PainelSala({
   }, [])
 
   useEffect(() => {
+    // Depois de uma queda de conexão (wifi, notebook que hibernou, aba em
+    // segundo plano), o realtime reconecta sozinho mas NÃO reenvia os
+    // eventos perdidos durante a queda — a tela ficava com contagem
+    // desatualizada pra sempre até alguém dar F5. Por isso, toda vez que o
+    // canal volta a ficar "SUBSCRIBED" depois de já ter caído uma vez,
+    // busca tudo de novo do banco e substitui o estado local.
+    let jaConectouAntes = false
+
+    async function ressincronizar() {
+      setSincronizando(true)
+      const [
+        { data: professoresNovos },
+        { data: atendimentosNovos },
+        { data: intervalosNovos },
+        { data: tarefasNovas },
+      ] = await Promise.all([
+        supabase.from('professores').select('*').eq('ativo', true).eq('em_sala', true).order('nome'),
+        supabase
+          .from('atendimentos')
+          .select(
+            'id, aluno_id, professor_id, inicio, tarefa, alunos(id, nome, classificacao, alertas, ultimo_acesso, restricoes)',
+          )
+          .is('fim', null),
+        supabase.from('lanches').select('id, professor_id, tipo, inicio').is('fim', null),
+        supabase
+          .from('tarefas')
+          .select('id, aluno_id, professor_id, tipo, status, observacao, inicio, fim, alunos(id, nome)')
+          .eq('data', hoje)
+          .neq('status', 'cancelada')
+          .order('created_at'),
+      ])
+      if (professoresNovos) setProfessores(professoresNovos as Professor[])
+      if (atendimentosNovos) setAtendimentos(atendimentosNovos as unknown as AtendimentoAberto[])
+      if (intervalosNovos) setIntervalos(intervalosNovos as IntervaloAberto[])
+      if (tarefasNovas) setTarefas(tarefasNovas as unknown as TarefaDoDia[])
+      setSincronizando(false)
+    }
+
     const canal = supabase
       .channel('painel-sala')
       .on(
@@ -209,7 +248,12 @@ export function PainelSala({
           }
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (jaConectouAntes) void ressincronizar()
+          jaConectouAntes = true
+        }
+      })
 
     return () => {
       supabase.removeChannel(canal)
@@ -247,9 +291,20 @@ export function PainelSala({
   // professor com esse mesmo aluno que ainda não tenha sido concluída —
   // evita ter que fechar a tarefa separadamente.
   async function aoFinalizar(atendimentoId: string) {
+    setErroAcao(null)
     const atendimento = atendimentos.find((a) => a.id === atendimentoId)
     setAtendimentos((prev) => prev.filter((a) => a.id !== atendimentoId))
-    await finalizarAtendimento(atendimentoId)
+    const resultado = await finalizarAtendimento(atendimentoId)
+
+    // Se o banco recusou (ex.: o card ainda era otimista e o id não existia
+    // de verdade), o aluno tinha sumido da tela sem o atendimento ter sido
+    // finalizado de fato — "finalizava sozinho antes da hora". Desfaz a
+    // remoção otimista e avisa a recepção em vez de deixar isso invisível.
+    if (resultado?.erro) {
+      if (atendimento) setAtendimentos((prev) => [...prev, atendimento])
+      setErroAcao(resultado.erro)
+      return
+    }
 
     if (atendimento) {
       const tarefasRelacionadas = tarefas.filter(
@@ -283,13 +338,13 @@ export function PainelSala({
   }
 
   async function aoRemoverDaSala(professor: Professor) {
-    setErroRemocao(null)
+    setErroAcao(null)
     const anterior = professores
     setProfessores((prev) => prev.filter((p) => p.id !== professor.id))
     const resultado = await removerProfessorDaSala(professor.id)
     if (resultado?.erro) {
       setProfessores(anterior)
-      setErroRemocao(resultado.erro)
+      setErroAcao(resultado.erro)
     }
   }
 
@@ -305,7 +360,10 @@ export function PainelSala({
           idsNaSala={professores.map((p) => p.id)}
           onAdicionado={aoAdicionarProfessor}
         />
-        {erroRemocao && <p className="mt-2 text-sm text-red-600">{erroRemocao}</p>}
+        {erroAcao && <p className="mt-2 text-sm text-red-600">{erroAcao}</p>}
+        {sincronizando && (
+          <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">Reconectando e atualizando a sala…</p>
+        )}
       </div>
 
       <div className="relative min-h-[70vh] w-full flex-1 overflow-auto bg-gray-50 dark:bg-gray-800 p-4">
@@ -573,6 +631,12 @@ function CardProfessor({
 
                 const segundos = segundosDesde(atendimentoDaVaga.inicio, agora)
                 const excedeu1h = segundos / 60 >= 60
+                // Card ainda não confirmado pelo banco (acabou de ser alocado,
+                // esperando o evento realtime trocar pelo id de verdade). Se
+                // finalizar agora, o UPDATE no banco falha (id não existe) e o
+                // aluno some da tela sem o atendimento ter sido encerrado de
+                // fato — por isso trava o botão até confirmar.
+                const aindaConfirmando = atendimentoDaVaga.id.startsWith('otimista-')
 
                 return (
                   <div
@@ -628,9 +692,11 @@ function CardProfessor({
 
                     <button
                       onClick={() => onFinalizar(atendimentoDaVaga.id)}
-                      className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
+                      disabled={aindaConfirmando}
+                      title={aindaConfirmando ? 'Aguarde a confirmação antes de finalizar' : undefined}
+                      className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Finalizar atendimento
+                      {aindaConfirmando ? 'Confirmando…' : 'Finalizar atendimento'}
                     </button>
                   </div>
                 )
