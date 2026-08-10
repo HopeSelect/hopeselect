@@ -41,10 +41,33 @@ export async function atualizarProfessor(
   redirect('/professores')
 }
 // Ativa/desativa em vez de excluir (professor pode ter atendimentos no histórico).
-export async function definirAtivoProfessor(id: string, ativo: boolean) {
+// Ao desativar, bloqueia se houver atendimento aberto: sem essa trava, o
+// professor (e os alunos alocados nele) somem da Sala em tempo real assim
+// que "ativo" vira false, sem ninguém ter finalizado o atendimento de
+// verdade — a mesma trava que já existe pra "remover da sala".
+export async function definirAtivoProfessor(id: string, ativo: boolean): Promise<{ erro: string } | null> {
   const supabase = await criarClienteServer()
-  await supabase.from('professores').update({ ativo }).eq('id', id)
+
+  if (!ativo) {
+    const { data: aberto } = await supabase
+      .from('atendimentos')
+      .select('id')
+      .eq('professor_id', id)
+      .is('fim', null)
+      .maybeSingle()
+
+    if (aberto) {
+      return {
+        erro: 'Este professor está em atendimento na Sala agora. Finalize o atendimento antes de desativar.',
+      }
+    }
+  }
+
+  const { error } = await supabase.from('professores').update({ ativo }).eq('id', id)
+  if (error) return { erro: error.message }
   revalidatePath('/professores')
+  revalidatePath('/sala')
+  return null
 }
 // Exclui de verdade. Só permite se o professor não tiver nenhum
 // atendimento, tarefa ou intervalo no histórico — apagar isso quebraria

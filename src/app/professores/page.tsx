@@ -5,8 +5,9 @@ import { criarClienteServer } from '@/lib/supabase/server'
 import { GENEROS, formatarEscalaResumo } from '@/lib/utils'
 import type { HorarioProfessor, Professor } from '@/lib/tipos'
 import { ProfessorForm } from './professor-form'
-import { criarProfessor, definirAtivoProfessor } from './actions'
+import { criarProfessor } from './actions'
 import { ExcluirProfessorBotao } from './excluir-professor-botao'
+import { DefinirAtivoProfessorBotao } from './definir-ativo-professor-botao'
 
 const POR_PAGINA = 15
 
@@ -97,11 +98,7 @@ export default async function ProfessoresPage({
                 >
                   Editar
                 </Link>
-                <form action={definirAtivoProfessor.bind(null, p.id, !p.ativo)}>
-                  <button className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
-                    {p.ativo ? 'Desativar' : 'Ativar'}
-                  </button>
-                </form>
+                <DefinirAtivoProfessorBotao id={p.id} ativo={p.ativo} />
                 <ExcluirProfessorBotao id={p.id} nome={p.nome} />
               </div>
             ))}
