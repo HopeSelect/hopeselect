@@ -119,15 +119,9 @@ export function PainelSala({
   const [tarefas, setTarefas] = useState(tarefasIniciais)
   const [alocandoPara, setAlocandoPara] = useState<Professor | null>(null)
   const [verPerfilAlunoId, setVerPerfilAlunoId] = useState<string | null>(null)
-  const [agora, setAgora] = useState(() => Date.now())
   const [erroAcao, setErroAcao] = useState<string | null>(null)
   const [sincronizando, setSincronizando] = useState(false)
   const { colunas, larguraCard, larguraUtil } = useLayoutCanvas()
-
-  useEffect(() => {
-    const t = setInterval(() => setAgora(Date.now()), 1_000)
-    return () => clearInterval(t)
-  }, [])
 
   useEffect(() => {
     // Depois de uma queda de conexão (wifi, notebook que hibernou, aba em
@@ -417,7 +411,6 @@ export function PainelSala({
               atendimentosDoProfessor={atendimentosDoProfessor}
               intervalo={intervalo}
               tarefasDoProfessor={tarefasDoProfessor}
-              agora={agora}
               onMover={(x, y) =>
                 setProfessores((prev) =>
                   prev.map((p) => (p.id === professor.id ? { ...p, pos_x: x, pos_y: y } : p)),
@@ -465,7 +458,6 @@ function CardProfessor({
   atendimentosDoProfessor,
   intervalo,
   tarefasDoProfessor,
-  agora,
   onMover,
   onSoltar,
   onAlocar,
@@ -483,7 +475,6 @@ function CardProfessor({
   atendimentosDoProfessor: AtendimentoAberto[]
   intervalo: IntervaloAberto | undefined
   tarefasDoProfessor: TarefaDoDia[]
-  agora: number
   onMover: (x: number, y: number) => void
   onSoltar: (x: number, y: number) => void
   onAlocar: () => void
@@ -538,6 +529,20 @@ function CardProfessor({
   const ocupado = atendimentosDoProfessor.length > 0
   const emIntervalo = Boolean(intervalo)
   const baseVagas = Math.max(2, atendimentosDoProfessor.length)
+
+  // Relógio próprio do card, não do painel inteiro — com muitos professores
+  // na sala ao mesmo tempo, um "agora" global no componente pai forçava
+  // TODOS os cards a re-renderizar a cada segundo, mesmo os livres. Aqui só
+  // conta o tempo (e só re-renderiza) quem realmente tem duração pra mostrar.
+  const temTarefaEmAndamento = tarefasDoProfessor.some((t) => Boolean(t.inicio) && !t.fim)
+  const precisaContarTempo = ocupado || emIntervalo || temTarefaEmAndamento
+  const [agora, setAgora] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!precisaContarTempo) return
+    const t = setInterval(() => setAgora(Date.now()), 1_000)
+    return () => clearInterval(t)
+  }, [precisaContarTempo])
   const totalVagas = baseVagas + extras
 
   return (
