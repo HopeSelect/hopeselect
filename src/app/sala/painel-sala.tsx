@@ -278,6 +278,31 @@ export function PainelSala({
       },
     ])
     setAlocandoPara(null)
+
+    // Plano B: normalmente o realtime confirma o registro em menos de 1s,
+    // mas se o evento não chegar (canal lento/instável), o card ficava preso
+    // em "Confirmando..." pra sempre, sem nenhuma saída. Depois de alguns
+    // segundos, busca o registro real direto no banco em vez de depender só
+    // do realtime.
+    setTimeout(() => void confirmarAlocacao(alunoId), 4_000)
+  }
+
+  async function confirmarAlocacao(alunoId: string) {
+    const { data } = await supabase
+      .from('atendimentos')
+      .select(
+        'id, aluno_id, professor_id, inicio, tarefa, alunos(id, nome, classificacao, alertas, ultimo_acesso, restricoes)',
+      )
+      .eq('aluno_id', alunoId)
+      .is('fim', null)
+      .maybeSingle()
+
+    if (data) {
+      setAtendimentos((prev) => {
+        const outros = prev.filter((a) => a.aluno_id !== data.aluno_id)
+        return [...outros, data as unknown as AtendimentoAberto]
+      })
+    }
   }
 
   async function aoConcluirTarefa(id: string) {
