@@ -152,15 +152,6 @@ export function AlunoForm({
             />
           </label>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Última prescrição de treino
-            <input
-              name="ultima_prescricao"
-              type="date"
-              defaultValue={inicial?.ultima_prescricao?.slice(0, 10) ?? ''}
-              className={campo}
-            />
-          </label>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Último laudo
             <input
               name="ultimo_laudo"

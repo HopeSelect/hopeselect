@@ -24,7 +24,9 @@ function dadosAluno(fd: FormData) {
     nutricionista: valorOuNull(fd.get('nutricionista')),
     foto_url: valorOuNull(fd.get('foto_url')),
     ultimo_momento_coach: valorOuNull(fd.get('ultimo_momento_coach')),
-    ultima_prescricao: valorOuNull(fd.get('ultima_prescricao')),
+    // ultima_prescricao não é mais editável por aqui — a prescrição de
+    // treino já é bem coberta pelo módulo Tarefas automaticamente, sem
+    // precisar de preenchimento manual. Valor antigo fica intacto no banco.
     ultimo_laudo: valorOuNull(fd.get('ultimo_laudo')),
     ultimo_atendimento_nutri: valorOuNull(fd.get('ultimo_atendimento_nutri')),
   }
