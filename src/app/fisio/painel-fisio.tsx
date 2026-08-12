@@ -109,6 +109,36 @@ export function PainelFisio({
       },
     ])
     setAlocandoPara(null)
+
+    // Plano B: se o realtime não confirmar (canal lento/instável), o card
+    // ficaria preso em "Confirmando..." pra sempre. Tenta buscar o registro
+    // real direto no banco, repetindo até 6x, a cada 4s, se não achar nada
+    // ou a consulta falhar — mesmo mecanismo já usado na Sala de professor.
+    setTimeout(() => void confirmarAlocacao(alunoId), 4_000)
+  }
+
+  async function confirmarAlocacao(alunoId: string, tentativa = 1) {
+    const { data, error } = await supabase
+      .from('atendimentos_fisioterapeuta')
+      .select('id, aluno_id, fisioterapeuta_id, inicio, alunos(id, nome, classificacao, alertas, ultimo_acesso, restricoes, foto_url)')
+      .eq('aluno_id', alunoId)
+      .is('fim', null)
+      .maybeSingle()
+
+    if (data) {
+      setAtendimentos((prev) => {
+        const aindaOtimista = prev.some((a) => a.aluno_id === data.aluno_id && a.id.startsWith('otimista-'))
+        if (!aindaOtimista) return prev
+        const outros = prev.filter((a) => a.aluno_id !== data.aluno_id)
+        return [...outros, data as unknown as AtendimentoFisioAberto]
+      })
+      return
+    }
+
+    if (error) console.error('Erro ao confirmar alocação (fisio):', error.message)
+    if (tentativa < 6) {
+      setTimeout(() => void confirmarAlocacao(alunoId, tentativa + 1), 4_000)
+    }
   }
 
   async function aoFinalizar(atendimentoId: string) {
@@ -171,6 +201,9 @@ export function PainelFisio({
                     .join(' · ')
                   const segundos = segundosDesde(atendimentoDaVaga.inicio, agora)
                   const excedeu1h = segundos / 60 >= 60
+                  // Card ainda não confirmado pelo banco — se finalizar agora,
+                  // o UPDATE falha (id não existe de verdade ainda).
+                  const aindaConfirmando = atendimentoDaVaga.id.startsWith('otimista-')
 
                   return (
                     <div key={atendimentoDaVaga.id} className={`rounded-md border p-2 ${classeCardDuracao(segundos)}`}>
@@ -210,9 +243,11 @@ export function PainelFisio({
                       {infoSecundaria && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{infoSecundaria}</p>}
                       <button
                         onClick={() => void aoFinalizar(atendimentoDaVaga.id)}
-                        className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600"
+                        disabled={aindaConfirmando}
+                        title={aindaConfirmando ? 'Aguarde a confirmação antes de finalizar' : undefined}
+                        className="mt-2 w-full rounded-md bg-gray-900 dark:bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 dark:hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Finalizar atendimento
+                        {aindaConfirmando ? 'Confirmando…' : 'Finalizar atendimento'}
                       </button>
                     </div>
                   )

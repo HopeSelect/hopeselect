@@ -275,14 +275,15 @@ export function PainelSala({
 
     // Plano B: normalmente o realtime confirma o registro em menos de 1s,
     // mas se o evento não chegar (canal lento/instável), o card ficava preso
-    // em "Confirmando..." pra sempre, sem nenhuma saída. Depois de alguns
-    // segundos, busca o registro real direto no banco em vez de depender só
-    // do realtime.
+    // em "Confirmando..." pra sempre, sem nenhuma saída. Busca o registro
+    // real direto no banco, tentando de novo (até 6x, a cada 4s) se a
+    // consulta falhar ou não achar nada de primeira — uma falha pontual de
+    // rede não pode mais deixar o card preso pra sempre.
     setTimeout(() => void confirmarAlocacao(alunoId), 4_000)
   }
 
-  async function confirmarAlocacao(alunoId: string) {
-    const { data } = await supabase
+  async function confirmarAlocacao(alunoId: string, tentativa = 1) {
+    const { data, error } = await supabase
       .from('atendimentos')
       .select(
         'id, aluno_id, professor_id, inicio, tarefa, alunos(id, nome, classificacao, alertas, ultimo_acesso, restricoes)',
@@ -293,9 +294,20 @@ export function PainelSala({
 
     if (data) {
       setAtendimentos((prev) => {
+        // Só substitui se ainda existir um card otimista pra esse aluno —
+        // evita reaparecer o card se o usuário já finalizou/removeu antes
+        // dessa tentativa atrasada chegar.
+        const aindaOtimista = prev.some((a) => a.aluno_id === data.aluno_id && a.id.startsWith('otimista-'))
+        if (!aindaOtimista) return prev
         const outros = prev.filter((a) => a.aluno_id !== data.aluno_id)
         return [...outros, data as unknown as AtendimentoAberto]
       })
+      return
+    }
+
+    if (error) console.error('Erro ao confirmar alocação:', error.message)
+    if (tentativa < 6) {
+      setTimeout(() => void confirmarAlocacao(alunoId, tentativa + 1), 4_000)
     }
   }
 
